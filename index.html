@@ -20,7 +20,7 @@
         .sidebar-header h2 { margin: 0; font-size: 18px; }
         .close-btn { background: none; border: none; color: white; font-size: 28px; cursor: pointer; display: none; padding: 0; line-height: 1; }
         
-        /* ACCORDEONS (SECTIONS RETRACTABLES) */
+        /* ACCORDEONS GAUCHE */
         details.panel-section { background: white; margin: 8px 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         details.panel-section summary { background: #fff; padding: 12px 15px; font-size: 14px; font-weight: bold; color: #2c3e50; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; border-radius: 8px; }
         details[open].panel-section summary { border-bottom: 1px solid #eee; border-bottom-left-radius: 0; border-bottom-right-radius: 0; color: #0078A8; }
@@ -47,33 +47,38 @@
         .gradient-bar { height: 12px; border-radius: 3px; margin: 10px 0 5px 0; border: 1px solid #999; }
         .legend-labels { display: flex; justify-content: space-between; font-size: 11px; color: #666; }
         
-        /* GRAPHIQUE PLEIN ÉCRAN */
+        /* GRAPHIQUE */
         .chart-fullscreen { position: fixed !important; top: 5vh; left: 5vw; right: 5vw; bottom: 5vh; z-index: 9999; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.6); display: flex; flex-direction: column; }
         .btn-expand { background: #0078A8; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
-        
-        /* DETAILS LISTE (Canons) */
-        .canon-details { background: #f9f9f9; margin-bottom: 6px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
-        .canon-details summary { padding: 10px; font-weight: 600; cursor: pointer; outline: none; display: flex; justify-content: space-between; font-size: 12px; border: none;}
-        .canon-details > div { padding: 10px; border-top: 1px solid #ddd; font-size: 12px; color: #555; background: #fff; }
         
         /* CARTE & MOBILE */
         #map-container { flex-grow: 1; position: relative; height: 100%; background: #222; }
         #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%; z-index: 1; }
-        #mobile-toggle { position: absolute; top: 15px; left: 15px; z-index: 1000; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; display: none; }
+        #btn-menu-mobile { position: absolute; top: 15px; left: 15px; z-index: 1000; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; display: none; }
 
         /* MARKER CUSTOM (N° dans le point) */
         .custom-cannon-icon { background: none; border: none; }
         .cannon-circle { border-radius: 50%; color: white; font-weight: bold; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); box-sizing: border-box; box-shadow: 0px 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: transform 0.2s;}
         .cannon-circle:hover { transform: scale(1.2); z-index: 1000 !important; cursor: pointer; }
 
-        /* BANDEAU DROIT (MODE ÉDITION) */
-        #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 2001; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        /* =========================================
+           BANDEAU DROIT (SELECTION & EDITION) 
+           ========================================= */
+        #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: #fff; z-index: 2001; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         #right-sidebar.open { transform: translateX(0); }
-        #btn-toggle-edit { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #e74c3c; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: pointer; font-size: 14px; font-weight: bold; transition: background 0.3s; }
-        #btn-toggle-edit:hover { background: #c0392b; }
         
-        .edit-header { background: #e74c3c; color: white; padding: 15px; font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
-        .edit-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
+        .right-header { background: #f39c12; color: white; padding: 15px; font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
+        .right-header.editing { background: #e74c3c; }
+        .right-content { padding: 15px; overflow-y: auto; flex-grow: 1; }
+        
+        /* Fiches de sélection */
+        .sel-details { background: #f9f9f9; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
+        .sel-details summary { padding: 10px; font-weight: 600; cursor: pointer; outline: none; display: flex; justify-content: space-between; font-size: 13px; background: #fff; border-bottom: 1px solid #eee; }
+        .sel-details > div { padding: 12px; font-size: 13px; color: #444; background: #fafafa; }
+        .btn-edit-small { background: #34495e; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 11px; margin-top: 10px; width: 100%; font-weight: bold;}
+        .btn-edit-small:hover { background: #2c3e50; }
+
+        /* Formulaire Édition */
         .edit-input { width: 100%; box-sizing: border-box; padding: 8px; margin-top: 4px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
         .edit-label { font-size: 12px; font-weight: bold; color: #555; }
         #edit-instructions { background: #fdf0ed; border-left: 4px solid #e74c3c; padding: 10px; margin-bottom: 15px; font-size: 12px; color: #c0392b; line-height: 1.4; }
@@ -82,7 +87,7 @@
             #sidebar { position: absolute; height: 100%; width: 85%; transform: translateX(-100%); }
             #sidebar.open { transform: translateX(0); }
             #right-sidebar { width: 85%; }
-            #mobile-toggle { display: block; }
+            #btn-menu-mobile { display: block; }
             .close-btn { display: block; }
         }
     </style>
@@ -113,7 +118,7 @@
                 </div>
             </details>
 
-            <details class="panel-section">
+            <details class="panel-section" open>
                 <summary>2. Thème de la carte</summary>
                 <div class="section-content radio-group" style="padding-top: 5px;">
                     <label><input type="radio" name="layer" value="type" checked> Type de canon</label>
@@ -145,39 +150,45 @@
                 </div>
             </details>
 
-            <details class="panel-section" id="chart-section" style="display:none;" open>
-                <summary>
+            <details class="panel-section" id="chart-section">
+                <summary style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                     4. Analyse <button class="btn-expand" id="btn-chart-expand" onclick="event.preventDefault(); toggleFullscreenChart();">Agrandir ⛶</button>
                 </summary>
                 <div class="section-content" id="chart-wrapper" style="position: relative; height: 220px; width:100%; padding-top: 5px;">
                     <canvas id="pisteChart"></canvas>
                 </div>
             </details>
-            
-            <details class="panel-section" id="list-section">
-                <summary>5. Détails des Canons</summary>
-                <div class="section-content" id="type-list" style="max-height: 250px; overflow-y: auto; padding: 5px;"></div>
-            </details>
         </div>
 
         <div id="map-container">
-            <button id="mobile-toggle" onclick="toggleLeftSidebar()">☰ Menu</button>
-            <button id="btn-toggle-edit" onclick="toggleRightSidebar()">✏️ Édition Canon</button>
+            <button id="btn-menu-mobile" onclick="toggleLeftSidebar()">☰ Menu Filtres</button>
             <div id="map"></div>
         </div>
 
         <div id="right-sidebar">
-            <div class="edit-header">
-                <span>📍 Mode Édition</span>
-                <button class="close-btn" onclick="toggleRightSidebar()" style="display:block; font-size:22px; cursor:pointer;">&times;</button>
+            <div class="right-header" id="right-header">
+                <span id="right-title">📌 Sélection Multiple</span>
+                <button class="close-btn" onclick="closeRightSidebar()" style="display:block; font-size:22px; cursor:pointer;">&times;</button>
             </div>
-            <div class="edit-content">
-                <div id="edit-instructions">
-                    <b>Étape 1 :</b> Cliquez sur un canon sur la carte pour le sélectionner.<br><br>
-                    <b>Étape 2 :</b> Cliquez n'importe où sur la carte pour le déplacer, et modifiez ses infos ci-dessous.
+            
+            <div class="right-content">
+                
+                <div id="view-selection">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                        <span style="font-size:13px; color:#555;"><b id="sel-count">0</b> canon(s) sélectionné(s)</span>
+                        <button onclick="clearSelection()" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; font-size:11px;">Vider ✕</button>
+                    </div>
+                    <div id="selected-list">
+                        </div>
+                    
+                    <button onclick="exportToTSV()" style="width:100%; background:#f39c12; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:25px; font-size:12px;">💾 Exporter la base (.tsv)</button>
                 </div>
 
-                <div id="edit-form-area" style="display:none; opacity:0; transition: opacity 0.3s;">
+                <div id="view-edit" style="display:none;">
+                    <div id="edit-instructions">
+                        <b>Mode Édition activé</b><br>Modifiez les informations ci-dessous, ou cliquez n'importe où sur la carte pour déplacer le point géographique.
+                    </div>
+
                     <h3 style="margin-top:0; color:#e74c3c;">Canon N°<span id="edit-id-display"></span></h3>
                     <input type="hidden" id="edit-id">
                     
@@ -202,10 +213,12 @@
                         <div style="flex:1;"><div class="edit-label">Longitude</div><input type="number" step="0.0000001" id="edit-lng" class="edit-input"></div>
                     </div>
                     
-                    <button id="btn-save-edit" style="width:100%; background:#27ae60; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:10px; font-size:14px;">✅ Valider les modifications</button>
-                    
-                    <button onclick="exportToTSV()" style="width:100%; background:#f39c12; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:15px; font-size:12px;">💾 Télécharger fichier .tsv à jour</button>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button onclick="cancelEdit()" style="flex:1; background:#95a5a6; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;">Annuler</button>
+                        <button onclick="saveEdit()" style="flex:2; background:#27ae60; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;">✅ Enregistrer</button>
+                    </div>
                 </div>
+
             </div>
         </div>
 
@@ -454,7 +467,7 @@
         
         rawData.forEach(row => {
             let t = (row[6] || "").toString().trim();
-            if (!["demak lenko", "demac lenko", "sufag", "street", "taurus", "taurax", "peak"].includes(t.toLowerCase())) technoTypes.add(t);
+            if (!["demak lenko", "demac lenko", "sufag", "street", "taurus", "taurax", "peak"].includes(t.toLowerCase())) technoTypes.add(t.toLowerCase());
             if (row[8]) repSet.add(row[8].toString().trim());
             if (row[9]) transfoSet.add(row[9].toString().trim());
             if (row[7]) pistesSet.add(row[7].toString().trim());
@@ -465,7 +478,7 @@
         let technoColors = {};
         sortedTechno.forEach((t, i) => {
             let luminosite = sortedTechno.length > 1 ? 0.8 - (i / (sortedTechno.length - 1)) * 0.4 : 0.6;
-            technoColors[t.toLowerCase()] = hslToHex(0.14, 1.0, luminosite);
+            technoColors[t] = hslToHex(0.14, 1.0, luminosite);
         });
 
         const repColors = generatePalette(Array.from(repSet).sort(), 0.8, 0.45);
@@ -505,6 +518,8 @@
         let currentLayer = 'type';
         let currentPistes = ['all'];
         let currentTypes = ['all'];
+        let selectedCannonsMap = new Map(); // Pour la sélection multiple { id -> layer }
+        let currentlyEditingId = null; // ID du canon en cours d'édition
         
         let absoluteMaxes = { eau: 0, air: 0, temps: 0 };
         let currentMaxThreshold = { eau: 0, air: 0, temps: 0 };
@@ -569,39 +584,105 @@
             attribution: 'Tiles &copy; Esri', maxZoom: 18
         }).addTo(map);
 
-        // ==========================================
-        // 6. GESTION MODE ÉDITION (PANNEAU DROIT)
-        // ==========================================
-        let editMode = false;
-        let selectedCannon = null;
-
-        function toggleRightSidebar() {
-            const rs = document.getElementById('right-sidebar');
-            rs.classList.toggle('open');
-            editMode = rs.classList.contains('open');
-            
-            if (editMode) {
-                document.getElementById('edit-instructions').style.display = 'block';
-                document.getElementById('edit-form-area').style.display = 'none';
-            } else {
-                if (selectedCannon) {
-                    selectedCannon = null;
-                    updateMap(); 
-                }
-            }
-        }
-
+        // Clic sur la carte (pour le mode édition)
         map.on('click', function(e) {
-            if (editMode && selectedCannon) {
+            if (currentlyEditingId) {
+                let layer = selectedCannonsMap.get(currentlyEditingId);
                 document.getElementById('edit-lat').value = e.latlng.lat.toFixed(7);
                 document.getElementById('edit-lng').value = e.latlng.lng.toFixed(7);
-                selectedCannon.setLatLng(e.latlng); 
+                layer.setLatLng(e.latlng); 
             }
         });
 
-        document.getElementById('btn-save-edit').addEventListener('click', () => {
-            if (!selectedCannon) return;
-            const p = selectedCannon.feature.properties;
+        // ==========================================
+        // 6. GESTION SELECTION ET EDITION (PANNEAU DROIT)
+        // ==========================================
+        function toggleRightSidebar() {
+            const rs = document.getElementById('right-sidebar');
+            rs.classList.toggle('open');
+            // Si on ferme
+            if (!rs.classList.contains('open')) {
+                if (currentlyEditingId) cancelEdit(); // Annule l'édition en cours
+                clearSelection();
+            }
+        }
+
+        function closeRightSidebar() {
+            document.getElementById('right-sidebar').classList.remove('open');
+            if (currentlyEditingId) cancelEdit();
+            clearSelection();
+        }
+
+        function clearSelection() {
+            selectedCannonsMap.clear();
+            updateMap();
+            renderSelectionPanel();
+        }
+
+        function renderSelectionPanel() {
+            document.getElementById('sel-count').innerText = selectedCannonsMap.size;
+            let listDiv = document.getElementById('selected-list');
+            listDiv.innerHTML = '';
+            
+            if (selectedCannonsMap.size === 0) {
+                listDiv.innerHTML = "<p style='font-size:12px; color:#7f8c8d; text-align:center;'>Aucun canon sélectionné. Cliquez sur les points de la carte.</p>";
+                return;
+            }
+
+            selectedCannonsMap.forEach((layer, id) => {
+                const p = layer.feature.properties;
+                listDiv.innerHTML += `
+                    <details class="sel-details" open>
+                        <summary>Canon N° ${p.id} - ${p.piste}</summary>
+                        <div>
+                            <b>Type :</b> <span style="color:${p.couleur_defaut}">${p.type}</span><br>
+                            <b>Eau :</b> ${p.eau} m³ | <b>Air :</b> ${p.air}<br>
+                            <b>Temps :</b> ${p.temps} h<br>
+                            <b>Répéteur :</b> ${p.rep} | <b>Transfo :</b> ${p.transfo}<br>
+                            <button class="btn-edit-small" onclick="startEdit(${p.id})">✏️ Éditer ce canon</button>
+                        </div>
+                    </details>`;
+            });
+        }
+
+        function startEdit(id) {
+            currentlyEditingId = id;
+            const layer = selectedCannonsMap.get(id);
+            const p = layer.feature.properties;
+            
+            document.getElementById('edit-id-display').innerText = p.id;
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-type').value = p.type;
+            document.getElementById('edit-piste').value = p.piste;
+            document.getElementById('edit-eau').value = p.eau;
+            document.getElementById('edit-air').value = p.air;
+            document.getElementById('edit-temps').value = p.temps;
+            document.getElementById('edit-rep').value = p.rep;
+            document.getElementById('edit-transfo').value = p.transfo;
+            document.getElementById('edit-lat').value = layer.getLatLng().lat.toFixed(7);
+            document.getElementById('edit-lng').value = layer.getLatLng().lng.toFixed(7);
+            
+            document.getElementById('view-selection').style.display = 'none';
+            document.getElementById('view-edit').style.display = 'block';
+            document.getElementById('right-header').classList.add('editing');
+            document.getElementById('right-title').innerText = "✏️ Mode Édition";
+
+            updateMap(); // Rafraichir couleur (bordure rouge)
+        }
+
+        function cancelEdit() {
+            currentlyEditingId = null;
+            document.getElementById('view-selection').style.display = 'block';
+            document.getElementById('view-edit').style.display = 'none';
+            document.getElementById('right-header').classList.remove('editing');
+            document.getElementById('right-title').innerText = "📌 Sélection Multiple";
+            updateMap();
+        }
+
+        function saveEdit() {
+            if (!currentlyEditingId) return;
+            const layer = selectedCannonsMap.get(currentlyEditingId);
+            const p = layer.feature.properties;
             
             p.type = document.getElementById('edit-type').value;
             p.piste = document.getElementById('edit-piste').value;
@@ -613,18 +694,20 @@
             
             const lat = parseFloat(document.getElementById('edit-lat').value);
             const lng = parseFloat(document.getElementById('edit-lng').value);
-            selectedCannon.feature.geometry.coordinates = [lng, lat];
+            layer.feature.geometry.coordinates = [lng, lat];
             
+            // Recalcul de la couleur par defaut du Type
             let tLower = p.type.toLowerCase().trim();
             if (["demak lenko", "demac lenko"].includes(tLower)) p.couleur_defaut = "#0000FF";
             else if (["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) p.couleur_defaut = "#008000";
-            else p.couleur_defaut = technoColors[tLower] || "#FFD700";
+            else {
+                if(!technoColors[tLower]) technoColors[tLower] = "#FFD700"; // Sécurité si nouveau type
+                p.couleur_defaut = technoColors[tLower];
+            }
 
-            alert(`Canon N°${p.id} mis à jour avec succès dans la mémoire.`);
-            
-            updateMap();
-            updateRightPanel();
-        });
+            cancelEdit();
+            renderSelectionPanel();
+        }
 
         function exportToTSV() {
             let tsv = "N° regard\tlatitude\tlongitude\teau m3\tair\ttps de marche\tType canon\tPistes\trépéteur\ttransfo\n";
@@ -667,43 +750,35 @@
                 return L.marker(latlng, { icon: icon });
             },
             onEachFeature: function (feature, layer) {
+                // CLIC : Gère la Sélection (plus de hover tooltip)
                 layer.on('click', function(e) {
-                    if (editMode) {
-                        L.DomEvent.stopPropagation(e); 
-                        if (selectedCannon) updateMap(); 
-                        selectedCannon = layer;
-                        
-                        const p = feature.properties;
-                        document.getElementById('edit-id-display').innerText = p.id;
-                        document.getElementById('edit-id').value = p.id;
-                        document.getElementById('edit-type').value = p.type;
-                        document.getElementById('edit-piste').value = p.piste;
-                        document.getElementById('edit-eau').value = p.eau;
-                        document.getElementById('edit-air').value = p.air;
-                        document.getElementById('edit-temps').value = p.temps;
-                        document.getElementById('edit-rep').value = p.rep;
-                        document.getElementById('edit-transfo').value = p.transfo;
-                        document.getElementById('edit-lat').value = feature.geometry.coordinates[1];
-                        document.getElementById('edit-lng').value = feature.geometry.coordinates[0];
-                        
-                        const form = document.getElementById('edit-form-area');
-                        document.getElementById('edit-instructions').style.display = 'none';
-                        form.style.display = 'block';
-                        setTimeout(() => form.style.opacity = '1', 10);
+                    L.DomEvent.stopPropagation(e);
+                    
+                    // Bloquer la sélection si on est DANS le formulaire d'édition
+                    if (currentlyEditingId) return;
 
-                        updateMap(); 
+                    const id = feature.properties.id;
+                    if (selectedCannonsMap.has(id)) {
+                        selectedCannonsMap.delete(id); // Désélectionner
+                    } else {
+                        selectedCannonsMap.set(id, layer); // Sélectionner
+                    }
+                    
+                    updateMap();
+                    renderSelectionPanel();
+                    
+                    // Ouvre le panneau droit s'il y a des sélections
+                    if (selectedCannonsMap.size > 0) {
+                        document.getElementById('right-sidebar').classList.add('open');
                     }
                 });
-
-                const p = feature.properties;
-                layer.bindTooltip(`<strong>Canon N° ${p.id} | ${p.piste}</strong><br>Type : <b style="color:${p.couleur_defaut}">${p.type}</b><br>Eau : ${p.eau} m³ | Air : ${p.air} | Tps : ${p.temps} h<br>Rép : <b>${p.rep}</b> | Transfo : <b>${p.transfo}</b>`);
             }
         }).addTo(map);
 
         map.fitBounds(geojsonLayer.getBounds(), { padding: [30, 30] });
 
         // ==========================================
-        // 8. LOGIQUE FILTRES & PANNEAUX
+        // 8. LOGIQUE FILTRES & PANNEAUX GAUCHE
         // ==========================================
         function updateLegend() {
             const content = document.getElementById('legend-content');
@@ -745,7 +820,6 @@
 
                 if (!visible) {
                     if(layer._icon) layer._icon.style.display = 'none';
-                    layer.closeTooltip();
                 } else {
                     let radius = 12; 
                     let ratio = 0;
@@ -761,9 +835,14 @@
                     let borderWidth = "1.5px";
                     let fontSize = Math.max(9, radius - 4) + "px"; 
 
-                    if (editMode && layer === selectedCannon) {
-                        borderColor = "#e74c3c"; borderWidth = "3px";
-                        layer.setZIndexOffset(1000);
+                    // Surlignage de la sélection
+                    let isSelected = selectedCannonsMap.has(props.id);
+                    let isEditing = (currentlyEditingId === props.id);
+
+                    if (isEditing) {
+                        borderColor = "#e74c3c"; borderWidth = "4px"; layer.setZIndexOffset(2000);
+                    } else if (isSelected) {
+                        borderColor = "#f39c12"; borderWidth = "4px"; layer.setZIndexOffset(1000);
                     } else {
                         layer.setZIndexOffset(0);
                     }
@@ -778,15 +857,15 @@
         }
 
         function updateRightPanel() {
+            // Update the Graph
             const chartCont = document.getElementById('chart-section');
-            const listCont = document.getElementById('list-section');
-            
             let filtered = snowCannons.features;
+            
             if (!currentPistes.includes('all')) filtered = filtered.filter(f => currentPistes.includes(f.properties.piste));
             if (!currentTypes.includes('all')) filtered = filtered.filter(f => currentTypes.includes(f.properties.type));
             
             if (['eau','air','temps'].includes(currentLayer)) {
-                listCont.style.display = 'none'; chartCont.style.display = 'block';
+                chartCont.style.display = 'block';
                 filtered = filtered.filter(f => f.properties[currentLayer] >= currentMinThreshold[currentLayer] && f.properties[currentLayer] <= currentMaxThreshold[currentLayer]);
                 
                 let labels = filtered.map(f => 'N°' + f.properties.id);
@@ -795,17 +874,30 @@
                 
                 let ctx = document.getElementById('pisteChart').getContext('2d');
                 if (window.myChart) window.myChart.destroy();
-                window.myChart = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: currentLayer.toUpperCase(), data: data, backgroundColor: bgColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
-            } else {
-                chartCont.style.display = 'none'; listCont.style.display = 'block';
-                let html = filtered.length === 0 ? "<i style='padding:10px; display:block;'>Aucun canon ne correspond.</i>" : "";
-                filtered.forEach(f => {
-                    html += `<details class="canon-details"><summary>N° ${f.properties.id} - ${f.properties.piste}</summary><div>Type : <b style="color:${f.properties.couleur_defaut}">${f.properties.type}</b><br>Eau: ${f.properties.eau} m³ | Air: ${f.properties.air} | Tps: ${f.properties.temps} h<br>Rep: ${f.properties.rep} | Transfo: ${f.properties.transfo}</div></details>`;
+                window.myChart = new Chart(ctx, { 
+                    type: 'bar', 
+                    data: { labels: labels, datasets: [{ label: currentLayer.toUpperCase(), data: data, backgroundColor: bgColors, borderRadius: 4 }] }, 
+                    options: { 
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }, // Cache la grosse légende Chart.js
+                            tooltip: {
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        let idx = tooltipItems[0].dataIndex;
+                                        return 'Canon N°' + filtered[idx].properties.id + ' | ' + filtered[idx].properties.piste;
+                                    }
+                                }
+                            }
+                        }
+                    } 
                 });
-                document.getElementById('type-list').innerHTML = html;
+            } else {
+                chartCont.style.display = 'none';
             }
         }
 
+        // Ecouteurs Evenements
         document.querySelectorAll('input[name="layer"]').forEach(r => { r.addEventListener('change', (e) => { currentLayer = e.target.value; updateLegend(); updateMap(); updateRightPanel(); }); });
         document.getElementById('slider-min').addEventListener('input', (e) => { let val = parseFloat(e.target.value); if (val > currentMaxThreshold[currentLayer]) { val = currentMaxThreshold[currentLayer]; e.target.value = val; } currentMinThreshold[currentLayer] = val; document.getElementById('val-min').innerText = val; updateMap(); updateRightPanel(); });
         document.getElementById('slider-max').addEventListener('input', (e) => { let val = parseFloat(e.target.value); if (val < currentMinThreshold[currentLayer]) { val = currentMinThreshold[currentLayer]; e.target.value = val; } currentMaxThreshold[currentLayer] = val; document.getElementById('val-max').innerText = val; updateMap(); updateRightPanel(); });
@@ -816,7 +908,6 @@
             if (window.myChart) window.myChart.resize();
         }
 
-        // MAJ Chart si on ouvre le panneau Analyse
         document.getElementById('chart-section').addEventListener('toggle', function() {
             if(this.open && window.myChart) setTimeout(() => window.myChart.resize(), 50);
         });
@@ -825,6 +916,7 @@
         if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
         
         // LANCEMENT
+        renderSelectionPanel();
         updateLegend(); updateMap(); updateRightPanel();
         setTimeout(() => map.invalidateSize(), 500);
 
