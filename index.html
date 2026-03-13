@@ -223,7 +223,7 @@
         // ==========================================
         // API GOOGLE SHEETS
         // ==========================================
-        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
+        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzI2FLqyfjMUkuaH-er98Og7U5Q0WxVUD0ci_7sCZ2ZkQwG_5_V2ei5OHb8mSrkChkOLw/exec";
         
         let rawData = [];
         let rawTickets = [];
@@ -250,16 +250,15 @@
                     });
                 }
 
-                // LECTURE DES TICKETS (LECTURE SEULE)
-                // Ordre de vos colonnes : 0:id, 1:état, 2:date, 3:n°regard, 4:piste, 5:defaut, 6:Défaut sonde, 7:cause, ...
+                // LECTURE DES TICKETS (AVEC LES BONS INDEX EXACTS DE VOTRE FICHIER)
                 if (data.tickets && data.tickets.length > 0) {
                     rawTickets = data.tickets.slice(1).map(row => ({
                         idTicket: row[0],
                         statut: (row[1] || "").toString().toLowerCase().trim(), // "à faire", "en cours", "fait"
                         date: row[2],
-                        idCanon: row[3], // "n° regard"
-                        defaut: row[5] || "Non spécifié",
-                        cause: row[7] || "Non spécifiée"
+                        idCanon: row[3], // Colonne "n° regard" = index 3
+                        defaut: row[6] || "Non spécifié", // Colonne "defaut" = index 6 (à cause de la colonne vide)
+                        cause: row[8] || "Non spécifiée"  // Colonne "cause" = index 8
                     }));
                 }
 
@@ -423,7 +422,7 @@
                 
                 let ticketsHTML = "";
                 
-                // Brique : Défauts en cours
+                // Bloc "À FAIRE / EN COURS"
                 if (active.length > 0) {
                     ticketsHTML += `<div class="ticket-alert"><strong>🚨 Défauts en cours :</strong><ul style="margin:5px 0; padding-left:15px;">`;
                     active.forEach(t => {
@@ -433,13 +432,13 @@
                     ticketsHTML += `</ul></div>`;
                 }
 
-                // Brique : Historique
+                // Bloc "HISTORIQUE (FAIT)"
                 if (history.length > 0) {
                     ticketsHTML += `<details class="ticket-history"><summary>📁 Voir l'historique (${history.length})</summary><ul style="padding-left:15px; margin-top:8px;">`;
                     history.forEach(t => {
                         let d = new Date(t.date);
                         let dateStr = isNaN(d.getTime()) ? (t.date || "Date inconnue") : d.toLocaleDateString('fr-FR');
-                        ticketsHTML += `<li style="margin-bottom:6px;"><b>${dateStr}</b> - <b>Défaut :</b> ${t.defaut} <br><span style="color:#666; font-size:11px;"><b>Cause :</b> ${t.cause}</span></li>`;
+                        ticketsHTML += `<li style="margin-bottom:6px; font-size:11px;"><b>${dateStr}</b> - <b>Défaut :</b> ${t.defaut} <br><span style="color:#666;"><b>Cause :</b> ${t.cause}</span></li>`;
                     });
                     ticketsHTML += `</ul></details>`;
                 }
@@ -588,7 +587,6 @@
             } else {
                 modal.style.display = 'flex'; document.getElementById('chart-modal-body').appendChild(wrapper);
             }
-            // Forcer le redessin du graphique à la bonne taille
             updateRightPanel();
         }
 
@@ -602,7 +600,6 @@
             function closeDragElement() { document.onmouseup = null; document.onmousemove = null; }
         }
 
-        // Rendre le modal fluide lors du redimensionnement
         new ResizeObserver(() => { if (window.myChart && document.getElementById('chart-modal').style.display === 'flex') { window.myChart.resize(); } }).observe(document.getElementById('chart-modal'));
 
         function toggleLeftSidebar() { document.getElementById('sidebar').classList.toggle('open'); setTimeout(() => map.invalidateSize(), 300); }
