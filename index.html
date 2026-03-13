@@ -15,13 +15,11 @@
         
         #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
         .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #0078A8; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+        
         /* BANDEAU GAUCHE */
         #sidebar { width: 340px; flex-shrink: 0; background: #f8f9fa; display: flex; flex-direction: column; z-index: 2000; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
         .sidebar-header { background: #2c3e50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-header h2 { margin: 0; font-size: 16px; }
-        .close-btn { background: none; border: none; color: white; font-size: 28px; cursor: pointer; display: none; padding: 0; line-height: 1; }
         
         details.panel-section { background: white; margin: 8px 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         details.panel-section summary { background: #fff; padding: 12px 15px; font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; border-radius: 8px; }
@@ -40,8 +38,7 @@
         .range-control input[type=range] { width: 100%; margin: 0; }
         .val-badge { color: #0078A8; font-weight: bold; }
 
-        /* SOUS-MENU SAISONS */
-        .season-menu { margin-left: 15px; border-left: 2px solid #0078A8; padding-left: 10px; margin-top: 5px; margin-bottom: 10px;}
+        .season-menu { margin-left: 10px; border-left: 2px solid #0078A8; padding-left: 10px; margin-top: 5px; margin-bottom: 5px;}
         .season-summary { font-size: 12px; font-weight: bold; cursor: pointer; padding: 5px 0; color: #555; }
 
         #legend-content { max-height: 180px; overflow-y: auto; padding-right: 5px;}
@@ -54,25 +51,25 @@
         #chart-modal-header { background: #2c3e50; color: white; padding: 8px 15px; cursor: move; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold; user-select: none;}
         #chart-modal-body { flex-grow: 1; padding: 10px; position: relative; background: #fff; width: 100%; height: calc(100% - 35px); box-sizing: border-box;}
         .btn-expand { background: #0078A8; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
-        .btn-expand:hover { background: #005f85; }
 
         #map-container { flex-grow: 1; position: relative; height: 100%; background: #222; }
         #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%; z-index: 1; }
-        #btn-menu-mobile { position: absolute; top: 15px; left: 15px; z-index: 1000; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; display: none; }
+        #btn-multi-toggle { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.3s; }
+        #btn-multi-toggle.active { background: #3498db; color: white; border-color: #2980b9; }
 
         .custom-cannon-icon { background: none; border: none; }
         .cannon-circle { border-radius: 50%; color: white; font-weight: bold; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); box-sizing: border-box; box-shadow: 0px 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: transform 0.2s;}
         .cannon-circle:hover { transform: scale(1.15); z-index: 1000 !important; cursor: pointer; }
 
         /* BANDEAU DROIT (FICHES CANON) */
-        #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 380px; background: #f8f9fa; z-index: 2001; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 400px; background: #f8f9fa; z-index: 2001; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         #right-sidebar.open { transform: translateX(0); }
         .right-header { background: #34495e; color: white; padding: 15px; font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
         .right-content { padding: 15px; overflow-y: auto; flex-grow: 1; }
         
         .sel-details { background: #fff; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden;}
-        .sel-details-header { padding: 12px; font-weight: 600; font-size: 15px; background: #ecf0f1; border-bottom: 1px solid #ddd; color: #2c3e50;}
-        .sel-details-body { padding: 15px; font-size: 12px; color: #444; line-height: 1.5; }
+        .sel-details-header { padding: 12px; font-weight: 600; font-size: 15px; background: #ecf0f1; border-bottom: 1px solid #ddd; color: #2c3e50; display:flex; justify-content:space-between; align-items:center;}
+        .sel-details-body { padding: 15px; font-size: 13px; color: #444; line-height: 1.5; }
         
         .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fdfdfd; border: 1px solid #eee; padding: 10px; border-radius: 4px; margin-top: 10px; }
         .tech-grid div { background: #fff; padding: 5px; border-radius: 3px; border: 1px solid #f0f0f0; }
@@ -82,17 +79,22 @@
         .ticket-history { margin-top: 12px; background: #f4f6f7; padding: 10px; border-radius: 4px; border: 1px solid #e1e5e8;}
         .ticket-history summary { font-size: 12px; font-weight: bold; color: #27ae60; cursor: pointer; outline:none;}
         
-        @media (max-width: 768px) {
-            #sidebar { position: absolute; height: 100%; width: 85%; transform: translateX(-100%); }
-            #sidebar.open { transform: translateX(0); }
-            #right-sidebar { width: 85%; }
-            #chart-modal { width: 90%; left: 5%; top: 5%; height: 50vh;}
-            #btn-menu-mobile { display: block; }
-            .close-btn { display: block; }
-        }
+        .btn-edit-small { background: #e74c3c; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-top: 10px; width: 100%; font-weight: bold;}
+        
+        /* FORMULAIRE ÉDITION */
+        .edit-input { width: 100%; box-sizing: border-box; padding: 8px; margin-top: 4px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .edit-label { font-size: 12px; font-weight: bold; color: #555; }
+        .toggle-move { background:#fdf0ed; padding:10px; border:1px dashed #e74c3c; border-radius:4px; font-size:12px; font-weight:bold; color:#c0392b; cursor:pointer; display:flex; align-items:center; gap:8px;}
     </style>
 </head>
 <body>
+    <datalist id="list-types"></datalist>
+    <datalist id="list-pistes"></datalist>
+    <datalist id="list-vannes"></datalist>
+    <datalist id="list-modules"></datalist>
+    <datalist id="list-reps"></datalist>
+    <datalist id="list-transfos"></datalist>
+
     <div id="loading-overlay">
         <div class="spinner"></div>
         <h2 style="color:#0078A8; margin:0;">GMAO AppSheet...</h2>
@@ -102,10 +104,7 @@
     <div id="app-container">
         
         <div id="sidebar" class="open">
-            <div class="sidebar-header">
-                <h2>❄️ GMAO Neige</h2>
-                <button class="close-btn" onclick="toggleLeftSidebar()">&times;</button>
-            </div>
+            <div class="sidebar-header"><h2>❄️ GMAO Neige</h2></div>
 
             <details class="panel-section" open>
                 <summary>1. Légende & Plages</summary>
@@ -126,70 +125,96 @@
                     <label><input type="radio" name="layer" value="type"> Type de canon</label>
                     <label><input type="radio" name="layer" value="repeteur"> Répéteurs</label>
                     <label><input type="radio" name="layer" value="transfo"> Transformateurs</label>
-                    <hr style="margin: 8px 0; border-top: 1px dashed #ccc;">
-                    
-                    <div style="font-weight:bold; font-size:12px; color:#555; margin-top:10px;">📊 HISTORIQUE ENNEIGEURS</div>
-                    <div id="dynamic-seasons-menu"></div>
-
                 </div>
+            </details>
+
+            <details class="panel-section">
+                <summary>3. Historique Enneigeurs (Volumes)</summary>
+                <div class="section-content" style="padding-top: 5px;" id="dynamic-seasons-menu">
+                    </div>
             </details>
             
             <details class="panel-section">
-                <summary>3. Filtres Avancés</summary>
+                <summary>4. Filtres Avancés</summary>
                 <div class="section-content" style="padding-top: 5px;">
                     <b style="font-size:12px;">Pistes :</b>
-                    <div class="checkbox-list" id="piste-checkboxes"><label><input type="checkbox" id="check-all-pistes" checked> <b>Toutes les pistes</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-pistes"></div></div>
-                    
+                    <div class="checkbox-list" id="piste-checkboxes"><label><input type="checkbox" id="check-all-pistes" checked> <b>Toutes</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-pistes"></div></div>
                     <b style="font-size:12px;">Type Canon :</b>
-                    <div class="checkbox-list" id="type-checkboxes"><label><input type="checkbox" id="check-all-types" checked> <b>Tous les types</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-types"></div></div>
-                    
+                    <div class="checkbox-list" id="type-checkboxes"><label><input type="checkbox" id="check-all-types" checked> <b>Tous</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-types"></div></div>
                     <b style="font-size:12px;">Type Vanne :</b>
-                    <div class="checkbox-list" id="vanne-checkboxes"><label><input type="checkbox" id="check-all-vannes" checked> <b>Toutes les vannes</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-vannes"></div></div>
-                    
+                    <div class="checkbox-list" id="vanne-checkboxes"><label><input type="checkbox" id="check-all-vannes" checked> <b>Toutes</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-vannes"></div></div>
                     <b style="font-size:12px;">Type Module :</b>
-                    <div class="checkbox-list" id="module-checkboxes"><label><input type="checkbox" id="check-all-modules" checked> <b>Tous les modules</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-modules"></div></div>
+                    <div class="checkbox-list" id="module-checkboxes"><label><input type="checkbox" id="check-all-modules" checked> <b>Tous</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-modules"></div></div>
                 </div>
             </details>
 
             <details class="panel-section" id="chart-section" open>
-                <summary>
-                    4. Analyse 
-                    <button class="btn-expand" title="Agrandir et déplacer" onclick="event.preventDefault(); event.stopPropagation(); toggleFullscreenChart();">Agrandir ⛶</button>
-                </summary>
+                <summary>5. Analyse <button class="btn-expand" onclick="event.preventDefault(); toggleFullscreenChart();">Agrandir ⛶</button></summary>
                 <div class="section-content" id="original-chart-container" style="position: relative; height: 200px; width:100%; padding-top: 5px;">
-                    <div id="chart-wrapper" style="position: relative; width: 100%; height: 100%;">
-                        <canvas id="pisteChart"></canvas>
-                    </div>
+                    <div id="chart-wrapper" style="position: relative; width: 100%; height: 100%;"><canvas id="pisteChart"></canvas></div>
                 </div>
             </details>
         </div>
 
         <div id="map-container">
-            <button id="btn-menu-mobile" onclick="toggleLeftSidebar()">☰ Menu Filtres</button>
+            <button id="btn-multi-toggle" onclick="toggleMultiSelect()">🔲 Multi-Sélection : OFF</button>
             <div id="map"></div>
         </div>
 
         <div id="chart-modal">
-            <div id="chart-modal-header">
-                <span>📈 Analyse (Redimensionnable)</span>
-                <button onclick="toggleFullscreenChart()" style="background:none;border:none;color:white;cursor:pointer;font-size:16px;">✖</button>
-            </div>
+            <div id="chart-modal-header"><span>📈 Analyse (Redimensionnable)</span><button onclick="toggleFullscreenChart()" style="background:none;border:none;color:white;cursor:pointer;font-size:16px;">✖</button></div>
             <div id="chart-modal-body"></div>
         </div>
 
         <div id="right-sidebar">
             <div class="right-header" id="right-header">
-                <span>📌 Fiche Technique</span>
-                <button class="close-btn" onclick="closeRightSidebar()" style="display:block; font-size:22px; cursor:pointer;">&times;</button>
+                <span id="right-title">📌 Fiche Canon</span>
+                <button onclick="closeRightSidebar()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
             </div>
             
             <div class="right-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                    <span style="font-size:13px; color:#555;"><b id="sel-count">0</b> canon(s) ciblé(s)</span>
-                    <button onclick="clearSelection()" style="background:#95a5a6; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; font-size:11px;">Vider la sélection ✕</button>
-                </div>
-                <div id="selected-list">
+                <div id="view-selection">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;" id="multi-tools">
+                        <span style="font-size:13px; color:#555;"><b id="sel-count">0</b> sélectionné(s)</span>
+                        <button onclick="clearSelection()" style="background:#95a5a6; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; font-size:11px;">Vider ✕</button>
                     </div>
+                    <div id="selected-list"></div>
+                </div>
+
+                <div id="view-edit" style="display:none;">
+                    <label class="toggle-move" style="margin-bottom:15px;">
+                        <input type="checkbox" id="allow-move-chk"> Autoriser le déplacement géographique du canon sur la carte
+                    </label>
+
+                    <h3 style="margin-top:0; color:#e74c3c;">Édition N°<span id="edit-id-display"></span></h3>
+                    <input type="hidden" id="edit-id">
+                    
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1;"><div class="edit-label">Type de canon</div><input type="text" id="edit-type" class="edit-input" list="list-types"></div>
+                        <div style="flex:1;"><div class="edit-label">Piste associée</div><input type="text" id="edit-piste" class="edit-input" list="list-pistes"></div>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1;"><div class="edit-label">Vanne</div><input type="text" id="edit-vanne" class="edit-input" list="list-vannes"></div>
+                        <div style="flex:1;"><div class="edit-label">Module</div><input type="text" id="edit-module" class="edit-input" list="list-modules"></div>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1;"><div class="edit-label">Répéteur</div><input type="text" id="edit-rep" class="edit-input" list="list-reps"></div>
+                        <div style="flex:1;"><div class="edit-label">Transfo</div><input type="text" id="edit-transfo" class="edit-input" list="list-transfos"></div>
+                    </div>
+                    
+                    <hr style="border:0; border-top:1px solid #eee; margin: 10px 0;">
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1;"><div class="edit-label">Latitude</div><input type="number" step="0.0000001" id="edit-lat" class="edit-input"></div>
+                        <div style="flex:1;"><div class="edit-label">Longitude</div><input type="number" step="0.0000001" id="edit-lng" class="edit-input"></div>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button onclick="cancelEdit()" style="flex:1; background:#95a5a6; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;">Annuler</button>
+                        <button id="btn-save-edit" style="flex:2; background:#27ae60; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;">✅ Sauvegarder dans Général</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -200,6 +225,7 @@
         let snowCannons = { "type": "FeatureCollection", "features": [] };
         let rawTickets = [];
         let saisonsList = []; 
+        let isMultiSelect = false;
         
         const map = L.map('map', {zoomControl: false}).setView([42.766, 0.564], 14);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
@@ -207,50 +233,46 @@
 
         let geojsonLayer = null;
 
-        // Fonction pour trouver l'index d'une colonne peu importe la casse
-        const getIdx = (headers, nomsCherches, fallbackIndex) => {
-            let i = headers.findIndex(h => nomsCherches.includes(h));
-            return i !== -1 ? i : fallbackIndex;
+        const getIdx = (headers, nomsCherches, fallback) => {
+            let i = headers.findIndex(h => nomsCherches.some(n => h.includes(n)));
+            return i !== -1 ? i : fallback;
         };
 
         // FETCH DATA
         async function fetchGoogleSheetsData() {
             try {
                 const response = await fetch(GOOGLE_API_URL);
-                if (!response.ok) throw new Error("Statut API : " + response.status);
+                if (!response.ok) throw new Error("Erreur serveur : " + response.status);
                 const data = await response.json();
                 
-                // --- 1. LECTURE ONGLET GÉNÉRAL ---
-                if (!data.general || data.general.length < 2) throw new Error("Onglet Général introuvable ou vide. Vérifiez le nom de l'onglet.");
+                // 1. LECTURE ONGLET GÉNÉRAL
+                if (!data.general || data.general.length < 2) throw new Error("Tableau général introuvable.");
                 const genHeaders = data.general[0].map(h => h.toString().toLowerCase().trim());
                 
-                // N° regard est dans la colonne C d'après vous (donc index 2)
                 const idxId = getIdx(genHeaders, ['n° regard', 'regard'], 2);
                 const idxPiste = getIdx(genHeaders, ['pistes', 'piste'], 3);
                 const idxType = getIdx(genHeaders, ['type canon', 'type'], 4);
                 const idxVanne = getIdx(genHeaders, ['type de vanne', 'vanne'], 5);
                 const idxModule = getIdx(genHeaders, ['type de module', 'module'], 7);
-                const idxXY = getIdx(genHeaders, ['xy', 'gps', 'coordonnées'], 29);
-                const idxRep = getIdx(genHeaders, ['épéteur', 'répéteur', 'repeteur'], 35);
-                const idxTrans = getIdx(genHeaders, ['transfo', 'transformateur'], 36);
+                const idxXY = getIdx(genHeaders, ['xy', 'gps'], 29);
+                const idxRep = getIdx(genHeaders, ['peteur', 'repeteur'], 35);
+                const idxTrans = getIdx(genHeaders, ['transfo'], 36);
 
                 let dictGeneral = {};
                 data.general.slice(1).forEach(row => {
                     let idRaw = row[idxId];
                     if (!idRaw) return;
-                    
-                    // On nettoie l'ID pour ne garder QUE les chiffres
                     let id = idRaw.toString().replace(/[^0-9]/g, ''); 
                     
-                    // Parsing du XY (Lat, Long)
                     let lat = 0, lng = 0;
                     if (idxXY !== -1 && row[idxXY]) {
                         let parts = row[idxXY].toString().split(',');
-                        if (parts.length === 2) {
-                            lat = parseFloat(parts[0].trim());
-                            lng = parseFloat(parts[1].trim());
-                        }
+                        if (parts.length === 2) { lat = parseFloat(parts[0].trim()); lng = parseFloat(parts[1].trim()); }
                     }
+
+                    // Stocker toutes les infos détaillées
+                    let fullData = [];
+                    genHeaders.forEach((head, i) => { if(row[i]) fullData.push({k: head, v: row[i]}); });
 
                     dictGeneral[id] = {
                         id: id, lat: lat, lng: lng,
@@ -260,11 +282,12 @@
                         module: row[idxModule] || "N/A",
                         rep: row[idxRep] || "N/A",
                         transfo: row[idxTrans] || "N/A",
-                        historique: {} // Sera rempli par l'onglet historique
+                        fullData: fullData,
+                        historique: {}
                     };
                 });
 
-                // --- 2. LECTURE ONGLET HISTORIQUE ENNEIGEURS ---
+                // 2. LECTURE HISTORIQUE
                 if (data.historique && data.historique.length > 1) {
                     const histHeaders = data.historique[0].map(h => h.toString().toLowerCase().trim());
                     const idxCanons = getIdx(histHeaders, ['canons', 'n° regard'], 0);
@@ -275,99 +298,76 @@
                     histHeaders.forEach((h, i) => {
                         let match = h.match(/(eau|air|marche).*?(\d{2}\/\d{2})/i);
                         if (match) {
-                            let type = match[1].toLowerCase();
-                            let saison = match[2];
-                            saisonsSet.add(saison);
-                            if (type.includes('eau')) colsEau[saison] = i;
-                            if (type.includes('air')) colsAir[saison] = i;
-                            if (type.includes('marche')) colsTemps[saison] = i;
+                            let t = match[1].toLowerCase(); let s = match[2];
+                            saisonsSet.add(s);
+                            if (t.includes('eau')) colsEau[s] = i;
+                            if (t.includes('air')) colsAir[s] = i;
+                            if (t.includes('marche')) colsTemps[s] = i;
                         }
                     });
-                    
                     saisonsList = Array.from(saisonsSet).sort().reverse();
 
                     data.historique.slice(1).forEach(row => {
                         let rawId = row[idxCanons];
                         if (rawId) {
-                            // Nettoyage intelligent : si "YA 123", on ne garde que "123"
-                            let id = rawId.toString().replace(/[^0-9]/g, '');
+                            let id = rawId.toString().replace(/[^0-9]/g, ''); // Enlève le "YA "
                             if (id && dictGeneral[id]) {
                                 saisonsList.forEach(s => {
-                                    dictGeneral[id].historique[s] = {
-                                        eau: colsEau[s] ? parseFloat(row[colsEau[s]]) || 0 : 0,
-                                        air: colsAir[s] ? parseFloat(row[colsAir[s]]) || 0 : 0,
-                                        temps: colsTemps[s] ? parseFloat(row[colsTemps[s]]) || 0 : 0
-                                    };
+                                    dictGeneral[id].historique[s] = { eau: colsEau[s]?parseFloat(row[colsEau[s]])||0:0, air: colsAir[s]?parseFloat(row[colsAir[s]])||0:0, temps: colsTemps[s]?parseFloat(row[colsTemps[s]])||0:0 };
                                 });
                             }
                         }
                     });
                 }
 
-                // --- 3. LECTURE TICKETS ---
+                // 3. LECTURE TICKETS
                 if (data.tickets && data.tickets.length > 1) {
                     const tHeaders = data.tickets[0].map(h => h.toString().toLowerCase().trim());
                     const idxTEtat = getIdx(tHeaders, ['état', 'etat'], 1);
                     const idxTDate = getIdx(tHeaders, ['date'], 2);
-                    const idxTRegard = getIdx(tHeaders, ['n°regard', 'n° regard', 'regard'], 3);
-                    const idxTDefaut = getIdx(tHeaders, ['defaut', 'défaut'], 6); // Index 6 selon vous
-                    const idxTCause = getIdx(tHeaders, ['cause'], 8); // Index 8 selon vous
+                    const idxTRegard = getIdx(tHeaders, ['n°regard', 'regard'], 3);
+                    const idxTDefaut = getIdx(tHeaders, ['defaut', 'défaut'], 5); // Remis à 5 d'après votre retour
+                    const idxTCause = getIdx(tHeaders, ['cause'], 7); // Remis à 7
 
                     rawTickets = data.tickets.slice(1).map(row => ({
                         statut: (row[idxTEtat] || "").toString().toLowerCase().trim(),
                         date: row[idxTDate],
-                        // Sécurité nettoyage ID
                         idCanon: (row[idxTRegard] || "").toString().replace(/[^0-9]/g, ''), 
                         defaut: row[idxTDefaut] || "Non spécifié",
                         cause: row[idxTCause] || "Non spécifiée"
                     }));
                 }
 
-                // --- TRANSFORMATION EN GEOJSON ---
+                // CREATION GEOJSON
                 Object.values(dictGeneral).forEach(canon => {
                     if (canon.lat && canon.lng) { 
-                        snowCannons.features.push({
-                            "type": "Feature",
-                            "geometry": { "type": "Point", "coordinates": [canon.lng, canon.lat] },
-                            "properties": canon
-                        });
+                        snowCannons.features.push({ "type": "Feature", "geometry": { "type": "Point", "coordinates": [canon.lng, canon.lat] }, "properties": canon });
                     }
                 });
-
-                if (snowCannons.features.length === 0) {
-                    throw new Error("Les canons ont été lus, mais aucun point GPS (xy) n'a été trouvé.");
-                }
 
                 document.getElementById('loading-overlay').style.display = 'none';
                 initApp();
 
             } catch (error) {
                 console.error("ERREUR : ", error);
-                document.getElementById('loading-overlay').innerHTML = `
-                    <h2 style='color:red;'>Erreur de chargement</h2>
-                    <p style='color:#333;'>${error.message}</p>
-                    <p style='font-size:12px;'>Avez-vous bien mis à jour Apps Script (Nouvelle version) ?</p>`;
+                document.getElementById('loading-overlay').innerHTML = `<h2 style='color:red;'>Erreur de chargement</h2><p>${error.message}</p>`;
             }
         }
 
         // ==========================================
-        // GESTION DES TICKETS
+        // GESTION TICKETS
         // ==========================================
         function getTicketsForCanon(idCanon) { return rawTickets.filter(t => t.idCanon == idCanon); }
-        function getActiveTickets(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); }
-        function getHistoryTickets(idCanon) { 
-            return getTicketsForCanon(idCanon).filter(t => !t.statut.includes('faire') && !t.statut.includes('cours') && t.statut !== "").sort((a, b) => new Date(b.date) - new Date(a.date));
-        }
+        function getActiveTickets(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut === 'à faire' || t.statut === 'en cours'); }
+        function getHistoryTickets(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut === 'fait').sort((a,b) => new Date(b.date) - new Date(a.date)); }
 
         // ==========================================
-        // CONSTRUCTION APP & UI
+        // UI & VARIABLES
         // ==========================================
         let currentLayer = 'defauts'; 
         let currentPistes = ['all'], currentTypes = ['all'], currentVannes = ['all'], currentModules = ['all'];
-        let selectedCannonsMap = new Map();
-        let currentSeason = ""; 
-        let absoluteMaxes = { eau: 0, air: 0, temps: 0 }; 
-        let currentMaxThreshold = {}; let currentMinThreshold = { eau: 0, air: 0, temps: 0 };
+        let selectedCannonsMap = new Map(); let currentlyEditingId = null; 
+        let currentSeason = ""; let absoluteMaxes = { eau: 0, air: 0, temps: 0 }; let currentMaxThreshold = {}; let currentMinThreshold = { eau: 0, air: 0, temps: 0 };
         let technoColors = {}, repColors = {}, transfoColors = {}, pisteColors = {};
 
         function initApp() {
@@ -379,42 +379,33 @@
             let tSet = new Set(), rSet = new Set(), trSet = new Set(), pSet = new Set(), vSet = new Set(), mSet = new Set();
             snowCannons.features.forEach(f => {
                 let p = f.properties;
-                tSet.add(p.type.toLowerCase()); pSet.add(p.piste); rSet.add(p.rep); trSet.add(p.transfo); vSet.add(p.vanne); mSet.add(p.module);
+                if(p.type) tSet.add(p.type.toLowerCase()); if(p.piste) pSet.add(p.piste); if(p.rep) rSet.add(p.rep); 
+                if(p.transfo) trSet.add(p.transfo); if(p.vanne) vSet.add(p.vanne); if(p.module) mSet.add(p.module);
             });
 
             Array.from(tSet).sort().forEach((t, i) => { technoColors[t] = hslToHex(0.14, 1.0, tSet.size > 1 ? 0.8 - (i / (tSet.size - 1)) * 0.4 : 0.6); });
-            repColors = generatePalette(Array.from(rSet).sort(), 0.8, 0.45);
-            transfoColors = generatePalette(Array.from(trSet).sort(), 0.65, 0.55);
-            pisteColors = generatePalette(Array.from(pSet).sort(), 0.7, 0.5);
+            repColors = generatePalette(Array.from(rSet).sort(), 0.8, 0.45); transfoColors = generatePalette(Array.from(trSet).sort(), 0.65, 0.55); pisteColors = generatePalette(Array.from(pSet).sort(), 0.7, 0.5);
 
             snowCannons.features.forEach(f => {
-                let typeLower = f.properties.type.toLowerCase();
-                if (["demak lenko", "demac lenko"].includes(typeLower)) f.properties.couleur_defaut = "#0000FF";
-                else if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeLower)) f.properties.couleur_defaut = "#008000";
-                else f.properties.couleur_defaut = technoColors[typeLower] || "#FFD700";
+                let typeLower = f.properties.type.toLowerCase(); let color = "#FFD700";
+                if (["demak lenko", "demac lenko"].includes(typeLower)) color = "#0000FF";
+                else if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeLower)) color = "#008000";
+                else color = technoColors[typeLower] || "#FFD700";
+                f.properties.couleur_defaut = color;
             });
 
+            // Peupler les Datalists pour l'édition
+            const fillDL = (id, set) => document.getElementById(id).innerHTML = Array.from(set).sort().map(v => `<option value="${v}">`).join('');
+            fillDL('list-types', Array.from(tSet)); fillDL('list-pistes', pSet); fillDL('list-vannes', vSet); fillDL('list-modules', mSet); fillDL('list-reps', rSet); fillDL('list-transfos', trSet);
+
             if (saisonsList.length > 0) currentSeason = saisonsList[0];
-            generateSeasonMenu();
-            calculateMaxes();
+            generateSeasonMenu(); calculateMaxes();
 
-            function buildCbs(id, set, cls) {
-                const c = document.getElementById(id); c.innerHTML = '';
-                [...set].sort().forEach(v => { let l=document.createElement('label'); let cb=document.createElement('input'); cb.type='checkbox'; cb.className=cls; cb.value=v; l.appendChild(cb); l.appendChild(document.createTextNode(' '+v)); c.appendChild(l); });
-            }
-            buildCbs('individual-pistes', pSet, 'piste-cb'); buildCbs('individual-types', tSet, 'type-cb');
-            buildCbs('individual-vannes', vSet, 'vanne-cb'); buildCbs('individual-modules', mSet, 'module-cb');
+            function buildCbs(id, set, cls) { const c = document.getElementById(id); c.innerHTML = ''; [...set].sort().forEach(v => { let l=document.createElement('label'); let cb=document.createElement('input'); cb.type='checkbox'; cb.className=cls; cb.value=v; l.appendChild(cb); l.appendChild(document.createTextNode(' '+v)); c.appendChild(l); }); }
+            buildCbs('individual-pistes', pSet, 'piste-cb'); buildCbs('individual-types', tSet, 'type-cb'); buildCbs('individual-vannes', vSet, 'vanne-cb'); buildCbs('individual-modules', mSet, 'module-cb');
 
-            function setupCbs(allId, cls, cbk) {
-                const aBtn = document.getElementById(allId); const cbs = document.querySelectorAll('.'+cls);
-                const getVals = () => aBtn.checked ? ['all'] : Array.from(cbs).filter(c=>c.checked).map(c=>c.value);
-                aBtn.addEventListener('change', e => { if(e.target.checked) cbs.forEach(c=>c.checked=false); cbk(getVals()); });
-                cbs.forEach(c => c.addEventListener('change', () => { if(c.checked) aBtn.checked=false; else if(Array.from(cbs).every(x=>!x.checked)) aBtn.checked=true; cbk(getVals()); }));
-            }
-            setupCbs('check-all-pistes', 'piste-cb', vals => { currentPistes = vals; updateMap(); updateRightPanel(); });
-            setupCbs('check-all-types', 'type-cb', vals => { currentTypes = vals; updateMap(); updateRightPanel(); });
-            setupCbs('check-all-vannes', 'vanne-cb', vals => { currentVannes = vals; updateMap(); updateRightPanel(); });
-            setupCbs('check-all-modules', 'module-cb', vals => { currentModules = vals; updateMap(); updateRightPanel(); });
+            function setupCbs(allId, cls, cbk) { const aBtn = document.getElementById(allId); const cbs = document.querySelectorAll('.'+cls); const getVals = () => aBtn.checked ? ['all'] : Array.from(cbs).filter(c=>c.checked).map(c=>c.value); aBtn.addEventListener('change', e => { if(e.target.checked) cbs.forEach(c=>c.checked=false); cbk(getVals()); }); cbs.forEach(c => c.addEventListener('change', () => { if(c.checked) aBtn.checked=false; else if(Array.from(cbs).every(x=>!x.checked)) aBtn.checked=true; cbk(getVals()); })); }
+            setupCbs('check-all-pistes', 'piste-cb', vals => { currentPistes = vals; updateMap(); updateRightPanel(); }); setupCbs('check-all-types', 'type-cb', vals => { currentTypes = vals; updateMap(); updateRightPanel(); }); setupCbs('check-all-vannes', 'vanne-cb', vals => { currentVannes = vals; updateMap(); updateRightPanel(); }); setupCbs('check-all-modules', 'module-cb', vals => { currentModules = vals; updateMap(); updateRightPanel(); });
 
             if(geojsonLayer) map.removeLayer(geojsonLayer);
             geojsonLayer = L.geoJSON(snowCannons, {
@@ -422,10 +413,15 @@
                 onEachFeature: function (feature, layer) {
                     layer.on('click', function(e) {
                         L.DomEvent.stopPropagation(e);
+                        if (currentlyEditingId) return; 
                         const id = feature.properties.id;
+                        
+                        if (!isMultiSelect) selectedCannonsMap.clear(); // Si single select, on vide
                         if (selectedCannonsMap.has(id)) selectedCannonsMap.delete(id); else selectedCannonsMap.set(id, layer);
+                        
                         updateMap(); renderSelectionPanel();
                         if (selectedCannonsMap.size > 0) document.getElementById('right-sidebar').classList.add('open');
+                        else document.getElementById('right-sidebar').classList.remove('open');
                     });
                 }
             }).addTo(map);
@@ -434,20 +430,27 @@
             updateLegend(); updateMap(); updateRightPanel();
         }
 
+        // ==========================================
+        // TOGGLE MULTI SELECT
+        // ==========================================
+        function toggleMultiSelect() {
+            isMultiSelect = !isMultiSelect;
+            const btn = document.getElementById('btn-multi-toggle');
+            if(isMultiSelect) {
+                btn.classList.add('active'); btn.innerText = "🔲 Multi-Sélection : ACTIVÉE";
+                document.getElementById('multi-tools').style.display = 'flex';
+            } else {
+                btn.classList.remove('active'); btn.innerText = "🔲 Multi-Sélection : OFF";
+                document.getElementById('multi-tools').style.display = 'none';
+                if(selectedCannonsMap.size > 1) clearSelection();
+            }
+        }
+
         function generateSeasonMenu() {
-            let container = document.getElementById('dynamic-seasons-menu');
-            container.innerHTML = "";
+            let container = document.getElementById('dynamic-seasons-menu'); container.innerHTML = "";
             saisonsList.forEach((s, idx) => {
                 let openAttr = idx === 0 ? "open" : "";
-                container.innerHTML += `
-                    <details class="season-menu" ${openAttr}>
-                        <summary class="season-summary">► Saison ${s}</summary>
-                        <div class="radio-group" style="padding-left:15px; margin-top:5px;">
-                            <label><input type="radio" name="layer" value="eau_${s}"> Eau (m³)</label>
-                            <label><input type="radio" name="layer" value="air_${s}"> Air</label>
-                            <label><input type="radio" name="layer" value="temps_${s}"> Tps Marche</label>
-                        </div>
-                    </details>`;
+                container.innerHTML += `<details class="season-menu" ${openAttr}><summary class="season-summary">Saison ${s}</summary><div class="radio-group"><label><input type="radio" name="layer" value="eau_${s}"> Eau (m³)</label><label><input type="radio" name="layer" value="air_${s}"> Air</label><label><input type="radio" name="layer" value="temps_${s}"> Tps Marche</label></div></details>`;
             });
             document.querySelectorAll('input[name="layer"]').forEach(r => r.addEventListener('change', handleLayerChange));
         }
@@ -465,9 +468,34 @@
         }
 
         // ==========================================
+        // SAUVEGARDE GOOGLE SHEETS
+        // ==========================================
+        document.getElementById('btn-save-edit').addEventListener('click', async () => {
+            if (!currentlyEditingId) return;
+            const btn = document.getElementById('btn-save-edit'); btn.innerText = "⏳ Envoi..."; btn.disabled = true;
+            const payload = { id: document.getElementById('edit-id').value, lat: parseFloat(document.getElementById('edit-lat').value), lon: parseFloat(document.getElementById('edit-lng').value), type: document.getElementById('edit-type').value, piste: document.getElementById('edit-piste').value, rep: document.getElementById('edit-rep').value, transfo: document.getElementById('edit-transfo').value, vanne: document.getElementById('edit-vanne').value, module: document.getElementById('edit-module').value };
+
+            try {
+                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if(result.status === "success") {
+                    const layer = selectedCannonsMap.get(currentlyEditingId); const p = layer.feature.properties;
+                    p.type = payload.type; p.piste = payload.piste; p.rep = payload.rep; p.transfo = payload.transfo; p.vanne = payload.vanne; p.module = payload.module;
+                    
+                    let tLower = p.type.toLowerCase().trim();
+                    if (["demak lenko", "demac lenko"].includes(tLower)) p.couleur_defaut = "#0000FF"; else if (["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) p.couleur_defaut = "#008000"; else p.couleur_defaut = technoColors[tLower] || "#FFD700";
+
+                    layer.feature.geometry.coordinates = [payload.lon, payload.lat]; layer.setLatLng([payload.lat, payload.lon]);
+                    cancelEdit();
+                } else alert("Erreur : " + result.message);
+            } catch (err) { alert("Échec réseau avec Google Sheets."); }
+            btn.innerText = "✅ Sauvegarder dans Général"; btn.disabled = false;
+        });
+
+        // ==========================================
         // PANNEAU DROIT (SELECTION)
         // ==========================================
-        function closeRightSidebar() { document.getElementById('right-sidebar').classList.remove('open'); clearSelection(); }
+        function closeRightSidebar() { document.getElementById('right-sidebar').classList.remove('open'); if(currentlyEditingId) cancelEdit(); clearSelection(); }
         function clearSelection() { selectedCannonsMap.clear(); updateMap(); renderSelectionPanel(); }
 
         function renderSelectionPanel() {
@@ -477,31 +505,43 @@
             
             selectedCannonsMap.forEach((layer, id) => {
                 const p = layer.feature.properties;
-                let active = getActiveTickets(p.id);
-                let history = getHistoryTickets(p.id);
+                let active = getActiveTickets(p.id); let history = getHistoryTickets(p.id);
                 let ticketsHTML = "";
                 
                 if (active.length > 0) {
                     ticketsHTML += `<div class="ticket-alert"><strong>🚨 Défauts en cours :</strong><ul style="margin:5px 0; padding-left:15px;">`;
-                    active.forEach(t => {
-                        let icon = t.statut.includes('faire') ? '🔴' : '🟠';
-                        ticketsHTML += `<li style="margin-bottom:6px;">${icon} <b>Défaut :</b> ${t.defaut} <br><span style="color:#555; font-size:11px;"><b>Cause :</b> ${t.cause}</span></li>`;
-                    });
+                    active.forEach(t => ticketsHTML += `<li style="margin-bottom:6px;">${t.statut === 'à faire'?'🔴':'🟠'} <b>Défaut:</b> ${t.defaut} <br><span style="color:#555; font-size:11px;"><b>Cause:</b> ${t.cause}</span></li>`);
                     ticketsHTML += `</ul></div>`;
                 }
 
                 if (history.length > 0) {
                     ticketsHTML += `<details class="ticket-history"><summary>📁 Voir l'historique (${history.length})</summary><ul style="padding-left:15px; margin-top:8px;">`;
                     history.forEach(t => {
-                        let d = new Date(t.date); let dateStr = isNaN(d.getTime()) ? (t.date || "Date inc.") : d.toLocaleDateString('fr-FR');
+                        let d = new Date(t.date); let dateStr = isNaN(d.getTime()) ? (t.date || "Inconnue") : d.toLocaleDateString('fr-FR');
                         ticketsHTML += `<li style="margin-bottom:6px; font-size:11px;"><b>${dateStr}</b> - <b>Défaut:</b> ${t.defaut} <br><span style="color:#666;"><b>Cause:</b> ${t.cause}</span></li>`;
                     });
                     ticketsHTML += `</ul></details>`;
                 }
 
-                let histData = p.historique[currentSeason] || {eau:0, air:0, temps:0};
+                // Affichage conditionnel selon le mode
+                if(isMultiSelect) {
+                    // MODE MINI (MULTI)
+                    listDiv.innerHTML += `
+                    <div class="sel-details">
+                        <div class="sel-details-header">Canon N° ${p.id} <span style="font-weight:normal; font-size:12px;">(${p.piste})</span></div>
+                        <div class="sel-details-body">
+                            <b>Type:</b> ${p.type} <br>
+                            ${ticketsHTML}
+                        </div>
+                    </div>`;
+                } else {
+                    // MODE DÉTAILLÉ (SINGLE)
+                    // Création de la liste complète des données Général
+                    let fullDataHTML = `<details style="margin-top:10px; font-size:11px; background:#f0f0f0; padding:8px; border-radius:4px;"><summary style="cursor:pointer; font-weight:bold;">🔍 Voir toutes les données techniques</summary><ul style="padding-left:15px; margin-top:5px; color:#555;">`;
+                    p.fullData.forEach(item => { if(item.k && item.v) fullDataHTML += `<li><b>${item.k.toUpperCase()}:</b> ${item.v}</li>`; });
+                    fullDataHTML += `</ul></details>`;
 
-                listDiv.innerHTML += `
+                    listDiv.innerHTML += `
                     <div class="sel-details">
                         <div class="sel-details-header">Canon N° ${p.id} <span style="font-weight:normal; font-size:12px;">(${p.piste})</span></div>
                         <div class="sel-details-body">
@@ -511,15 +551,42 @@
                                 <div><b>Vanne :</b> ${p.vanne}</div>
                                 <div><b>Module :</b> ${p.module}</div>
                             </div>
-                            <div style="margin-top:10px; background:#f0f8ff; padding:8px; border:1px solid #d4e6f1; border-radius:4px;">
-                                <b>Conso. Saison ${currentSeason} :</b><br>
-                                Eau: ${histData.eau} m³ | Air: ${histData.air} | Tps: ${histData.temps} h
-                            </div>
+                            ${fullDataHTML}
                             ${ticketsHTML}
+                            <button class="btn-edit-small" onclick="startEdit(${p.id})">✏️ Éditer les données du canon</button>
                         </div>
                     </div>`;
+                }
             });
         }
+
+        function startEdit(id) {
+            currentlyEditingId = id; const layer = selectedCannonsMap.get(id); const p = layer.feature.properties;
+            document.getElementById('edit-id-display').innerText = p.id; document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-type').value = p.type; document.getElementById('edit-piste').value = p.piste;
+            document.getElementById('edit-vanne').value = p.vanne; document.getElementById('edit-module').value = p.module;
+            document.getElementById('edit-rep').value = p.rep; document.getElementById('edit-transfo').value = p.transfo;
+            document.getElementById('edit-lat').value = layer.getLatLng().lat.toFixed(7); document.getElementById('edit-lng').value = layer.getLatLng().lng.toFixed(7);
+            
+            document.getElementById('allow-move-chk').checked = false; // Décoché par sécurité
+
+            document.getElementById('view-selection').style.display = 'none'; document.getElementById('view-edit').style.display = 'block';
+            document.getElementById('right-header').classList.add('editing'); document.getElementById('right-title').innerText = "✏️ Mode Édition";
+            updateMap(); 
+        }
+
+        function cancelEdit() {
+            currentlyEditingId = null; document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none';
+            document.getElementById('right-header').classList.remove('editing'); document.getElementById('right-title').innerText = "📌 Fiche Canon";
+            updateMap(); renderSelectionPanel();
+        }
+
+        map.on('click', function(e) { 
+            if (currentlyEditingId && document.getElementById('allow-move-chk').checked) { 
+                document.getElementById('edit-lat').value = e.latlng.lat.toFixed(7); document.getElementById('edit-lng').value = e.latlng.lng.toFixed(7); 
+                selectedCannonsMap.get(currentlyEditingId).setLatLng(e.latlng); 
+            } 
+        });
 
         // ==========================================
         // AFFICHAGE CARTE & GRAPHIQUE
@@ -529,7 +596,7 @@
             if (layerType === 'defauts') {
                 let act = getActiveTickets(props.id);
                 if (act.length === 0) return '#95a5a6'; 
-                if (act.some(t => t.statut.includes('faire'))) return '#e74c3c'; 
+                if (act.some(t => t.statut === 'à faire')) return '#e74c3c'; 
                 return '#f39c12'; 
             }
             if (layerType.includes('eau')) return inter([173,216,230], [0,0,139], ratio);
@@ -609,10 +676,7 @@
             let activeSeason = currentLayer.split('_')[1] || currentSeason;
 
             if (['eau','air','temps'].includes(baseLayer)) {
-                f = f.filter(x => {
-                    let v = x.properties.historique[activeSeason] ? x.properties.historique[activeSeason][baseLayer] : 0;
-                    return v >= currentMinThreshold[baseLayer] && v <= currentMaxThreshold[baseLayer];
-                });
+                f = f.filter(x => { let v = x.properties.historique[activeSeason] ? x.properties.historique[activeSeason][baseLayer] : 0; return v >= currentMinThreshold[baseLayer] && v <= currentMaxThreshold[baseLayer]; });
                 window.myChart = new Chart(ctx, { 
                     type: 'bar', 
                     data: { labels: f.map(x => 'N°' + x.properties.id), datasets: [{ data: f.map(x => x.properties.historique[activeSeason] ? x.properties.historique[activeSeason][baseLayer] : 0), backgroundColor: f.map(x => pisteColors[x.properties.piste] || '#0078A8'), borderRadius: 4 }] }, 
@@ -631,10 +695,7 @@
 
         function handleLayerChange(e) {
             currentLayer = e.target.value;
-            if (currentLayer.includes('_')) {
-                currentSeason = currentLayer.split('_')[1];
-                calculateMaxes();
-            }
+            if (currentLayer.includes('_')) { currentSeason = currentLayer.split('_')[1]; calculateMaxes(); }
             updateLegend(); updateMap(); updateRightPanel(); renderSelectionPanel();
         }
 
@@ -642,22 +703,14 @@
         document.getElementById('slider-max').addEventListener('input', e => { let baseLayer = currentLayer.split('_')[0]; let val = parseFloat(e.target.value); if (val < currentMinThreshold[baseLayer]) { val = currentMinThreshold[baseLayer]; e.target.value = val; } currentMaxThreshold[baseLayer] = val; document.getElementById('val-max').innerText = val; updateMap(); updateRightPanel(); });
 
         function toggleFullscreenChart() {
-            const modal = document.getElementById('chart-modal');
-            const wrapper = document.getElementById('chart-wrapper');
-            const orig = document.getElementById('original-chart-container');
-            
-            if (modal.style.display === 'flex') {
-                modal.style.display = 'none'; orig.appendChild(wrapper);
-            } else {
-                modal.style.display = 'flex'; document.getElementById('chart-modal-body').appendChild(wrapper);
-            }
+            const modal = document.getElementById('chart-modal'); const wrapper = document.getElementById('chart-wrapper'); const orig = document.getElementById('original-chart-container');
+            if (modal.style.display === 'flex') { modal.style.display = 'none'; orig.appendChild(wrapper); } else { modal.style.display = 'flex'; document.getElementById('chart-modal-body').appendChild(wrapper); }
             updateRightPanel();
         }
 
         dragElement(document.getElementById("chart-modal"));
         function dragElement(elmnt) {
-            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            document.getElementById("chart-modal-header").onmousedown = dragMouseDown;
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0; document.getElementById("chart-modal-header").onmousedown = dragMouseDown;
             function dragMouseDown(e) { e = e || window.event; e.preventDefault(); pos3 = e.clientX; pos4 = e.clientY; document.onmouseup = closeDragElement; document.onmousemove = elementDrag; }
             function elementDrag(e) { e = e || window.event; e.preventDefault(); pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY; pos3 = e.clientX; pos4 = e.clientY; elmnt.style.top = (elmnt.offsetTop - pos2) + "px"; elmnt.style.left = (elmnt.offsetLeft - pos1) + "px"; }
             function closeDragElement() { document.onmouseup = null; document.onmousemove = null; }
