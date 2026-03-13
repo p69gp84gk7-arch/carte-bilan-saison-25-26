@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GMAO Neige - Tableau de Bord</title>
+    <title>GMAO Neige - Tableau de Bord Avancé</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -13,18 +13,18 @@
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; background: #eee; overflow: hidden; }
         #app-container { display: flex; height: 100%; width: 100%; position: relative; }
         
-        #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
         .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #0078A8; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* BANDEAU GAUCHE */
         #sidebar { width: 340px; flex-shrink: 0; background: #f8f9fa; display: flex; flex-direction: column; z-index: 2000; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
         .sidebar-header { background: #2c3e50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .sidebar-header h2 { margin: 0; font-size: 18px; }
+        .sidebar-header h2 { margin: 0; font-size: 16px; }
         .close-btn { background: none; border: none; color: white; font-size: 28px; cursor: pointer; display: none; padding: 0; line-height: 1; }
         
         details.panel-section { background: white; margin: 8px 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        details.panel-section summary { background: #fff; padding: 12px 15px; font-size: 14px; font-weight: bold; color: #2c3e50; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; border-radius: 8px; }
+        details.panel-section summary { background: #fff; padding: 12px 15px; font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; border-radius: 8px; }
         details[open].panel-section summary { border-bottom: 1px solid #eee; border-bottom-left-radius: 0; border-bottom-right-radius: 0; color: #0078A8; }
         details.panel-section summary::-webkit-details-marker { display: none; }
         details.panel-section summary::after { content: '▼'; font-size: 12px; color: #888; transition: transform 0.3s; }
@@ -40,20 +40,22 @@
         .range-control input[type=range] { width: 100%; margin: 0; }
         .val-badge { color: #0078A8; font-weight: bold; }
 
+        /* SOUS-MENU SAISONS */
+        .season-menu { margin-left: 15px; border-left: 2px solid #0078A8; padding-left: 10px; margin-top: 5px; margin-bottom: 10px;}
+        .season-summary { font-size: 12px; font-weight: bold; cursor: pointer; padding: 5px 0; color: #555; }
+
         #legend-content { max-height: 180px; overflow-y: auto; padding-right: 5px;}
         .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 12px;}
         .color-box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #999; flex-shrink: 0;}
         .gradient-bar { height: 12px; border-radius: 3px; margin: 10px 0 5px 0; border: 1px solid #999; }
         .legend-labels { display: flex; justify-content: space-between; font-size: 11px; color: #666; }
         
-        /* GRAPHIQUE FLOTTANT */
         #chart-modal { display: none; position: absolute; top: 15%; left: 360px; width: 600px; height: 400px; min-width: 300px; min-height: 200px; background: white; z-index: 9999; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); resize: both; overflow: hidden; flex-direction: column; border: 1px solid #ccc; }
         #chart-modal-header { background: #2c3e50; color: white; padding: 8px 15px; cursor: move; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold; user-select: none;}
         #chart-modal-body { flex-grow: 1; padding: 10px; position: relative; background: #fff; width: 100%; height: calc(100% - 35px); box-sizing: border-box;}
         .btn-expand { background: #0078A8; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
         .btn-expand:hover { background: #005f85; }
 
-        /* CARTE & MOBILE */
         #map-container { flex-grow: 1; position: relative; height: 100%; background: #222; }
         #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%; z-index: 1; }
         #btn-menu-mobile { position: absolute; top: 15px; left: 15px; z-index: 1000; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; display: none; }
@@ -61,32 +63,25 @@
         .custom-cannon-icon { background: none; border: none; }
         .cannon-circle { border-radius: 50%; color: white; font-weight: bold; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); box-sizing: border-box; box-shadow: 0px 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: transform 0.2s;}
         .cannon-circle:hover { transform: scale(1.15); z-index: 1000 !important; cursor: pointer; }
-        
-        /* BANDEAU DROIT */
-        #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: #fff; z-index: 2001; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+
+        /* BANDEAU DROIT (FICHES CANON) */
+        #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 380px; background: #f8f9fa; z-index: 2001; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         #right-sidebar.open { transform: translateX(0); }
-        
         .right-header { background: #34495e; color: white; padding: 15px; font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
-        .right-header.editing { background: #e74c3c; }
         .right-content { padding: 15px; overflow-y: auto; flex-grow: 1; }
         
-        .sel-details { background: #fff; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden;}
-        .sel-details-header { padding: 12px; font-weight: 600; font-size: 14px; background: #f8f9fa; border-bottom: 1px solid #eee; color: #2c3e50; display:flex; justify-content:space-between;}
-        .sel-details-body { padding: 12px; font-size: 12px; color: #444; }
+        .sel-details { background: #fff; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden;}
+        .sel-details-header { padding: 12px; font-weight: 600; font-size: 15px; background: #ecf0f1; border-bottom: 1px solid #ddd; color: #2c3e50;}
+        .sel-details-body { padding: 15px; font-size: 12px; color: #444; line-height: 1.5; }
         
-        .ticket-alert { background: #fdf0ed; border-left: 4px solid #e74c3c; padding: 8px; margin: 10px 0; border-radius: 3px; }
-        .ticket-alert strong { color: #c0392b; display: block; margin-bottom: 4px;}
-        .ticket-history { margin-top: 10px; background: #f4f6f7; padding: 8px; border-radius: 4px; border: 1px solid #e1e5e8;}
+        .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fdfdfd; border: 1px solid #eee; padding: 10px; border-radius: 4px; margin-top: 10px; }
+        .tech-grid div { background: #fff; padding: 5px; border-radius: 3px; border: 1px solid #f0f0f0; }
+        
+        .ticket-alert { background: #fdf0ed; border-left: 4px solid #e74c3c; padding: 10px; margin: 12px 0; border-radius: 3px; }
+        .ticket-alert strong { color: #c0392b; display: block; margin-bottom: 6px; font-size: 13px;}
+        .ticket-history { margin-top: 12px; background: #f4f6f7; padding: 10px; border-radius: 4px; border: 1px solid #e1e5e8;}
         .ticket-history summary { font-size: 12px; font-weight: bold; color: #27ae60; cursor: pointer; outline:none;}
-        .ticket-history ul { padding-left: 20px; margin-top: 8px; margin-bottom: 0; color: #555; font-size: 11px;}
-        .ticket-history li { margin-bottom: 5px; }
         
-        .btn-edit-small { background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-top: 10px; width: 100%; font-weight: bold;}
-        .btn-edit-small:hover { background: #c0392b; }
-
-        .edit-input { width: 100%; box-sizing: border-box; padding: 7px; margin-top: 4px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-        .edit-label { font-size: 12px; font-weight: bold; color: #555; }
-
         @media (max-width: 768px) {
             #sidebar { position: absolute; height: 100%; width: 85%; transform: translateX(-100%); }
             #sidebar.open { transform: translateX(0); }
@@ -100,8 +95,8 @@
 <body>
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <h2 style="color:#0078A8; margin:0;">Connexion à Google Sheets...</h2>
-        <p style="color:#666;">Récupération des données en temps réel</p>
+        <h2 style="color:#0078A8; margin:0;">GMAO AppSheet...</h2>
+        <p style="color:#666;">Récupération des bases Général, Historique & Tickets</p>
     </div>
 
     <div id="app-container">
@@ -132,19 +127,27 @@
                     <label><input type="radio" name="layer" value="repeteur"> Répéteurs</label>
                     <label><input type="radio" name="layer" value="transfo"> Transformateurs</label>
                     <hr style="margin: 8px 0; border-top: 1px dashed #ccc;">
-                    <label><input type="radio" name="layer" value="eau"> Volume Eau (m³)</label>
-                    <label><input type="radio" name="layer" value="air"> Volume Air</label>
-                    <label><input type="radio" name="layer" value="temps"> Temps de marche</label>
+                    
+                    <div style="font-weight:bold; font-size:12px; color:#555; margin-top:10px;">📊 HISTORIQUE ENNEIGEURS</div>
+                    <div id="dynamic-seasons-menu"></div>
+
                 </div>
             </details>
             
             <details class="panel-section">
-                <summary>3. Filtres de Sélection</summary>
+                <summary>3. Filtres Avancés</summary>
                 <div class="section-content" style="padding-top: 5px;">
-                    <b style="font-size:12px;">Par Pistes :</b>
+                    <b style="font-size:12px;">Pistes :</b>
                     <div class="checkbox-list" id="piste-checkboxes"><label><input type="checkbox" id="check-all-pistes" checked> <b>Toutes les pistes</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-pistes"></div></div>
-                    <b style="font-size:12px;">Par Types :</b>
+                    
+                    <b style="font-size:12px;">Type Canon :</b>
                     <div class="checkbox-list" id="type-checkboxes"><label><input type="checkbox" id="check-all-types" checked> <b>Tous les types</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-types"></div></div>
+                    
+                    <b style="font-size:12px;">Type Vanne :</b>
+                    <div class="checkbox-list" id="vanne-checkboxes"><label><input type="checkbox" id="check-all-vannes" checked> <b>Toutes les vannes</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-vannes"></div></div>
+                    
+                    <b style="font-size:12px;">Type Module :</b>
+                    <div class="checkbox-list" id="module-checkboxes"><label><input type="checkbox" id="check-all-modules" checked> <b>Tous les modules</b></label><hr style="margin: 5px 0; border-top: 1px solid #ddd;"><div id="individual-modules"></div></div>
                 </div>
             </details>
 
@@ -176,48 +179,27 @@
 
         <div id="right-sidebar">
             <div class="right-header" id="right-header">
-                <span id="right-title">📌 Sélection Multiple</span>
+                <span>📌 Fiche Technique</span>
                 <button class="close-btn" onclick="closeRightSidebar()" style="display:block; font-size:22px; cursor:pointer;">&times;</button>
             </div>
             
             <div class="right-content">
-                <div id="view-selection">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                        <span style="font-size:13px; color:#555;"><b id="sel-count">0</b> canon(s) ciblé(s)</span>
-                        <button onclick="clearSelection()" style="background:#95a5a6; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; font-size:11px;">Vider ✕</button>
-                    </div>
-                    <div id="selected-list"></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                    <span style="font-size:13px; color:#555;"><b id="sel-count">0</b> canon(s) ciblé(s)</span>
+                    <button onclick="clearSelection()" style="background:#95a5a6; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; font-size:11px;">Vider la sélection ✕</button>
                 </div>
-
-                <div id="view-edit" style="display:none;">
-                    <div style="background:#fdf0ed; border-left:4px solid #e74c3c; padding:10px; margin-bottom:15px; font-size:12px; color:#c0392b;">
-                        <b>Mode Édition activé</b><br>Modifiez les informations ou cliquez sur la carte pour replacer le canon géographique.
+                <div id="selected-list">
                     </div>
-                    <h3 style="margin-top:0; color:#e74c3c;">Édition Canon N°<span id="edit-id-display"></span></h3>
-                    <input type="hidden" id="edit-id">
-                    
-                    <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="edit-label">Type de canon</div><input type="text" id="edit-type" class="edit-input"></div><div style="flex:1;"><div class="edit-label">Piste associée</div><input type="text" id="edit-piste" class="edit-input"></div></div>
-                    <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="edit-label">Eau (m³)</div><input type="number" id="edit-eau" class="edit-input"></div><div style="flex:1;"><div class="edit-label">Air</div><input type="number" id="edit-air" class="edit-input"></div><div style="flex:1;"><div class="edit-label">Tps (h)</div><input type="number" id="edit-temps" class="edit-input"></div></div>
-                    <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="edit-label">Répéteur</div><input type="text" id="edit-rep" class="edit-input"></div><div style="flex:1;"><div class="edit-label">Transfo</div><input type="text" id="edit-transfo" class="edit-input"></div></div>
-                    <hr style="border:0; border-top:1px solid #eee; margin: 10px 0;">
-                    <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="edit-label">Latitude</div><input type="number" step="0.0000001" id="edit-lat" class="edit-input"></div><div style="flex:1;"><div class="edit-label">Longitude</div><input type="number" step="0.0000001" id="edit-lng" class="edit-input"></div></div>
-                    
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button onclick="cancelEdit()" style="flex:1; background:#95a5a6; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;">Annuler</button>
-                        <button id="btn-save-edit" style="flex:2; background:#27ae60; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;">✅ Sauvegarder</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // L'URL de votre Google Apps Script
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
         
-        let rawData = [];
-        let rawTickets = [];
         let snowCannons = { "type": "FeatureCollection", "features": [] };
+        let rawTickets = [];
+        let saisonsList = []; // Liste des saisons trouvées ("16/17", "24/25"...)
         
         const map = L.map('map', {zoomControl: false}).setView([42.766, 0.564], 14);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
@@ -225,106 +207,195 @@
 
         let geojsonLayer = null;
 
-        // RECUPERATION DES DONNEES
+        // Fonction pour trouver l'index d'une colonne peu importe la casse
+        const getIdx = (headers, nomsCherches) => {
+            let i = headers.findIndex(h => nomsCherches.includes(h));
+            return i !== -1 ? i : -1;
+        };
+
+        // FETCH DATA
         async function fetchGoogleSheetsData() {
             try {
                 const response = await fetch(GOOGLE_API_URL);
                 if (!response.ok) throw new Error("Statut API : " + response.status);
                 const data = await response.json();
                 
-                // LECTURE DES CANONS
-                if (data.canons && data.canons.length > 1) {
-                    rawData = data.canons.slice(1).map(row => {
-                        const safeParse = (val) => parseFloat((val||"0").toString().replace(',', '.')) || 0;
-                        return [ row[0] || "", safeParse(row[1]), safeParse(row[2]), safeParse(row[3]), safeParse(row[4]), safeParse(row[5]), (row[6] || "Inconnu").toString().trim(), (row[7] || "Inconnue").toString().trim().replace(/^./, str => str.toUpperCase()), (row[8] || "").toString().trim(), (row[9] || "").toString().trim() ];
+                // --- 1. LECTURE ONGLET GÉNÉRAL ---
+                if (!data.general || data.general.length < 2) throw new Error("Onglet général manquant ou vide.");
+                const genHeaders = data.general[0].map(h => h.toString().toLowerCase().trim());
+                
+                const idxId = getIdx(genHeaders, ['n° regard', 'id', 'regard']);
+                const idxPiste = getIdx(genHeaders, ['pistes', 'piste']);
+                const idxType = getIdx(genHeaders, ['type canon', 'type']);
+                const idxVanne = getIdx(genHeaders, ['type de vanne', 'vanne']);
+                const idxModule = getIdx(genHeaders, ['type de module', 'module']);
+                const idxRep = getIdx(genHeaders, ['épéteur', 'répéteur', 'repeteur']);
+                const idxTrans = getIdx(genHeaders, ['transfo', 'transformateur']);
+                const idxXY = getIdx(genHeaders, ['xy', 'gps', 'coordonnées']);
+
+                let dictGeneral = {};
+                data.general.slice(1).forEach(row => {
+                    let id = row[idxId];
+                    if (!id) return;
+                    
+                    // Parsing du XY (Lat, Long)
+                    let lat = 0, lng = 0;
+                    if (idxXY !== -1 && row[idxXY]) {
+                        let parts = row[idxXY].toString().split(',');
+                        if (parts.length === 2) {
+                            lat = parseFloat(parts[0].trim());
+                            lng = parseFloat(parts[1].trim());
+                        }
+                    }
+
+                    dictGeneral[id] = {
+                        id: id, lat: lat, lng: lng,
+                        piste: row[idxPiste] || "Inconnue",
+                        type: row[idxType] || "Inconnu",
+                        vanne: row[idxVanne] || "N/A",
+                        module: row[idxModule] || "N/A",
+                        rep: row[idxRep] || "N/A",
+                        transfo: row[idxTrans] || "N/A",
+                        historique: {} // Sera rempli par l'onglet historique
+                    };
+                });
+
+                // --- 2. LECTURE ONGLET HISTORIQUE ENNEIGEURS ---
+                if (data.historique && data.historique.length > 1) {
+                    const histHeaders = data.historique[0].map(h => h.toString().toLowerCase().trim());
+                    const idxCanons = getIdx(histHeaders, ['canons', 'n° regard']);
+                    
+                    // Détecter toutes les colonnes de conso et les saisons
+                    let colsEau = {}, colsAir = {}, colsTemps = {};
+                    let saisonsSet = new Set();
+
+                    histHeaders.forEach((h, i) => {
+                        let match = h.match(/(eau|air|marche).*?(\d{2}\/\d{2})/i);
+                        if (match) {
+                            let type = match[1].toLowerCase();
+                            let saison = match[2];
+                            saisonsSet.add(saison);
+                            if (type.includes('eau')) colsEau[saison] = i;
+                            if (type.includes('air')) colsAir[saison] = i;
+                            if (type.includes('marche')) colsTemps[saison] = i;
+                        }
                     });
-                } else {
-                    alert("⚠️ Aucun canon trouvé ! Vérifiez que l'onglet des canons s'appelle exactement 'Geocoding' (avec un grand G).");
+                    
+                    // Trier les saisons (plus récente en premier)
+                    saisonsList = Array.from(saisonsSet).sort().reverse();
+
+                    data.historique.slice(1).forEach(row => {
+                        let id = row[idxCanons];
+                        if (id && dictGeneral[id]) {
+                            saisonsList.forEach(s => {
+                                dictGeneral[id].historique[s] = {
+                                    eau: colsEau[s] ? parseFloat(row[colsEau[s]]) || 0 : 0,
+                                    air: colsAir[s] ? parseFloat(row[colsAir[s]]) || 0 : 0,
+                                    temps: colsTemps[s] ? parseFloat(row[colsTemps[s]]) || 0 : 0
+                                };
+                            });
+                        }
+                    });
                 }
 
-                // LECTURE DES TICKETS (Avec l'index des colonnes exact que vous m'avez fourni)
+                // --- 3. LECTURE TICKETS ---
                 if (data.tickets && data.tickets.length > 1) {
+                    const tHeaders = data.tickets[0].map(h => h.toString().toLowerCase().trim());
+                    const idxTEtat = getIdx(tHeaders, ['état', 'etat']);
+                    const idxTDate = getIdx(tHeaders, ['date']);
+                    const idxTRegard = getIdx(tHeaders, ['n°regard', 'n° regard']);
+                    const idxTDefaut = getIdx(tHeaders, ['defaut', 'défaut']);
+                    const idxTCause = getIdx(tHeaders, ['cause']);
+
                     rawTickets = data.tickets.slice(1).map(row => ({
-                        idTicket: row[0],
-                        statut: (row[1] || "").toString().toLowerCase().trim(), // "à faire", "en cours", "fait"
-                        date: row[2],
-                        idCanon: row[3], // Colonne "n° regard" = index 3
-                        defaut: row[6] || "Non spécifié", // Colonne "defaut" = index 6
-                        cause: row[8] || "Non spécifiée"  // Colonne "cause" = index 8
+                        statut: (row[idxTEtat] || "").toString().toLowerCase().trim(),
+                        date: row[idxTDate],
+                        idCanon: row[idxTRegard],
+                        defaut: row[idxTDefaut] || "Non spécifié",
+                        cause: row[idxTCause] || "Non spécifiée"
                     }));
                 }
+
+                // --- TRANSFORMATION EN GEOJSON ---
+                Object.values(dictGeneral).forEach(canon => {
+                    if (canon.lat && canon.lng) { // Ne garder que ceux qui ont des coords
+                        snowCannons.features.push({
+                            "type": "Feature",
+                            "geometry": { "type": "Point", "coordinates": [canon.lng, canon.lat] },
+                            "properties": canon
+                        });
+                    }
+                });
 
                 document.getElementById('loading-overlay').style.display = 'none';
                 initApp();
 
             } catch (error) {
                 console.error("ERREUR : ", error);
-                document.getElementById('loading-overlay').innerHTML = `<h2 style='color:red;'>Erreur de connexion</h2><p>Vérifiez que vous avez bien cliqué sur "Nouvelle version" dans Apps Script.</p>`;
+                document.getElementById('loading-overlay').innerHTML = `<h2 style='color:red;'>Erreur de connexion</h2><p>${error.message}</p>`;
             }
         }
 
         window.onload = fetchGoogleSheetsData;
 
-        // FILTRES TICKETS
+        // ==========================================
+        // GESTION DES TICKETS
+        // ==========================================
         function getTicketsForCanon(idCanon) { return rawTickets.filter(t => t.idCanon == idCanon); }
-        
-        function getActiveTickets(idCanon) { 
-            return getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); 
-        }
-        
+        function getActiveTickets(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); }
         function getHistoryTickets(idCanon) { 
-            return getTicketsForCanon(idCanon)
-                .filter(t => !t.statut.includes('faire') && !t.statut.includes('cours') && t.statut !== "")
-                .sort((a, b) => new Date(b.date) - new Date(a.date)); // Trie du plus récent au plus ancien
+            return getTicketsForCanon(idCanon).filter(t => !t.statut.includes('faire') && !t.statut.includes('cours') && t.statut !== "").sort((a, b) => new Date(b.date) - new Date(a.date));
         }
 
-        // CONSTRUCTION APP
-        let currentLayer = 'defauts'; // Défaut au chargement
-        let currentPistes = ['all']; let currentTypes = ['all'];
-        let selectedCannonsMap = new Map(); let currentlyEditingId = null; 
-        let absoluteMaxes = { eau: 0, air: 0, temps: 0 }; let currentMaxThreshold = {}; let currentMinThreshold = { eau: 0, air: 0, temps: 0 };
+        // ==========================================
+        // CONSTRUCTION APP & UI
+        // ==========================================
+        let currentLayer = 'defauts'; 
+        let currentPistes = ['all'], currentTypes = ['all'], currentVannes = ['all'], currentModules = ['all'];
+        let selectedCannonsMap = new Map();
+        let currentSeason = ""; 
+        let absoluteMaxes = { eau: 0, air: 0, temps: 0 }; 
+        let currentMaxThreshold = {}; let currentMinThreshold = { eau: 0, air: 0, temps: 0 };
         let technoColors = {}, repColors = {}, transfoColors = {}, pisteColors = {};
 
         function initApp() {
-            function hslToHex(h, s, l) {
-                let r, g, b; if (s === 0) { r = g = b = l; } else {
-                    const hue2rgb = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; }
-                    let q = l < 0.5 ? l * (1 + s) : l + s - l * s; let p = 2 * l - q;
-                    r = hue2rgb(p, q, h + 1 / 3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1 / 3);
-                }
-                const toHex = x => { const hex = Math.round(x * 255).toString(16); return hex.length === 1 ? '0' + hex : hex; }; return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-            }
+            // Couleurs
+            function hslToHex(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
+            let q=l<0.5?l*(1+s):l+s-l*s;let p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
+            const toHex=x=>{const hex=Math.round(x*255).toString(16);return hex.length===1?'0'+hex:hex;};return `#${toHex(r)}${toHex(g)}${toHex(b)}`;}
             function generatePalette(arr, s = 0.7, l = 0.5) { let pal = {}; arr.forEach((item, i) => { pal[item] = hslToHex(i / arr.length, s, l); }); return pal; }
 
-            let tSet = new Set(), rSet = new Set(), trSet = new Set(), pSet = new Set();
-            rawData.forEach(row => {
-                let t = row[6].toLowerCase();
-                if (!["demak lenko", "demac lenko", "sufag", "street", "taurus", "taurax", "peak"].includes(t)) tSet.add(t);
-                if (row[8]) rSet.add(row[8]); if (row[9]) trSet.add(row[9]); if (row[7]) pSet.add(row[7]);
+            let tSet = new Set(), rSet = new Set(), trSet = new Set(), pSet = new Set(), vSet = new Set(), mSet = new Set();
+            snowCannons.features.forEach(f => {
+                let p = f.properties;
+                tSet.add(p.type.toLowerCase()); pSet.add(p.piste); rSet.add(p.rep); trSet.add(p.transfo); vSet.add(p.vanne); mSet.add(p.module);
             });
+
             Array.from(tSet).sort().forEach((t, i) => { technoColors[t] = hslToHex(0.14, 1.0, tSet.size > 1 ? 0.8 - (i / (tSet.size - 1)) * 0.4 : 0.6); });
             repColors = generatePalette(Array.from(rSet).sort(), 0.8, 0.45);
             transfoColors = generatePalette(Array.from(trSet).sort(), 0.65, 0.55);
             pisteColors = generatePalette(Array.from(pSet).sort(), 0.7, 0.5);
 
-            snowCannons.features = rawData.map(row => {
-                let typeLower = row[6].toLowerCase(); let color = "#FFD700";
-                if (["demak lenko", "demac lenko"].includes(typeLower)) color = "#0000FF";
-                else if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeLower)) color = "#008000";
-                else color = technoColors[typeLower] || "#FFD700";
-                return { "type": "Feature", "geometry": { "type": "Point", "coordinates": [row[2], row[1]] }, "properties": { "id": row[0], "eau": row[3], "air": row[4], "temps": row[5], "type": row[6], "piste": row[7], "rep": row[8], "transfo": row[9], "couleur_defaut": color } };
+            // Appliquer couleur
+            snowCannons.features.forEach(f => {
+                let typeLower = f.properties.type.toLowerCase();
+                if (["demak lenko", "demac lenko"].includes(typeLower)) f.properties.couleur_defaut = "#0000FF";
+                else if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeLower)) f.properties.couleur_defaut = "#008000";
+                else f.properties.couleur_defaut = technoColors[typeLower] || "#FFD700";
             });
 
-            snowCannons.features.forEach(f => { absoluteMaxes.eau = Math.max(absoluteMaxes.eau, f.properties.eau); absoluteMaxes.air = Math.max(absoluteMaxes.air, f.properties.air); absoluteMaxes.temps = Math.max(absoluteMaxes.temps, f.properties.temps); });
-            currentMaxThreshold = { ...absoluteMaxes };
+            // Initialiser Saison par défaut
+            if (saisonsList.length > 0) currentSeason = saisonsList[0];
+            generateSeasonMenu();
+            calculateMaxes();
 
-            let pUnique = new Set(); let tUnique = new Set();
-            snowCannons.features.forEach(f => { if (f.properties.piste) pUnique.add(f.properties.piste); if (f.properties.type) tUnique.add(f.properties.type); });
+            // Checkboxes
             function buildCbs(id, set, cls) {
                 const c = document.getElementById(id); c.innerHTML = '';
                 [...set].sort().forEach(v => { let l=document.createElement('label'); let cb=document.createElement('input'); cb.type='checkbox'; cb.className=cls; cb.value=v; l.appendChild(cb); l.appendChild(document.createTextNode(' '+v)); c.appendChild(l); });
             }
-            buildCbs('individual-pistes', pUnique, 'piste-cb'); buildCbs('individual-types', tUnique, 'type-cb');
+            buildCbs('individual-pistes', pSet, 'piste-cb'); buildCbs('individual-types', tSet, 'type-cb');
+            buildCbs('individual-vannes', vSet, 'vanne-cb'); buildCbs('individual-modules', mSet, 'module-cb');
 
             function setupCbs(allId, cls, cbk) {
                 const aBtn = document.getElementById(allId); const cbs = document.querySelectorAll('.'+cls);
@@ -334,6 +405,8 @@
             }
             setupCbs('check-all-pistes', 'piste-cb', vals => { currentPistes = vals; updateMap(); updateRightPanel(); });
             setupCbs('check-all-types', 'type-cb', vals => { currentTypes = vals; updateMap(); updateRightPanel(); });
+            setupCbs('check-all-vannes', 'vanne-cb', vals => { currentVannes = vals; updateMap(); updateRightPanel(); });
+            setupCbs('check-all-modules', 'module-cb', vals => { currentModules = vals; updateMap(); updateRightPanel(); });
 
             if(geojsonLayer) map.removeLayer(geojsonLayer);
             geojsonLayer = L.geoJSON(snowCannons, {
@@ -341,7 +414,6 @@
                 onEachFeature: function (feature, layer) {
                     layer.on('click', function(e) {
                         L.DomEvent.stopPropagation(e);
-                        if (currentlyEditingId) return; 
                         const id = feature.properties.id;
                         if (selectedCannonsMap.has(id)) selectedCannonsMap.delete(id); else selectedCannonsMap.set(id, layer);
                         updateMap(); renderSelectionPanel();
@@ -350,50 +422,45 @@
                 }
             }).addTo(map);
 
-            if (snowCannons.features.length > 0) {
-                map.fitBounds(geojsonLayer.getBounds(), { padding: [30, 30] });
-            }
+            if (snowCannons.features.length > 0) map.fitBounds(geojsonLayer.getBounds(), { padding: [30, 30] });
             updateLegend(); updateMap(); updateRightPanel();
         }
 
-        // SAUVEGARDE GOOGLE SHEETS
-        document.getElementById('btn-save-edit').addEventListener('click', async () => {
-            if (!currentlyEditingId) return;
-            const btn = document.getElementById('btn-save-edit');
-            btn.innerText = "⏳ Envoi..."; btn.disabled = true;
+        function generateSeasonMenu() {
+            let container = document.getElementById('dynamic-seasons-menu');
+            container.innerHTML = "";
+            saisonsList.forEach((s, idx) => {
+                let openAttr = idx === 0 ? "open" : "";
+                container.innerHTML += `
+                    <details class="season-menu" ${openAttr}>
+                        <summary class="season-summary">► Saison ${s}</summary>
+                        <div class="radio-group" style="padding-left:15px; margin-top:5px;">
+                            <label><input type="radio" name="layer" value="eau_${s}"> Eau (m³)</label>
+                            <label><input type="radio" name="layer" value="air_${s}"> Air</label>
+                            <label><input type="radio" name="layer" value="temps_${s}"> Tps Marche</label>
+                        </div>
+                    </details>`;
+            });
+            // Ré-attacher les events
+            document.querySelectorAll('input[name="layer"]').forEach(r => r.addEventListener('change', handleLayerChange));
+        }
 
-            const payload = {
-                id: document.getElementById('edit-id').value,
-                lat: parseFloat(document.getElementById('edit-lat').value), lon: parseFloat(document.getElementById('edit-lng').value),
-                eau: parseFloat(document.getElementById('edit-eau').value) || 0, air: parseFloat(document.getElementById('edit-air').value) || 0, temps: parseFloat(document.getElementById('edit-temps').value) || 0,
-                type: document.getElementById('edit-type').value, piste: document.getElementById('edit-piste').value,
-                rep: document.getElementById('edit-rep').value, transfo: document.getElementById('edit-transfo').value
-            };
+        function calculateMaxes() {
+            absoluteMaxes = { eau: 0, air: 0, temps: 0 };
+            snowCannons.features.forEach(f => {
+                if (f.properties.historique[currentSeason]) {
+                    absoluteMaxes.eau = Math.max(absoluteMaxes.eau, f.properties.historique[currentSeason].eau);
+                    absoluteMaxes.air = Math.max(absoluteMaxes.air, f.properties.historique[currentSeason].air);
+                    absoluteMaxes.temps = Math.max(absoluteMaxes.temps, f.properties.historique[currentSeason].temps);
+                }
+            });
+            currentMaxThreshold = { ...absoluteMaxes };
+        }
 
-            try {
-                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const result = await response.json();
-                if(result.status === "success") {
-                    const layer = selectedCannonsMap.get(currentlyEditingId);
-                    const p = layer.feature.properties;
-                    p.type = payload.type; p.piste = payload.piste; p.eau = payload.eau; p.air = payload.air; p.temps = payload.temps; p.rep = payload.rep; p.transfo = payload.transfo;
-                    
-                    let tLower = p.type.toLowerCase().trim();
-                    if (["demak lenko", "demac lenko"].includes(tLower)) p.couleur_defaut = "#0000FF";
-                    else if (["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) p.couleur_defaut = "#008000";
-                    else { if(!technoColors[tLower]) technoColors[tLower] = "#FFD700"; p.couleur_defaut = technoColors[tLower]; }
-
-                    layer.feature.geometry.coordinates = [payload.lon, payload.lat];
-                    layer.setLatLng([payload.lat, payload.lon]);
-                    cancelEdit();
-                } else alert("Erreur Google Sheets : " + result.message);
-            } catch (err) { alert("Échec réseau avec Google Sheets."); console.error(err); }
-
-            btn.innerText = "✅ Sauvegarder"; btn.disabled = false;
-        });
-
+        // ==========================================
         // PANNEAU DROIT (SELECTION)
-        function closeRightSidebar() { document.getElementById('right-sidebar').classList.remove('open'); if(currentlyEditingId) cancelEdit(); clearSelection(); }
+        // ==========================================
+        function closeRightSidebar() { document.getElementById('right-sidebar').classList.remove('open'); clearSelection(); }
         function clearSelection() { selectedCannonsMap.clear(); updateMap(); renderSelectionPanel(); }
 
         function renderSelectionPanel() {
@@ -405,122 +472,115 @@
                 const p = layer.feature.properties;
                 let active = getActiveTickets(p.id);
                 let history = getHistoryTickets(p.id);
-                
                 let ticketsHTML = "";
                 
-                // DEFAUTS EN COURS : Affiche le Défaut et la Cause
                 if (active.length > 0) {
                     ticketsHTML += `<div class="ticket-alert"><strong>🚨 Défauts en cours :</strong><ul style="margin:5px 0; padding-left:15px;">`;
                     active.forEach(t => {
-                        let icon = t.statut.includes('faire') ? '🔴' : '🟠';
-                        ticketsHTML += `<li style="margin-bottom:6px;">${icon} <b>Défaut :</b> ${t.defaut} <br><span style="color:#555; font-size:11px;"><b>Cause :</b> ${t.cause}</span> <i style="color:#777; font-size:11px;">(${t.statut})</i></li>`;
+                        let icon = t.statut === 'à faire' ? '🔴' : '🟠';
+                        ticketsHTML += `<li style="margin-bottom:6px;">${icon} <b>Défaut :</b> ${t.defaut} <br><span style="color:#555; font-size:11px;"><b>Cause :</b> ${t.cause}</span></li>`;
                     });
                     ticketsHTML += `</ul></div>`;
                 }
 
-                // HISTORIQUE : Affiche Date, Défaut et Cause
                 if (history.length > 0) {
                     ticketsHTML += `<details class="ticket-history"><summary>📁 Voir l'historique (${history.length})</summary><ul style="padding-left:15px; margin-top:8px;">`;
                     history.forEach(t => {
-                        let d = new Date(t.date);
-                        let dateStr = isNaN(d.getTime()) ? (t.date || "Date inconnue") : d.toLocaleDateString('fr-FR');
-                        ticketsHTML += `<li style="margin-bottom:6px; font-size:11px;"><b>${dateStr}</b> - <b>Défaut :</b> ${t.defaut} <br><span style="color:#666;"><b>Cause :</b> ${t.cause}</span></li>`;
+                        let d = new Date(t.date); let dateStr = isNaN(d.getTime()) ? (t.date || "Date inc.") : d.toLocaleDateString('fr-FR');
+                        ticketsHTML += `<li style="margin-bottom:6px; font-size:11px;"><b>${dateStr}</b> - <b>Défaut:</b> ${t.defaut} <br><span style="color:#666;"><b>Cause:</b> ${t.cause}</span></li>`;
                     });
                     ticketsHTML += `</ul></details>`;
                 }
+
+                // Volume de la saison en cours si dispo
+                let histData = p.historique[currentSeason] || {eau:0, air:0, temps:0};
 
                 listDiv.innerHTML += `
                     <div class="sel-details">
                         <div class="sel-details-header">Canon N° ${p.id} <span style="font-weight:normal; font-size:12px;">(${p.piste})</span></div>
                         <div class="sel-details-body">
-                            <b>Modèle:</b> <span style="color:${p.couleur_defaut}">${p.type}</span><br>
-                            <b>Eau:</b> ${p.eau} m³ | <b>Air:</b> ${p.air} | <b>Tps:</b> ${p.temps} h<br>
-                            <b>Répéteur:</b> ${p.rep} | <b>Transfo:</b> ${p.transfo}<br>
+                            <div class="tech-grid">
+                                <div><b>Modèle :</b> <span style="color:${p.couleur_defaut}">${p.type}</span></div>
+                                <div><b>Rép / Trans :</b> ${p.rep} / ${p.transfo}</div>
+                                <div><b>Vanne :</b> ${p.vanne}</div>
+                                <div><b>Module :</b> ${p.module}</div>
+                            </div>
+                            <div style="margin-top:10px; background:#f0f8ff; padding:8px; border:1px solid #d4e6f1; border-radius:4px;">
+                                <b>Conso. Saison ${currentSeason} :</b><br>
+                                Eau: ${histData.eau} m³ | Air: ${histData.air} | Tps: ${histData.temps} h
+                            </div>
                             ${ticketsHTML}
-                            <button class="btn-edit-small" onclick="startEdit(${p.id})">✏️ Modifier les données du canon</button>
                         </div>
                     </div>`;
             });
         }
 
-        function startEdit(id) {
-            currentlyEditingId = id; const layer = selectedCannonsMap.get(id); const p = layer.feature.properties;
-            document.getElementById('edit-id-display').innerText = p.id; document.getElementById('edit-id').value = p.id;
-            document.getElementById('edit-type').value = p.type; document.getElementById('edit-piste').value = p.piste;
-            document.getElementById('edit-eau').value = p.eau; document.getElementById('edit-air').value = p.air; document.getElementById('edit-temps').value = p.temps;
-            document.getElementById('edit-rep').value = p.rep; document.getElementById('edit-transfo').value = p.transfo;
-            document.getElementById('edit-lat').value = layer.getLatLng().lat.toFixed(7); document.getElementById('edit-lng').value = layer.getLatLng().lng.toFixed(7);
-            document.getElementById('view-selection').style.display = 'none'; document.getElementById('view-edit').style.display = 'block';
-            document.getElementById('right-header').classList.add('editing'); document.getElementById('right-title').innerText = "✏️ Mode Édition";
-            updateMap(); 
-        }
-
-        function cancelEdit() {
-            currentlyEditingId = null; document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none';
-            document.getElementById('right-header').classList.remove('editing'); document.getElementById('right-title').innerText = "📌 Sélection Multiple";
-            updateMap(); renderSelectionPanel();
-        }
-
-        map.on('click', function(e) { if (currentlyEditingId) { document.getElementById('edit-lat').value = e.latlng.lat.toFixed(7); document.getElementById('edit-lng').value = e.latlng.lng.toFixed(7); selectedCannonsMap.get(currentlyEditingId).setLatLng(e.latlng); } });
-
+        // ==========================================
         // AFFICHAGE CARTE & GRAPHIQUE
-        function getColorByFilter(layer, ratio, props) {
+        // ==========================================
+        function getColorByFilter(layerType, ratio, props) {
             const inter = (c1,c2,f) => { let r=c1.slice(); for(let i=0;i<3;i++)r[i]=Math.round(r[i]+f*(c2[i]-c1[i])); return `rgb(${r[0]},${r[1]},${r[2]})`;};
-            if (layer === 'defauts') {
+            if (layerType === 'defauts') {
                 let act = getActiveTickets(props.id);
-                if (act.length === 0) return '#95a5a6'; // Gris = RAS
-                if (act.some(t => t.statut.includes('faire'))) return '#e74c3c'; // Rouge = urgent
-                return '#f39c12'; // Orange = en cours
+                if (act.length === 0) return '#95a5a6'; 
+                if (act.some(t => t.statut === 'à faire')) return '#e74c3c'; 
+                return '#f39c12'; 
             }
-            if (layer === 'eau') return inter([173,216,230], [0,0,139], ratio);
-            if (layer === 'air') return inter([255,250,205], [184,134,11], ratio);
-            if (layer === 'temps') return inter([144,238,144], [0,100,0], ratio);
-            if (layer === 'repeteur') return repColors[props.rep] || '#555';
-            if (layer === 'transfo') return transfoColors[props.transfo] || '#555';
+            if (layerType.includes('eau')) return inter([173,216,230], [0,0,139], ratio);
+            if (layerType.includes('air')) return inter([255,250,205], [184,134,11], ratio);
+            if (layerType.includes('temps')) return inter([144,238,144], [0,100,0], ratio);
+            if (layerType === 'repeteur') return repColors[props.rep] || '#555';
+            if (layerType === 'transfo') return transfoColors[props.transfo] || '#555';
             return props.couleur_defaut;
         }
 
         function updateLegend() {
             const c = document.getElementById('legend-content'); const sc = document.getElementById('slider-container');
-            if (currentLayer === 'defauts') {
-                c.innerHTML = `<div class="legend-item"><div class="color-box" style="background: #e74c3c;"></div> À faire urgent</div><div class="legend-item"><div class="color-box" style="background: #f39c12;"></div> En cours</div><div class="legend-item"><div class="color-box" style="background: #95a5a6;"></div> RAS</div>`; sc.style.display = 'none';
-            } else if (currentLayer === 'type') {
-                c.innerHTML = `<div class="legend-item"><div class="color-box" style="background: #0000FF;"></div> Demac Lenko</div><div class="legend-item"><div class="color-box" style="background: #008000;"></div> Sufag / Street / Taurus / Peak</div><div class="legend-item"><div class="color-box" style="background: linear-gradient(to right, #FFFF99, #B8860B);"></div> Technoalpin</div>`; sc.style.display = 'none';
-            } else if (currentLayer === 'repeteur') {
-                let html = ''; Object.keys(repColors).sort().forEach(k => html += `<div class="legend-item"><div class="color-box" style="background: ${repColors[k]};"></div> Répéteur ${k}</div>`); c.innerHTML=html; sc.style.display='none';
-            } else if (currentLayer === 'transfo') {
-                let html = ''; Object.keys(transfoColors).sort().forEach(k => html += `<div class="legend-item"><div class="color-box" style="background: ${transfoColors[k]};"></div> Transfo ${k}</div>`); c.innerHTML=html; sc.style.display='none';
-            } else {
+            let baseLayer = currentLayer.split('_')[0];
+
+            if (baseLayer === 'defauts') { c.innerHTML = `<div class="legend-item"><div class="color-box" style="background: #e74c3c;"></div> À faire</div><div class="legend-item"><div class="color-box" style="background: #f39c12;"></div> En cours</div><div class="legend-item"><div class="color-box" style="background: #95a5a6;"></div> RAS</div>`; sc.style.display = 'none'; }
+            else if (baseLayer === 'type') { c.innerHTML = `<div class="legend-item"><div class="color-box" style="background: #0000FF;"></div> Demac Lenko</div><div class="legend-item"><div class="color-box" style="background: #008000;"></div> Sufag / Street / Taurus / Peak</div><div class="legend-item"><div class="color-box" style="background: linear-gradient(to right, #FFFF99, #B8860B);"></div> Technoalpin</div>`; sc.style.display = 'none'; }
+            else if (baseLayer === 'repeteur') { let h=''; Object.keys(repColors).sort().forEach(k => h += `<div class="legend-item"><div class="color-box" style="background: ${repColors[k]};"></div> Répéteur ${k}</div>`); c.innerHTML=h; sc.style.display='none'; }
+            else if (baseLayer === 'transfo') { let h=''; Object.keys(transfoColors).sort().forEach(k => h += `<div class="legend-item"><div class="color-box" style="background: ${transfoColors[k]};"></div> Transfo ${k}</div>`); c.innerHTML=h; sc.style.display='none'; }
+            else {
                 sc.style.display = 'block';
-                document.getElementById('slider-min').max = absoluteMaxes[currentLayer]; document.getElementById('slider-max').max = absoluteMaxes[currentLayer];
-                document.getElementById('slider-min').value = currentMinThreshold[currentLayer]; document.getElementById('slider-max').value = currentMaxThreshold[currentLayer];
-                document.getElementById('val-min').innerText = currentMinThreshold[currentLayer]; document.getElementById('val-max').innerText = currentMaxThreshold[currentLayer];
-                if (currentLayer === 'eau') c.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #ADD8E6, #00008B);"></div><div class="legend-labels"><span>Min</span><span>Max</span></div>`;
-                else if (currentLayer === 'air') c.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #FFFACD, #B8860B);"></div><div class="legend-labels"><span>Min</span><span>Max</span></div>`;
-                else if (currentLayer === 'temps') c.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #90EE90, #006400);"></div><div class="legend-labels"><span>Min</span><span>Max</span></div>`;
+                document.getElementById('slider-min').max = absoluteMaxes[baseLayer]; document.getElementById('slider-max').max = absoluteMaxes[baseLayer];
+                document.getElementById('slider-min').value = currentMinThreshold[baseLayer]; document.getElementById('slider-max').value = currentMaxThreshold[baseLayer];
+                document.getElementById('val-min').innerText = currentMinThreshold[baseLayer]; document.getElementById('val-max').innerText = currentMaxThreshold[baseLayer];
+                if (baseLayer === 'eau') c.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #ADD8E6, #00008B);"></div><div class="legend-labels"><span>Min</span><span>Max</span></div>`;
+                else if (baseLayer === 'air') c.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #FFFACD, #B8860B);"></div><div class="legend-labels"><span>Min</span><span>Max</span></div>`;
+                else if (baseLayer === 'temps') c.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #90EE90, #006400);"></div><div class="legend-labels"><span>Min</span><span>Max</span></div>`;
             }
         }
 
         function updateMap() {
             if(!geojsonLayer) return;
+            let baseLayer = currentLayer.split('_')[0];
+            let activeSeason = currentLayer.split('_')[1] || currentSeason;
+
             geojsonLayer.eachLayer(function(layer) {
                 const p = layer.feature.properties; let vis = true;
                 if (!currentPistes.includes('all') && !currentPistes.includes(p.piste)) vis = false;
-                if (!currentTypes.includes('all') && !currentTypes.includes(p.type)) vis = false;
-                if (['eau','air','temps'].includes(currentLayer)) { if (p[currentLayer] < currentMinThreshold[currentLayer] || p[currentLayer] > currentMaxThreshold[currentLayer]) vis = false; }
+                if (!currentTypes.includes('all') && !currentTypes.includes(p.type.toLowerCase())) vis = false;
+                if (!currentVannes.includes('all') && !currentVannes.includes(p.vanne)) vis = false;
+                if (!currentModules.includes('all') && !currentModules.includes(p.module)) vis = false;
+
+                let val = 0;
+                if (['eau','air','temps'].includes(baseLayer)) {
+                    val = p.historique[activeSeason] ? p.historique[activeSeason][baseLayer] : 0;
+                    if (val < currentMinThreshold[baseLayer] || val > currentMaxThreshold[baseLayer]) vis = false;
+                }
 
                 if (!vis) {
                     if(layer._icon) layer._icon.style.display = 'none';
                 } else {
                     let rad = 12; let ratio = 0;
-                    if (['eau','air','temps'].includes(currentLayer)) { let maxVal = absoluteMaxes[currentLayer] || 1; ratio = p[currentLayer] / maxVal; rad = 10 + (14 * ratio); }
+                    if (['eau','air','temps'].includes(baseLayer)) { let maxVal = absoluteMaxes[baseLayer] || 1; ratio = val / maxVal; rad = 10 + (14 * ratio); }
                     
                     let bg = getColorByFilter(currentLayer, ratio, p);
                     let bord = "white"; let bw = "1.5px"; let fsz = Math.max(9, rad - 4) + "px"; 
 
-                    let isSel = selectedCannonsMap.has(p.id); let isEdit = (currentlyEditingId === p.id);
-                    if (isEdit) { bord = "#e74c3c"; bw = "4px"; layer.setZIndexOffset(2000); }
-                    else if (isSel) { bord = "#2c3e50"; bw = "3px"; layer.setZIndexOffset(1000); }
+                    if (selectedCannonsMap.has(p.id)) { bord = "#2c3e50"; bw = "3px"; layer.setZIndexOffset(1000); }
                     else { layer.setZIndexOffset(0); }
 
                     layer.setIcon(L.divIcon({ className: 'custom-cannon-icon', html: `<div class="cannon-circle" style="background-color:${bg};width:${rad*2}px;height:${rad*2}px;line-height:${rad*2}px;border:${bw} solid ${bord};font-size:${fsz};">${p.id}</div>`, iconSize: [rad*2, rad*2], iconAnchor: [rad, rad] }));
@@ -532,16 +592,24 @@
         function updateRightPanel() {
             let f = snowCannons.features;
             if (!currentPistes.includes('all')) f = f.filter(x => currentPistes.includes(x.properties.piste));
-            if (!currentTypes.includes('all')) f = f.filter(x => currentTypes.includes(x.properties.type));
-            
+            if (!currentTypes.includes('all')) f = f.filter(x => currentTypes.includes(x.properties.type.toLowerCase()));
+            if (!currentVannes.includes('all')) f = f.filter(x => currentVannes.includes(x.properties.vanne));
+            if (!currentModules.includes('all')) f = f.filter(x => currentModules.includes(x.properties.module));
+
             let ctx = document.getElementById('pisteChart').getContext('2d');
             if (window.myChart) window.myChart.destroy();
-                
-            if (['eau','air','temps'].includes(currentLayer)) {
-                f = f.filter(x => x.properties[currentLayer] >= currentMinThreshold[currentLayer] && x.properties[currentLayer] <= currentMaxThreshold[currentLayer]);
+            
+            let baseLayer = currentLayer.split('_')[0];
+            let activeSeason = currentLayer.split('_')[1] || currentSeason;
+
+            if (['eau','air','temps'].includes(baseLayer)) {
+                f = f.filter(x => {
+                    let v = x.properties.historique[activeSeason] ? x.properties.historique[activeSeason][baseLayer] : 0;
+                    return v >= currentMinThreshold[baseLayer] && v <= currentMaxThreshold[baseLayer];
+                });
                 window.myChart = new Chart(ctx, { 
                     type: 'bar', 
-                    data: { labels: f.map(x => 'N°' + x.properties.id), datasets: [{ data: f.map(x => x.properties[currentLayer]), backgroundColor: f.map(x => pisteColors[x.properties.piste] || '#0078A8'), borderRadius: 4 }] }, 
+                    data: { labels: f.map(x => 'N°' + x.properties.id), datasets: [{ data: f.map(x => x.properties.historique[activeSeason] ? x.properties.historique[activeSeason][baseLayer] : 0), backgroundColor: f.map(x => pisteColors[x.properties.piste] || '#0078A8'), borderRadius: 4 }] }, 
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { title: function(t) { return 'Canon N°' + f[t[0].dataIndex].properties.id + ' | ' + f[t[0].dataIndex].properties.piste; } } } } } 
                 });
             } else {
@@ -555,12 +623,18 @@
             }
         }
 
-        // EVENEMENTS UI
-        document.querySelectorAll('input[name="layer"]').forEach(r => r.addEventListener('change', e => { currentLayer = e.target.value; updateLegend(); updateMap(); updateRightPanel(); }));
-        document.getElementById('slider-min').addEventListener('input', e => { let val = parseFloat(e.target.value); if (val > currentMaxThreshold[currentLayer]) { val = currentMaxThreshold[currentLayer]; e.target.value = val; } currentMinThreshold[currentLayer] = val; document.getElementById('val-min').innerText = val; updateMap(); updateRightPanel(); });
-        document.getElementById('slider-max').addEventListener('input', e => { let val = parseFloat(e.target.value); if (val < currentMinThreshold[currentLayer]) { val = currentMinThreshold[currentLayer]; e.target.value = val; } currentMaxThreshold[currentLayer] = val; document.getElementById('val-max').innerText = val; updateMap(); updateRightPanel(); });
+        function handleLayerChange(e) {
+            currentLayer = e.target.value;
+            if (currentLayer.includes('_')) {
+                currentSeason = currentLayer.split('_')[1];
+                calculateMaxes();
+            }
+            updateLegend(); updateMap(); updateRightPanel(); renderSelectionPanel();
+        }
 
-        // GESTION DU GRAPHIQUE FLOTTANT
+        document.getElementById('slider-min').addEventListener('input', e => { let baseLayer = currentLayer.split('_')[0]; let val = parseFloat(e.target.value); if (val > currentMaxThreshold[baseLayer]) { val = currentMaxThreshold[baseLayer]; e.target.value = val; } currentMinThreshold[baseLayer] = val; document.getElementById('val-min').innerText = val; updateMap(); updateRightPanel(); });
+        document.getElementById('slider-max').addEventListener('input', e => { let baseLayer = currentLayer.split('_')[0]; let val = parseFloat(e.target.value); if (val < currentMinThreshold[baseLayer]) { val = currentMinThreshold[baseLayer]; e.target.value = val; } currentMaxThreshold[baseLayer] = val; document.getElementById('val-max').innerText = val; updateMap(); updateRightPanel(); });
+
         function toggleFullscreenChart() {
             const modal = document.getElementById('chart-modal');
             const wrapper = document.getElementById('chart-wrapper');
