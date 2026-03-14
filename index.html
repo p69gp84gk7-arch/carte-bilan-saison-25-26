@@ -15,20 +15,11 @@
             document.getElementById('error-box').style.display = 'block';
             document.getElementById('error-msg').innerHTML = "<b>Erreur technique :</b> " + msg + (line ? "<br><b>Ligne :</b> " + line : "");
         }
-        
         window.onerror = function(message, source, lineno) { 
-            // Ignorer les erreurs fantômes des extensions Chrome/Firefox ou des CDN
-            if (message === 'Script error.' || message.indexOf('Script error') > -1) {
-                console.warn("Erreur fantôme ignorée (probablement une extension du navigateur).");
-                return false; 
-            }
-            showCrash(message, lineno); 
-            return true; 
+            if (message === 'Script error.' || message.indexOf('Script error') > -1) return false; 
+            showCrash(message, lineno); return true; 
         };
-        
-        window.addEventListener('unhandledrejection', function(event) { 
-            showCrash(event.reason ? event.reason.message : "Erreur asynchrone bloquée", "Réseau/Promesse"); 
-        });
+        window.addEventListener('unhandledrejection', function(event) { showCrash(event.reason ? event.reason.message : "Erreur réseau bloquée", "Réseau/Promesse"); });
     </script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
@@ -44,7 +35,6 @@
         #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;}
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         #error-box { display: none; background: #fdf0ed; border: 2px solid #e74c3c; padding: 20px; border-radius: 8px; max-width: 600px; color: #c0392b; margin-top:20px; text-align:left;}
 
         #toggle-menu-btn { position: absolute; top: 15px; left: 15px; z-index: 3000; background: #2c3e50; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.2s; }
@@ -79,7 +69,8 @@
         .checkbox-list { max-height: 120px; overflow-y: auto; padding: 5px; font-size: 12px; color: #555; }
         .checkbox-list label { display: block; margin-bottom: 6px; cursor: pointer; }
 
-        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color:#34495e; font-weight:600;}
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color:#34495e; font-weight:600; cursor: pointer; padding: 4px; border-radius: 4px; transition: 0.2s;}
+        .legend-item:hover { background: #eee; }
         .color-box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #ccc;}
         .gradient-bar { height: 10px; border-radius: 3px; margin: 10px 0 5px 0; border: 1px solid #ccc; }
         .legend-labels { display: flex; justify-content: space-between; font-size: 11px; color: #666; font-weight:bold;}
@@ -104,9 +95,8 @@
         .sel-details-header { padding: 15px; font-weight: bold; font-size: 15px; background: #fdfdfe; border-bottom: 1px solid #f0f0f0; color: #2c3e50; display:flex; justify-content:space-between; align-items:center;}
         .sel-details-body { padding: 15px; font-size: 13px; color: #444; line-height: 1.5; }
         
-        .badge { display: inline-block; background: #f0f3f5; color: #2c3e50; padding: 5px 10px; border-radius: 4px; font-size: 11.5px; margin: 0 4px 6px 0; border: 1px solid #e1e8ed; }
+        .badge { display: inline-block; background: #f0f3f5; color: #2c3e50; padding: 5px 10px; border-radius: 4px; font-size: 11px; margin: 0 4px 6px 0; border: 1px solid #e1e8ed; }
         .ticket-card { background: #fff; border: 1px solid #eee; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .hist-card { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 15px; border-radius: 8px; text-align: center; margin-bottom:15px; border:1px solid #b0c4de;}
         
         .piste-chart-container { background: #fff; border:1px solid #eee; padding:15px; border-radius:6px; margin-top:15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
         .btn-action-primary { background: #3498db; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-top: 15px; width: 100%; font-weight: bold; transition: 0.2s;}
@@ -116,13 +106,12 @@
         .edit-label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase;}
         #dynamic-edit-fields { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 6px; max-height: 45vh; overflow-y: auto;}
 
-        #compare-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 700px; max-width: 90%; background: white; z-index: 9999; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #ccc; flex-direction: column; overflow: hidden; }
+        #compare-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; max-width: 95%; background: white; z-index: 9999; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #ccc; flex-direction: column; overflow: hidden; }
         .comp-header { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: bold; }
-        .comp-body { padding: 20px; max-height: 70vh; overflow-y: auto; background: #f4f6f8; }
-        .comp-controls { display: flex; gap: 15px; background: #fff; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd; align-items: flex-end;}
-        .comp-chart-box { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; height: 200px; position: relative;}
+        .comp-body { padding: 20px; max-height: 80vh; overflow-y: auto; background: #f4f6f8; }
+        .comp-controls { display: flex; gap: 15px; background: #fff; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd; align-items: flex-end; flex-wrap: wrap;}
+        .comp-chart-box { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; height: 250px; position: relative;}
 
-        /* CALQUES KML/KMZ - UI COULEUR & EPAISSEUR */
         .kml-layer-item { display:flex; align-items:center; background:#fff; padding:8px 10px; border:1px solid #ddd; border-radius:4px; margin-bottom:8px; font-size:12px; font-weight:bold; }
         .layer-color-picker { width:24px; height:24px; padding:0; border:none; border-radius:4px; cursor:pointer; flex-shrink:0; outline:1px solid #ccc;}
         .layer-weight-picker { width:35px; height:22px; padding:2px; border:1px solid #ccc; border-radius:4px; text-align:center; font-size:12px; margin-left:5px;}
@@ -145,9 +134,10 @@
         <div class="comp-header"><span>📊 Comparaison Globale de Saisons</span><button onclick="openGlobalCompareModal(false)" style="background:none;border:none;color:white;cursor:pointer;font-size:24px;">&times;</button></div>
         <div class="comp-body">
             <div class="comp-controls">
-                <div style="flex:1;"><div class="edit-label">Donnée</div><select id="comp-metric" class="edit-input" style="margin:0;"><option value="eau">Eau (m³)</option><option value="air">Air</option><option value="temps">Temps de marche</option></select></div>
-                <div style="flex:1;"><div class="edit-label">Saison A</div><select id="comp-s1" class="edit-input" style="margin:0;"></select></div>
-                <div style="flex:1;"><div class="edit-label">Saison B</div><select id="comp-s2" class="edit-input" style="margin:0;"></select></div>
+                <div style="flex:1; min-width: 120px;"><div class="edit-label">Filtre Piste</div><select id="comp-piste" class="edit-input" style="margin:0;"><option value="all">Toutes les pistes</option></select></div>
+                <div style="flex:1; min-width: 120px;"><div class="edit-label">Donnée</div><select id="comp-metric" class="edit-input" style="margin:0;"><option value="eau">Eau (m³)</option><option value="air">Air</option><option value="temps">Temps de marche</option></select></div>
+                <div style="flex:1; min-width: 120px;"><div class="edit-label">Saison A</div><select id="comp-s1" class="edit-input" style="margin:0;"></select></div>
+                <div style="flex:1; min-width: 120px;"><div class="edit-label">Saison B</div><select id="comp-s2" class="edit-input" style="margin:0;"></select></div>
                 <button class="btn-action-primary" style="margin:0; width:auto; padding:10px 20px;" onclick="renderGlobalComparison()">Comparer</button>
             </div>
             <div class="comp-chart-box"><div style="position:absolute; top:5px; left:15px; font-weight:bold; font-size:12px; color:#555;" id="comp-title-1">Saison A</div><canvas id="comp-canvas-1"></canvas></div>
@@ -165,10 +155,11 @@
             <details class="panel-section" open>
                 <summary>1. Thème & Légende</summary>
                 <div class="section-content" style="padding-top: 10px;">
+                    
                     <div class="theme-block">
                         <label class="radio-card" id="lbl-defauts" style="border-radius: 6px 6px 0 0; margin-bottom: 0; border-color: #3498db;"><input type="radio" name="main_theme" value="defauts" checked> 🚨 Défauts en cours</label>
                         <div class="theme-details" id="details-defauts" style="display: block; border-color: #3498db;">
-                            <div style="font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:8px; text-transform:uppercase;">Légende</div>
+                            <div style="font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:8px; text-transform:uppercase;">Survolez pour cibler</div>
                             <div id="legend-defauts"></div>
                         </div>
                     </div>
@@ -176,7 +167,7 @@
                     <div class="theme-block">
                         <label class="radio-card" id="lbl-type"><input type="radio" name="main_theme" value="type"> ⚙️ Type de canon (Édition)</label>
                         <div class="theme-details" id="details-type" style="display: none; border-color: #3498db;">
-                            <div style="font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:8px; text-transform:uppercase;">Légende</div>
+                            <div style="font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:8px; text-transform:uppercase;">Survolez pour cibler</div>
                             <div id="legend-type"></div>
                         </div>
                     </div>
@@ -184,7 +175,7 @@
                     <div class="theme-block">
                         <label class="radio-card" id="lbl-repeteur"><input type="radio" name="main_theme" value="repeteur"> 📡 Répéteurs</label>
                         <div class="theme-details" id="details-repeteur" style="display: none; border-color: #3498db;">
-                            <div style="font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:8px; text-transform:uppercase;">Légende</div>
+                            <div style="font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:8px; text-transform:uppercase;">Survolez pour cibler</div>
                             <div id="legend-repeteur"></div>
                         </div>
                     </div>
@@ -192,7 +183,7 @@
                     <div class="theme-block">
                         <label class="radio-card" id="lbl-transfo"><input type="radio" name="main_theme" value="transfo"> ⚡ Transformateurs</label>
                         <div class="theme-details" id="details-transfo" style="display: none; border-color: #3498db;">
-                            <div style="font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:8px; text-transform:uppercase;">Légende</div>
+                            <div style="font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:8px; text-transform:uppercase;">Survolez pour cibler</div>
                             <div id="legend-transfo"></div>
                         </div>
                     </div>
@@ -257,8 +248,7 @@
                     <hr style="margin:15px 0; border-top:1px dashed #ccc;">
                     
                     <p style="font-size:11px; color:#666; margin-bottom:10px; line-height:1.4;">
-                        <b>2. Import Manuel depuis PC/Mobile :</b><br>
-                        (Sera sauvegardé dans ce navigateur)
+                        <b>2. Import Manuel depuis votre PC :</b>
                     </p>
                     <input type="file" id="kml-upload" accept=".kml,.kmz" style="display:none;" onchange="handleKMLUpload(event)">
                     <button class="btn-action-primary" style="margin-top:0; background:#8e44ad;" onclick="document.getElementById('kml-upload').click()">📂 Importer / Parcourir...</button>
@@ -269,7 +259,6 @@
 
         <div id="map-container">
             <div id="map-controls-tr">
-                <button id="btn-map-mode" class="map-btn" onclick="toggleMapMode()">🗺️ Vue Topographie / 3D</button>
                 <button id="btn-multi-toggle" class="map-btn" onclick="toggleMultiSelect()">🔲 Sélection Multiple : OFF</button>
             </div>
             <div id="map"></div>
@@ -317,10 +306,10 @@
         // 1. CONFIGURATION & VARIABLES GLOBALES 
         // =======================================================
         
-        // ⚠️ LIEN GOOGLE APPS SCRIPT ⚠️
+        // ⚠️ LIEN GOOGLE APPS SCRIPT (À VÉRIFIER) ⚠️
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
         
-        let map, satLayer, topoLayer;
+        let map, satLayer;
         let snowCannons = { "type": "FeatureCollection", "features": [] };
         let rawTickets = []; let saisonsList = []; let cloudKmzLayers = [];
         let isMultiSelect = false; let columnValuesSets = {}; let availableColumns = [];
@@ -349,7 +338,7 @@
         const getHistoryTickets = function(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); };
 
         // ==============================================================
-        // 3. FONCTION DE DEMARRAGE (LANCEMENT APRES CHARGEMENT HTML)
+        // 3. FONCTION DE DEMARRAGE
         // ==============================================================
         window.onload = async function() {
             try {
@@ -357,7 +346,6 @@
                 if (typeof JSZip === 'undefined') throw new Error("Les outils KMZ ne se sont pas chargés.");
 
                 satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 18 });
-                topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 18 });
                 map = L.map('map', {zoomControl: false, layers: [satLayer]}).setView([42.766, 0.564], 14);
                 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -372,18 +360,6 @@
         // ==============================================================
         // 4. TOUTES LES FONCTIONS DES BOUTONS DE L'INTERFACE
         // ==============================================================
-        window.toggleMapMode = function() {
-            if (!map) return;
-            const btn = document.getElementById('btn-map-mode');
-            if (currentMapMode === 'sat') {
-                map.removeLayer(satLayer); map.addLayer(topoLayer); currentMapMode = 'topo';
-                btn.innerHTML = "🛰️ Vue Satellite Standard"; btn.classList.add('active');
-            } else {
-                map.removeLayer(topoLayer); map.addLayer(satLayer); currentMapMode = 'sat';
-                btn.innerHTML = "🗺️ Vue Topographie / 3D"; btn.classList.remove('active');
-            }
-        };
-
         window.toggleMultiSelect = function() {
             isMultiSelect = !isMultiSelect; const btn = document.getElementById('btn-multi-toggle');
             if(isMultiSelect) { btn.classList.add('active'); btn.innerText = "🔲 Multi-Sélection : ACTIVÉE"; } 
@@ -453,15 +429,82 @@
             updateMap(); 
         };
 
+        // ====== EDITEUR DE TICKETS ======
+        window.editTicket = function(canonId, defaut, currentStatut) {
+            let idDiv = `ticket-edit-${canonId}-${defaut.replace(/[^a-zA-Z0-9]/g, "")}`;
+            let el = document.getElementById(idDiv);
+            if(!el) return;
+            
+            let statuts = ['à faire', 'en cours', 'fait'];
+            let options = statuts.map(s => `<option value="${s}" ${currentStatut === s ? 'selected' : ''}>${s.toUpperCase()}</option>`).join('');
+
+            el.innerHTML = `
+                <div style="margin-top:10px; background:#f4f6f8; padding:10px; border-radius:4px; border:1px solid #ddd;">
+                    <div style="font-size:11px; font-weight:bold; color:#555; margin-bottom:5px;">CHANGER LE STATUT :</div>
+                    <select id="sel-statut-${idDiv}" style="width:100%; padding:6px; font-size:12px; margin-bottom:10px;">${options}</select>
+                    <div style="font-size:11px; font-weight:bold; color:#555; margin-bottom:5px;">NOUVEAU COMMENTAIRE (Optionnel) :</div>
+                    <textarea id="txt-cause-${idDiv}" style="width:100%; padding:6px; font-size:12px; box-sizing:border-box; margin-bottom:10px;" rows="2"></textarea>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="renderSelectionPanel()" style="flex:1; padding:6px; background:#bdc3c7; color:white; border:none; border-radius:4px; cursor:pointer;">Annuler</button>
+                        <button onclick="saveTicket('${canonId}', '${defaut}', '${idDiv}')" style="flex:2; padding:6px; background:#2ecc71; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Mettre à jour</button>
+                    </div>
+                </div>
+            `;
+        };
+
+        window.saveTicket = async function(canonId, defaut, idDiv) {
+            let newStatut = document.getElementById(`sel-statut-${idDiv}`).value;
+            let newCause = document.getElementById(`txt-cause-${idDiv}`).value;
+            let btn = event.target;
+            btn.innerText = "..."; btn.disabled = true;
+
+            let payload = {
+                action: "update_ticket",
+                idCanon: canonId,
+                defaut: defaut,
+                statut: newStatut
+            };
+            
+            // Si l'utilisateur a rempli le commentaire, on l'envoie (il faut que la colonne Cause/Intervention existe dans le tableau tickets)
+            if(newCause.trim() !== "") {
+                payload.fields = { "Cause": newCause };
+            }
+
+            try {
+                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if(result.status === "success") {
+                    // Update in local array so UI refreshes without reload
+                    let ticket = rawTickets.find(t => t.idCanon === canonId && t.defaut === defaut);
+                    if(ticket) ticket.statut = newStatut;
+                    renderSelectionPanel();
+                    updateMap();
+                } else {
+                    alert("Erreur: " + result.msg);
+                    btn.innerText = "Mettre à jour"; btn.disabled = false;
+                }
+            } catch(e) {
+                alert("Échec réseau.");
+                btn.innerText = "Mettre à jour"; btn.disabled = false;
+            }
+        };
+
         window.openGlobalCompareModal = function(show) {
             let m = document.getElementById('compare-modal');
             if(!show) { m.style.display = 'none'; return; }
-            let s1 = document.getElementById('comp-s1'); let s2 = document.getElementById('comp-s2');
+            let s1 = document.getElementById('comp-s1'); let s2 = document.getElementById('comp-s2'); let pList = document.getElementById('comp-piste');
+            
             s1.innerHTML = ""; s2.innerHTML = "";
             saisonsList.forEach((s, i) => {
                 s1.innerHTML += `<option value="${s}" ${i===0?'selected':''}>${s}</option>`;
                 s2.innerHTML += `<option value="${s}" ${i===1?'selected':''}>${s}</option>`;
             });
+
+            pList.innerHTML = `<option value="all">Toutes les pistes</option>`;
+            Array.from(columnValuesSets[keyPiste] || []).sort().forEach(p => {
+                pList.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+
             m.style.display = 'flex';
             renderGlobalComparison();
         };
@@ -469,42 +512,41 @@
         window.renderGlobalComparison = function() {
             let s1 = document.getElementById('comp-s1').value; let s2 = document.getElementById('comp-s2').value;
             let metric = document.getElementById('comp-metric').value;
-            document.getElementById('comp-title-1').innerText = `Saison ${s1} - ${metric.toUpperCase()}`;
-            document.getElementById('comp-title-2').innerText = `Saison ${s2} - ${metric.toUpperCase()}`;
+            let targetPiste = document.getElementById('comp-piste').value;
 
-            let pistes = Array.from(columnValuesSets[keyPiste] || []).sort();
-            let d1 = [], d2 = [];
+            let labels = []; let d1 = []; let d2 = [];
 
-            pistes.forEach(p => {
-                let sum1 = 0; let sum2 = 0;
-                snowCannons.features.forEach(f => {
-                    if (getV(f.properties, keyPiste) === p) {
-                        if(f.properties.historique[s1]) sum1 += f.properties.historique[s1][metric];
-                        if(f.properties.historique[s2]) sum2 += f.properties.historique[s2][metric];
-                    }
+            if (targetPiste === 'all') {
+                document.getElementById('comp-title-1').innerText = `Saison ${s1} - ${metric.toUpperCase()} (Toutes pistes)`;
+                document.getElementById('comp-title-2').innerText = `Saison ${s2} - ${metric.toUpperCase()} (Toutes pistes)`;
+                labels = Array.from(columnValuesSets[keyPiste] || []).sort();
+                labels.forEach(p => {
+                    let sum1 = 0; let sum2 = 0;
+                    snowCannons.features.forEach(f => {
+                        if (getV(f.properties, keyPiste) === p) {
+                            if(f.properties.historique[s1]) sum1 += f.properties.historique[s1][metric];
+                            if(f.properties.historique[s2]) sum2 += f.properties.historique[s2][metric];
+                        }
+                    });
+                    d1.push(sum1); d2.push(sum2);
                 });
-                d1.push(sum1); d2.push(sum2);
-            });
+            } else {
+                document.getElementById('comp-title-1').innerText = `Saison ${s1} - ${metric.toUpperCase()} (Piste: ${targetPiste})`;
+                document.getElementById('comp-title-2').innerText = `Saison ${s2} - ${metric.toUpperCase()} (Piste: ${targetPiste})`;
+                let canons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === targetPiste).sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
+                labels = canons.map(c => c.properties.id);
+                canons.forEach(c => {
+                    d1.push(c.properties.historique[s1] ? c.properties.historique[s1][metric] : 0);
+                    d2.push(c.properties.historique[s2] ? c.properties.historique[s2][metric] : 0);
+                });
+            }
 
             if(chartInstances['c1']) chartInstances['c1'].destroy();
-            chartInstances['c1'] = new Chart(document.getElementById('comp-canvas-1').getContext('2d'), { type: 'bar', data: { labels: pistes, datasets: [{ data: d1, backgroundColor: '#3498db' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            chartInstances['c1'] = new Chart(document.getElementById('comp-canvas-1').getContext('2d'), { type: 'bar', data: { labels: labels, datasets: [{ data: d1, backgroundColor: '#3498db' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
             
             if(chartInstances['c2']) chartInstances['c2'].destroy();
-            chartInstances['c2'] = new Chart(document.getElementById('comp-canvas-2').getContext('2d'), { type: 'bar', data: { labels: pistes, datasets: [{ data: d2, backgroundColor: '#e67e22' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            chartInstances['c2'] = new Chart(document.getElementById('comp-canvas-2').getContext('2d'), { type: 'bar', data: { labels: labels, datasets: [{ data: d2, backgroundColor: '#e67e22' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
         };
-
-        window.drawSecondPisteChart = function(targetId, seasonStr) {
-            let canvasId = `chart2-${targetId}`; let ctx = document.getElementById(canvasId); if(!ctx) return;
-            if(chartInstances[canvasId]) { chartInstances[canvasId].destroy(); }
-            if(!seasonStr) return;
-            let targetCannon = snowCannons.features.find(f => f.properties.id === targetId).properties;
-            let pName = getV(targetCannon, keyPiste);
-            let pisteCannons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === pName && f.properties.historique[seasonStr]);
-            pisteCannons.sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
-            let bgColors = pisteCannons.map(f => f.properties.id === targetId ? '#e74c3c' : '#9b59b6');
-            chartInstances[canvasId] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: pisteCannons.map(f => f.properties.id), datasets: [{ data: pisteCannons.map(f => f.properties.historique[seasonStr][histMetric]), backgroundColor: bgColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: {font:{size:10}} } } } });
-        };
-
 
         // ==============================================================
         // 5. BASE DE DONNEES LOCALE (INDEXEDDB) 
@@ -701,8 +743,9 @@
 
             if (data.kmz && data.kmz.length > 0) {
                 cloudKmzLayers = data.kmz.map((k, index) => {
-                    let col = defaultColors[index % defaultColors.length];
-                    return { ...k, isVisible: false, leafletLayer: null, color: col, weight: 4 };
+                    let col = k.color ? k.color : defaultColors[index % defaultColors.length];
+                    let wei = k.weight ? parseInt(k.weight) : 4;
+                    return { ...k, isVisible: false, leafletLayer: null, color: col, weight: wei };
                 });
             }
 
@@ -816,20 +859,26 @@
                 cbx.checked = false;
             }
             cbx.disabled = false;
-        }
+        };
 
         window.changeCloudLayerStyle = function(idx, newColor, newWeight) {
             let layerObj = cloudKmzLayers[idx];
             if (newColor !== null) layerObj.color = newColor;
             if (newWeight !== null) layerObj.weight = parseInt(newWeight);
             
+            // Envoi modif vers Google Sheet (si besoin de persistance globale)
+            fetch(GOOGLE_API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'update_kmz', nom: layerObj.nom, color: layerObj.color, weight: layerObj.weight })
+            });
+
             if(layerObj.leafletLayer) {
                 layerObj.leafletLayer.setStyle({ color: layerObj.color, fillColor: layerObj.color, weight: layerObj.weight });
                 layerObj.leafletLayer.eachLayer(function (layer) {
                     if (layer instanceof L.CircleMarker) { layer.setStyle({ color: layerObj.color, fillColor: layerObj.color }); }
                 });
             }
-        }
+        };
 
         window.handleKMLUpload = async function(event) {
             const file = event.target.files[0];
@@ -873,7 +922,7 @@
                 }
                 event.target.value = ""; 
             }, 100);
-        }
+        };
 
         function addGeoJsonToMap(id, name, geojson, isVisible, hexColor, weight) {
             let finalWeight = weight || 4;
@@ -908,7 +957,7 @@
             if(ext.isVisible) { map.addLayer(ext.layer); } else { map.removeLayer(ext.layer); }
             updateLayerDataInDB(id, { isVisible: ext.isVisible });
             renderCustomLayersList();
-        }
+        };
 
         window.changeExtLayerStyle = function(id, newColor, newWeight) {
             if(externalLayers[id]) {
@@ -926,13 +975,13 @@
                 }
                 updateLayerDataInDB(id, { color: col, weight: w });
             }
-        }
+        };
 
         window.deleteExtLayer = function(id) {
             map.removeLayer(externalLayers[id].layer); delete externalLayers[id];
             deleteLayerFromDB(id);
             renderCustomLayersList();
-        }
+        };
 
         // ==========================================
         // 8. CONSTRUCTION UI & FILTRES GENERAUX
@@ -1025,7 +1074,7 @@
             for(let i=0; i<4; i++) {
                 container.innerHTML += `<div class="dynamic-filter-slot"><select class="filter-select" id="filter-sel-${i}" data-idx="${i}">${optionsHTML}</select><div class="checkbox-list" id="filter-cbx-${i}" style="display:none;"></div></div>`;
             }
-        }
+        };
 
         window.renderCheckboxesForFilter = function(idx, colName) {
             let cbxContainer = document.getElementById(`filter-cbx-${idx}`);
@@ -1042,7 +1091,7 @@
             const updateLogic = () => { activeFilters[idx].vals = allBtn.checked ? ['all'] : Array.from(cbs).filter(c=>c.checked).map(c=>c.value); updateMap(); triggerGlobalFilterChart(); };
             allBtn.addEventListener('change', e => { if(e.target.checked) cbs.forEach(c=>c.checked=false); updateLogic(); });
             cbs.forEach(c => c.addEventListener('change', () => { if(c.checked) allBtn.checked=false; else if(Array.from(cbs).every(x=>!x.checked)) allBtn.checked=true; updateLogic(); }));
-        }
+        };
 
         function attachEvents() {
             document.querySelectorAll('input[name="main_theme"]').forEach(r => {
@@ -1073,7 +1122,7 @@
             document.getElementById('season-slider').addEventListener('input', e => { histSeasonIdx = parseInt(e.target.value); document.getElementById('season-display').innerText = saisonsList[histSeasonIdx]; calculateMaxes(); updateLegend(); updateMap(); renderSelectionPanel(); });
             document.getElementById('slider-min').addEventListener('input', e => { let val = parseFloat(e.target.value); if(val > currentMaxThreshold[histMetric]) { val = currentMaxThreshold[histMetric]; e.target.value = val; } currentMinThreshold[histMetric] = val; document.getElementById('val-min').innerText = val; updateMap(); });
             document.getElementById('slider-max').addEventListener('input', e => { let val = parseFloat(e.target.value); if(val < currentMinThreshold[histMetric]) { val = currentMinThreshold[histMetric]; e.target.value = val; } currentMaxThreshold[histMetric] = val; document.getElementById('val-max').innerText = val; updateMap(); });
-            document.getElementById('dynamic-filters-container').addEventListener('change', e => { if(e.target.classList.contains('filter-select')) renderCheckboxesForFilter(e.target.getAttribute('data-idx'), e.target.value); });
+            document.getElementById('dynamic-filters-container').addEventListener('change', e => { if(e.target.classList.contains('filter-select')) window.renderCheckboxesForFilter(e.target.getAttribute('data-idx'), e.target.value); });
         
             map.on('click', function(e) { 
                 if (currentlyEditingId && document.getElementById('allow-move-chk').checked) { 
@@ -1139,7 +1188,7 @@
                     histHtml = `<details class="ticket-history"><summary>📁 Historique d'interventions passées (${history.length})</summary><ul style="padding-left:15px; margin-top:10px;">`;
                     history.forEach(t => {
                         let dateStr = isNaN(new Date(t.date).getTime()) ? (t.date || "Inconnue") : new Date(t.date).toLocaleDateString('fr-FR');
-                        histHtml += `<li style="margin-bottom:8px; font-size:11.5px; border-bottom:1px solid #eee; padding-bottom:5px;"><b>${dateStr}</b> - <span style="color:#e74c3c;">${t.defaut}</span> <br><span style="color:#666;">Intervention : ${t.cause}</span></li>`;
+                        histHtml += `<li style="margin-bottom:8px; font-size:11.5px; border-bottom:1px solid #eee; padding-bottom:5px;"><b>${dateStr}</b> - <span style="color:#e74c3c;">${t.defaut}</span> <br><span style="color:#666;">Intervention : ${t.cause || "Non précisé"}</span></li>`;
                     });
                     histHtml += `</ul></details>`;
                 }
@@ -1174,11 +1223,19 @@
                     else {
                         mainContent = active.map(t => {
                             let borderCol = t.statut.includes('faire') ? '#e74c3c' : '#f39c12';
-                            let details = t.fullData.map(d => {
-                                if (d.k.toLowerCase().includes('defaut') || d.k.toLowerCase().includes('n°')) return '';
-                                return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #f9f9f9; padding:5px 0; font-size:12px;"><span style="color:#7f8c8d;">${d.k}</span><span style="font-weight:600; text-align:right; max-width:65%; color:#2c3e50;">${d.v}</span></div>`;
-                            }).join('');
-                            return `<div class="ticket-card" style="border-left-color:${borderCol};"><div style="font-weight:bold; font-size:14px; color:#333; margin-bottom:10px; display:flex; justify-content:space-between;"><span>${t.defaut}</span><span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${borderCol}20; color:${borderCol};">${t.statut.toUpperCase()}</span></div>${details}</div>`;
+                            let safeDef = t.defaut.replace(/'/g, "\\'");
+                            let safeId = p.id.replace(/'/g, "\\'");
+                            let safeStat = t.statut.replace(/'/g, "\\'");
+                            let idDiv = `ticket-edit-${safeId}-${safeDef.replace(/[^a-zA-Z0-9]/g, "")}`;
+                            return `
+                                <div class="ticket-card" style="border-left-color:${borderCol};">
+                                    <div style="font-weight:bold; font-size:14px; color:#333; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;">
+                                        <span style="flex-grow:1; margin-right:10px;">${t.defaut}</span>
+                                        <button onclick="editTicket('${safeId}', '${safeDef}', '${safeStat}')" style="background:none; border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; flex-shrink:0;">Éditer ✏️</button>
+                                    </div>
+                                    <span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${borderCol}20; color:${borderCol}; font-weight:bold;">STATUT : ${t.statut.toUpperCase()}</span>
+                                    <div id="${idDiv}"></div>
+                                </div>`;
                         }).join('') + histHtml;
                     }
                 } 
@@ -1203,6 +1260,44 @@
             });
         }
 
+        // =======================================================
+        // 9. LEGENDE ET HOVER EFFECTS
+        // =======================================================
+        window.highlightLegend = function(theme, val) {
+            if(!geojsonLayer) return;
+            geojsonLayer.eachLayer(function(layer) {
+                let p = layer.feature.properties;
+                let match = false;
+                
+                if (theme === 'defauts') {
+                    let act = getActiveTickets(p.id);
+                    if (val === 'urgent' && act.some(t => t.statut.includes('faire'))) match = true;
+                    if (val === 'encours' && act.some(t => t.statut.includes('cours'))) match = true;
+                    if (val === 'ras' && act.length === 0) match = true;
+                } else if (theme === 'type') {
+                    let tLower = getV(p, keyType).toLowerCase();
+                    if (val === 'demac' && ["demak lenko", "demac lenko"].includes(tLower)) match = true;
+                    else if (val === 'sufag' && ["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) match = true;
+                    else if (val === 'techno' && !["demak lenko", "demac lenko", "sufag", "street", "taurus", "taurax", "peak"].includes(tLower) && tLower !== "n/a") match = true;
+                } else if (theme === 'repeteur') {
+                    if (getV(p, keyRep) === val) match = true;
+                } else if (theme === 'transfo') {
+                    if (getV(p, keyTransfo) === val) match = true;
+                }
+
+                if (match) {
+                    layer.setOpacity(1); layer.setZIndexOffset(2000);
+                    if(layer._icon) layer._icon.style.transform += ' scale(1.3)';
+                } else {
+                    layer.setOpacity(0.2); layer.setZIndexOffset(0);
+                }
+            });
+        };
+
+        window.resetHighlight = function() {
+            updateMap();
+        };
+
         function getColorByFilter(ratio, props) {
             const inter = (c1,c2,f) => { let r=c1.slice(); for(let i=0;i<3;i++)r[i]=Math.round(r[i]+f*(c2[i]-c1[i])); return `rgb(${r[0]},${r[1]},${r[2]})`;};
             if (mainTheme === 'defauts') { let act = getActiveTickets(props.id); if (act.length === 0) return '#bdc3c7'; if (act.some(t => t.statut.includes('faire'))) return '#e74c3c'; return '#f39c12'; }
@@ -1216,10 +1311,10 @@
         }
 
         function updateLegend() {
-            if (mainTheme === 'defauts') { document.getElementById('legend-defauts').innerHTML = `<div class="legend-item"><div class="color-box" style="background: #e74c3c;"></div> Urgent (À faire)</div><div class="legend-item"><div class="color-box" style="background: #f39c12;"></div> En cours</div><div class="legend-item"><div class="color-box" style="background: #bdc3c7;"></div> RAS</div>`;}
-            else if (mainTheme === 'type') { document.getElementById('legend-type').innerHTML = `<div class="legend-item"><div class="color-box" style="background: #0000FF;"></div> Demac Lenko</div><div class="legend-item"><div class="color-box" style="background: #008000;"></div> Sufag / Peak</div><div class="legend-item"><div class="color-box" style="background: linear-gradient(to right, #f1c40f, #e67e22);"></div> Technoalpin</div>`;}
-            else if (mainTheme === 'repeteur') { let h=''; Object.keys(repColors).sort().forEach(k => h += `<div class="legend-item"><div class="color-box" style="background: ${repColors[k]};"></div> Répéteur ${k}</div>`); document.getElementById('legend-repeteur').innerHTML = h;}
-            else if (mainTheme === 'transfo') { let h=''; Object.keys(transfoColors).sort().forEach(k => h += `<div class="legend-item"><div class="color-box" style="background: ${transfoColors[k]};"></div> Transfo ${k}</div>`); document.getElementById('legend-transfo').innerHTML = h;}
+            if (mainTheme === 'defauts') { document.getElementById('legend-defauts').innerHTML = `<div class="legend-item" onmouseenter="highlightLegend('defauts', 'urgent')" onmouseleave="resetHighlight()"><div class="color-box" style="background: #e74c3c;"></div> Urgent (À faire)</div><div class="legend-item" onmouseenter="highlightLegend('defauts', 'encours')" onmouseleave="resetHighlight()"><div class="color-box" style="background: #f39c12;"></div> En cours</div><div class="legend-item" onmouseenter="highlightLegend('defauts', 'ras')" onmouseleave="resetHighlight()"><div class="color-box" style="background: #bdc3c7;"></div> RAS</div>`;}
+            else if (mainTheme === 'type') { document.getElementById('legend-type').innerHTML = `<div class="legend-item" onmouseenter="highlightLegend('type', 'demac')" onmouseleave="resetHighlight()"><div class="color-box" style="background: #0000FF;"></div> Demac Lenko</div><div class="legend-item" onmouseenter="highlightLegend('type', 'sufag')" onmouseleave="resetHighlight()"><div class="color-box" style="background: #008000;"></div> Sufag / Peak</div><div class="legend-item" onmouseenter="highlightLegend('type', 'techno')" onmouseleave="resetHighlight()"><div class="color-box" style="background: linear-gradient(to right, #f1c40f, #e67e22);"></div> Technoalpin</div>`;}
+            else if (mainTheme === 'repeteur') { let h=''; Object.keys(repColors).sort().forEach(k => h += `<div class="legend-item" onmouseenter="highlightLegend('repeteur', '${k}')" onmouseleave="resetHighlight()"><div class="color-box" style="background: ${repColors[k]};"></div> Répéteur ${k}</div>`); document.getElementById('legend-repeteur').innerHTML = h;}
+            else if (mainTheme === 'transfo') { let h=''; Object.keys(transfoColors).sort().forEach(k => h += `<div class="legend-item" onmouseenter="highlightLegend('transfo', '${k}')" onmouseleave="resetHighlight()"><div class="color-box" style="background: ${transfoColors[k]};"></div> Transfo ${k}</div>`); document.getElementById('legend-transfo').innerHTML = h;}
             else if (mainTheme === 'historique') {
                 let hL = document.getElementById('legend-historique');
                 if (histMetric === 'eau') hL.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #add8e6, #2980b9);"></div><div class="legend-labels"><span>0 m³</span><span>Max</span></div>`;
@@ -1241,10 +1336,7 @@
                 if (currentModules && !currentModules.includes('all')) { if (!currentModules.includes(getV(p, keyModule))) vis = false; }
 
                 activeFilters.forEach(filt => {
-                    if(filt.key && filt.vals.length > 0 && !filt.vals.includes('all')) {
-                        let val = getV(p, filt.key);
-                        if(!filt.vals.includes(val)) vis = false;
-                    }
+                    if(filt.key && filt.vals.length > 0 && !filt.vals.includes('all')) { let val = getV(p, filt.key); if(!filt.vals.includes(val)) vis = false; }
                 });
 
                 let val = 0;
@@ -1272,7 +1364,6 @@
                     else { layer.setZIndexOffset(0); }
 
                     let actClass = (mainTheme === 'defauts' && getActiveTickets(p.id).some(t => t.statut.includes('faire'))) ? "alert-urgent" : "";
-
                     layer.setIcon(L.divIcon({ className: 'custom-cannon-icon', html: `<div class="cannon-circle ${actClass}" style="background-color:${bg};width:${rad*2}px;height:${rad*2}px;line-height:${rad*2}px;border:${bw} solid ${bord};font-size:${fsz};">${p.id}</div>`, iconSize: [rad*2, rad*2], iconAnchor: [rad, rad] }));
                 }
             });
