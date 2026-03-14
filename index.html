@@ -67,9 +67,9 @@
         .checkbox-list { max-height: 120px; overflow-y: auto; padding: 5px; font-size: 12px; color: #555; }
         .checkbox-list label { display: block; margin-bottom: 6px; cursor: pointer; }
 
-        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color:#34495e; font-weight:600;}
-        .color-box { width: 14px; height: 14px; border-radius: 3px;}
-        .gradient-bar { height: 12px; border-radius: 4px; margin: 10px 0 5px 0; border: 1px solid #ccc; }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color:#34495e; font-weight:600;}
+        .color-box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #ccc;}
+        .gradient-bar { height: 10px; border-radius: 4px; margin: 10px 0 5px 0; border: 1px solid #ccc; }
         .legend-labels { display: flex; justify-content: space-between; font-size: 11px; color: #666; font-weight:bold;}
 
         #map-container { flex-grow: 1; position: relative; height: 100%; background: #222; }
@@ -116,6 +116,7 @@
     </style>
 </head>
 <body>
+    
     <div id="datalists-container"></div> 
 
     <div id="loading-overlay">
@@ -478,7 +479,6 @@
                     }
                 }
 
-                // GESTION ONGLET KMZ (GitHub)
                 if (data.kmz && data.kmz.length > 0) {
                     cloudKmzLayers = data.kmz.map(k => ({ ...k, isVisible: false, leafletLayer: null }));
                 }
@@ -518,13 +518,14 @@
 
         fetchGoogleSheetsData();
 
-        // LECTURE DIRECTE GITHUB
+        // ==========================================
+        // GESTION DES CALQUES (GITHUB & LOCAUX)
+        // ==========================================
         async function fetchGitHubKMZ(url) {
             const response = await fetch(url);
             if (!response.ok) throw new Error("GitHub refuse l'accès. Vérifiez que le dépôt est public et l'URL Raw.");
             
             let kmlString = "";
-            // Est-ce un KMZ ?
             if (url.toLowerCase().endsWith('.kmz')) {
                 const blob = await response.blob();
                 const arrayBuffer = await blob.arrayBuffer();
@@ -533,7 +534,6 @@
                 if (!kmlFile) throw new Error("Aucun fichier KML trouvé dans le KMZ.");
                 kmlString = await kmlFile.async("string");
             } 
-            // C'est un KML
             else {
                 kmlString = await response.text();
             }
@@ -609,9 +609,6 @@
             cbx.disabled = false;
         }
 
-        // ==========================================
-        // GESTION UPLOAD MANUEL LOCAL
-        // ==========================================
         async function handleKMLUpload(event) {
             const file = event.target.files[0];
             if(!file) return;
@@ -691,92 +688,32 @@
             renderCustomLayersList();
         }
 
+        // ==========================================
+        // FONCTIONS PRINCIPALES (UI & CARTE)
+        // ==========================================
+        function generateDynamicFiltersUI() {
+            let container = document.getElementById('dynamic-filters-container'); container.innerHTML = "";
+            let optionsHTML = `<option value="">-- Choisir un critère --</option>` + availableColumns.map(c => `<option value="${c}">${c.toUpperCase()}</option>`).join('');
+            for(let i=0; i<4; i++) {
+                container.innerHTML += `<div class="dynamic-filter-slot"><select class="filter-select" id="filter-sel-${i}" data-idx="${i}">${optionsHTML}</select><div class="checkbox-list" id="filter-cbx-${i}" style="display:none;"></div></div>`;
+            }
+        }
 
-        function getV(p, key) { if(!key) return "N/A"; let o = p.fullData.find(x => x.k === key); return o ? o.v.toString().trim() : "N/A"; }
-        function getTicketsForCanon(idCanon) { return rawTickets.filter(t => t.idCanon === idCanon); }
-        function getActiveTickets(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); }
-        function getHistoryTickets(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); }
-
-        function initApp() {
-            function hslToHex(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
-            let q=l<0.5?l*(1+s):l+s-l*s;let p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
-            const toHex=x=>{const hex=Math.round(x*255).toString(16);return hex.length===1?'0'+hex:hex;};return `#${toHex(r)}${toHex(g)}${toHex(b)}`;}
-            function generatePalette(arr, s = 0.7, l = 0.5) { let pal = {}; arr.forEach((item, i) => { pal[item] = hslToHex(i / arr.length, s, l); }); return pal; }
-
-            let tSet = new Set(), rSet = new Set(), trSet = new Set(), pSet = new Set(), vSet = new Set(), mSet = new Set();
+        function renderCheckboxesForFilter(idx, colName) {
+            let cbxContainer = document.getElementById(`filter-cbx-${idx}`);
+            if(!colName) { cbxContainer.style.display = 'none'; activeFilters[idx] = {key:"", vals:[]}; updateMap(); triggerGlobalFilterChart(); return; }
             
-            snowCannons.features.forEach(f => {
-                let p = f.properties;
-                let t = getV(p, keyType); if(t!=="N/A") tSet.add(t.toLowerCase()); 
-                let r = getV(p, keyRep); if(r!=="N/A") rSet.add(r); 
-                let tr = getV(p, keyTransfo); if(tr!=="N/A") trSet.add(tr); 
-                let pi = getV(p, keyPiste); if(pi!=="N/A") pSet.add(pi);
-                let va = getV(p, keyVanne); if(va!=="N/A") vSet.add(va);
-                let mo = getV(p, keyModule); if(mo!=="N/A") mSet.add(mo);
-            });
+            cbxContainer.style.display = 'block';
+            let vals = Array.from(columnValuesSets[colName] || []).sort();
+            let html = `<label><input type="checkbox" class="cb-all-${idx}" checked> <b>Tout sélectionner</b></label><hr style="margin:4px 0; border-top:1px solid #eee;">`;
+            vals.forEach(v => html += `<label><input type="checkbox" class="cb-val-${idx}" value="${v}"> ${v}</label>`);
+            cbxContainer.innerHTML = html;
+            activeFilters[idx] = {key: colName, vals: ['all']};
 
-            Array.from(tSet).sort().forEach((t, i) => { technoColors[t] = hslToHex(0.14, 1.0, tSet.size > 1 ? 0.8 - (i / (tSet.size - 1)) * 0.4 : 0.6); });
-            repColors = generatePalette(Array.from(rSet).sort(), 0.8, 0.45); transfoColors = generatePalette(Array.from(trSet).sort(), 0.65, 0.55);
-
-            snowCannons.features.forEach(f => {
-                let typeLower = getV(f.properties, keyType).toLowerCase(); let color = "#FFD700";
-                if (["demak lenko", "demac lenko"].includes(typeLower)) color = "#0000FF";
-                else if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeLower)) color = "#008000";
-                else color = technoColors[typeLower] || "#FFD700";
-                f.properties.couleur_defaut = color;
-            });
-
-            let dlContainer = document.getElementById('datalists-container');
-            if (!dlContainer) { dlContainer = document.createElement('div'); dlContainer.id = 'datalists-container'; document.body.appendChild(dlContainer); }
-            let dlHtml = "";
-            for(let header in columnValuesSets) {
-                let safeId = "dl-" + header.replace(/[^a-zA-Z0-9]/g, '-');
-                dlHtml += `<datalist id="${safeId}">${Array.from(columnValuesSets[header]).sort().map(v=>`<option value="${v}">`).join('')}</datalist>`;
-            }
-            dlContainer.innerHTML = dlHtml;
-
-            if (saisonsList.length > 0) {
-                let sld = document.getElementById('season-slider');
-                sld.max = saisonsList.length - 1; sld.value = histSeasonIdx;
-                document.getElementById('season-display').innerText = saisonsList[histSeasonIdx];
-            }
-
-            function buildCbs(id, set, cls) { const c = document.getElementById(id); c.innerHTML = ''; [...set].sort().forEach(v => { let l=document.createElement('label'); let cb=document.createElement('input'); cb.type='checkbox'; cb.className=cls; cb.value=v; l.appendChild(cb); l.appendChild(document.createTextNode(' '+v)); c.appendChild(l); }); }
-            buildCbs('individual-pistes', pSet, 'piste-cb'); buildCbs('individual-types', tSet, 'type-cb'); buildCbs('individual-vannes', vSet, 'vanne-cb'); buildCbs('individual-modules', mSet, 'module-cb');
-
-            function setupCbs(allId, cls, cbk) { const aBtn = document.getElementById(allId); const cbs = document.querySelectorAll('.'+cls); const getVals = () => aBtn.checked ? ['all'] : Array.from(cbs).filter(c=>c.checked).map(c=>c.value); aBtn.addEventListener('change', e => { if(e.target.checked) cbs.forEach(c=>c.checked=false); cbk(getVals()); }); cbs.forEach(c => c.addEventListener('change', () => { if(c.checked) aBtn.checked=false; else if(Array.from(cbs).every(x=>!x.checked)) aBtn.checked=true; cbk(getVals()); })); }
-            setupCbs('check-all-pistes', 'piste-cb', vals => { currentPistes = vals; updateMap(); triggerGlobalFilterChart(); }); 
-            setupCbs('check-all-types', 'type-cb', vals => { currentTypes = vals; updateMap(); triggerGlobalFilterChart(); }); 
-            setupCbs('check-all-vannes', 'vanne-cb', vals => { currentVannes = vals; updateMap(); triggerGlobalFilterChart(); }); 
-            setupCbs('check-all-modules', 'module-cb', vals => { currentModules = vals; updateMap(); triggerGlobalFilterChart(); });
-
-            generateDynamicFiltersUI();
-            renderCloudLayersList();
-            calculateMaxes();
-
-            geojsonLayer = L.geoJSON(snowCannons, {
-                pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: L.divIcon({ className: 'custom-cannon-icon', html: `<div></div>` }) }); },
-                onEachFeature: function (feature, layer) {
-                    layer.on('click', function(e) {
-                        L.DomEvent.stopPropagation(e);
-                        if (currentlyEditingId) return; 
-                        const id = feature.properties.id;
-                        if (!isMultiSelect) selectedCannonsMap.clear(); 
-                        if (selectedCannonsMap.has(id)) selectedCannonsMap.delete(id); else selectedCannonsMap.set(id, layer);
-                        updateMap(); renderSelectionPanel();
-                        if (selectedCannonsMap.size > 0) document.getElementById('right-sidebar').classList.add('open');
-                        else document.getElementById('right-sidebar').classList.remove('open');
-                    });
-                }
-            }).addTo(map);
-
-            if (snowCannons.features.length > 0) {
-                let bounds = geojsonLayer.getBounds();
-                if(bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30] });
-            }
-            
-            attachEvents();
-            updateLegend(); updateMap();
+            let allBtn = cbxContainer.querySelector(`.cb-all-${idx}`); let cbs = cbxContainer.querySelectorAll(`.cb-val-${idx}`);
+            const updateLogic = () => { activeFilters[idx].vals = allBtn.checked ? ['all'] : Array.from(cbs).filter(c=>c.checked).map(c=>c.value); updateMap(); triggerGlobalFilterChart(); };
+            allBtn.addEventListener('change', e => { if(e.target.checked) cbs.forEach(c=>c.checked=false); updateLogic(); });
+            cbs.forEach(c => c.addEventListener('change', () => { if(c.checked) allBtn.checked=false; else if(Array.from(cbs).every(x=>!x.checked)) allBtn.checked=true; updateLogic(); }));
         }
 
         function attachEvents() {
@@ -854,7 +791,6 @@
             renderSelectionPanel();
         }
 
-        // SAUVEGARDE
         document.getElementById('btn-save-edit').addEventListener('click', async () => {
             if (!currentlyEditingId) return;
             const btn = document.getElementById('btn-save-edit'); btn.innerText = "⏳ Envoi..."; btn.disabled = true;
@@ -987,6 +923,111 @@
             });
         }
 
+        function drawPisteCompareChart(targetCannon) {
+            let canvasId = `chart-${targetCannon.id}`; let ctx = document.getElementById(canvasId); if(!ctx) return;
+            if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+            let s = saisonsList[histSeasonIdx]; let pName = getV(targetCannon, keyPiste);
+            let pisteCannons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === pName && f.properties.historique[s]);
+            pisteCannons.sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
+            
+            let bgColors = pisteCannons.map(f => f.properties.id === targetCannon.id ? '#e74c3c' : '#3498db');
+
+            chartInstances[canvasId] = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: { labels: pisteCannons.map(f => f.properties.id), datasets: [{ data: pisteCannons.map(f => f.properties.historique[s][histMetric]), backgroundColor: bgColors, borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: {font:{size:10}} } } }
+            });
+        }
+
+        window.drawSecondPisteChart = function(targetId, seasonStr) {
+            let canvasId = `chart2-${targetId}`; let ctx = document.getElementById(canvasId); if(!ctx) return;
+            if(chartInstances[canvasId]) { chartInstances[canvasId].destroy(); }
+            if(!seasonStr) return;
+
+            let targetCannon = snowCannons.features.find(f => f.properties.id === targetId).properties;
+            let pName = getV(targetCannon, keyPiste);
+            let pisteCannons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === pName && f.properties.historique[seasonStr]);
+            pisteCannons.sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
+            
+            let bgColors = pisteCannons.map(f => f.properties.id === targetId ? '#e74c3c' : '#9b59b6');
+
+            chartInstances[canvasId] = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: { labels: pisteCannons.map(f => f.properties.id), datasets: [{ data: pisteCannons.map(f => f.properties.historique[seasonStr][histMetric]), backgroundColor: bgColors, borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: {font:{size:10}} } } }
+            });
+        }
+
+        window.openGlobalCompareModal = function() {
+            let s1 = document.getElementById('comp-s1'); let s2 = document.getElementById('comp-s2');
+            s1.innerHTML = ""; s2.innerHTML = "";
+            saisonsList.forEach((s, i) => {
+                s1.innerHTML += `<option value="${s}" ${i===0?'selected':''}>${s}</option>`;
+                s2.innerHTML += `<option value="${s}" ${i===1?'selected':''}>${s}</option>`;
+            });
+            document.getElementById('compare-modal').style.display = 'flex';
+            renderGlobalComparison();
+        }
+
+        window.renderGlobalComparison = function() {
+            let s1 = document.getElementById('comp-s1').value; let s2 = document.getElementById('comp-s2').value;
+            let metric = document.getElementById('comp-metric').value;
+            document.getElementById('comp-title-1').innerText = `Saison ${s1} - ${metric.toUpperCase()}`;
+            document.getElementById('comp-title-2').innerText = `Saison ${s2} - ${metric.toUpperCase()}`;
+
+            let pistes = Array.from(columnValuesSets[keyPiste] || []).sort();
+            let d1 = [], d2 = [];
+
+            pistes.forEach(p => {
+                let sum1 = 0; let sum2 = 0;
+                snowCannons.features.forEach(f => {
+                    if (getV(f.properties, keyPiste) === p) {
+                        if(f.properties.historique[s1]) sum1 += f.properties.historique[s1][metric];
+                        if(f.properties.historique[s2]) sum2 += f.properties.historique[s2][metric];
+                    }
+                });
+                d1.push(sum1); d2.push(sum2);
+            });
+
+            if(chartInstances['c1']) chartInstances['c1'].destroy();
+            chartInstances['c1'] = new Chart(document.getElementById('comp-canvas-1').getContext('2d'), {
+                type: 'bar', data: { labels: pistes, datasets: [{ data: d1, backgroundColor: '#3498db' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            if(chartInstances['c2']) chartInstances['c2'].destroy();
+            chartInstances['c2'] = new Chart(document.getElementById('comp-canvas-2').getContext('2d'), {
+                type: 'bar', data: { labels: pistes, datasets: [{ data: d2, backgroundColor: '#e67e22' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function startEdit(id) {
+            currentlyEditingId = id; const layer = selectedCannonsMap.get(id); const p = layer.feature.properties;
+            document.getElementById('edit-id-display').innerText = p.id; document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-lat').value = layer.getLatLng().lat.toFixed(7); document.getElementById('edit-lng').value = layer.getLatLng().lng.toFixed(7);
+            
+            let formContainer = document.getElementById('dynamic-edit-fields'); formContainer.innerHTML = "";
+            p.fullData.forEach(item => {
+                let kLow = item.k.toLowerCase();
+                if(kLow.includes('regard') || kLow.includes('xy') || kLow.includes('gps')) return;
+                let safeId = "dl-" + item.k.replace(/[^a-zA-Z0-9]/g, '-');
+                formContainer.innerHTML += `<div style="margin-bottom:10px;"><div class="edit-label">${item.k}</div><input type="text" class="edit-input dyn-field" data-key="${item.k}" value="${item.v}" list="${safeId}"></div>`;
+            });
+
+            document.getElementById('allow-move-chk').checked = false; 
+            document.getElementById('view-selection').style.display = 'none'; document.getElementById('view-edit').style.display = 'block';
+            document.getElementById('right-header').classList.add('editing'); document.getElementById('right-title').innerText = "✏️ Édition Complète";
+            updateMap(); 
+        }
+
+        function cancelEdit() {
+            currentlyEditingId = null; document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none';
+            document.getElementById('right-header').classList.remove('editing'); document.getElementById('right-title').innerText = "📌 Fiche Détaillée";
+            updateMap(); renderSelectionPanel();
+        }
+
         function getColorByFilter(ratio, props) {
             const inter = (c1,c2,f) => { let r=c1.slice(); for(let i=0;i<3;i++)r[i]=Math.round(r[i]+f*(c2[i]-c1[i])); return `rgb(${r[0]},${r[1]},${r[2]})`;};
             if (mainTheme === 'defauts') {
@@ -1075,6 +1116,15 @@
                 console.error(e);
             }
         }
+
+        // INIT FILTERS AFTER LOAD
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if(document.getElementById('datalists-container')) {
+                    // console.log("Prêt");
+                }
+            }, 1000);
+        });
     </script>
 </body>
 </html>
