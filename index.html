@@ -7,6 +7,7 @@
     
     <script>
         window.onerror = function(message, source, lineno) {
+            document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('loading-spinner').style.display = 'none';
             document.getElementById('loading-title').innerText = "🛑 CRASH SYSTÈME";
             document.getElementById('loading-title').style.color = "#e74c3c";
@@ -97,6 +98,7 @@
         .edit-label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase;}
         #dynamic-edit-fields { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 6px; max-height: 45vh; overflow-y: auto;}
 
+        /* FENETRE COMPARAISON MODAL */
         #compare-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 700px; max-width: 90%; background: white; z-index: 9999; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #ccc; flex-direction: column; overflow: hidden; }
         .comp-header { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: bold; }
         .comp-body { padding: 20px; max-height: 70vh; overflow-y: auto; background: #f4f6f8; }
@@ -331,16 +333,16 @@
 
                     let lat = 0, lng = 0;
                     if (row[idxXY]) {
-                        let xyStr = row[idxXY].toString().replace(/;/g, ',').replace(/\//g, ',');
-                        if (!xyStr.includes(',') && xyStr.includes(' ')) xyStr = xyStr.replace(' ', ',');
-                        let parts = xyStr.split(',');
-                        if (parts.length >= 2) { 
-                            lat = parseFloat(parts[0].trim().replace(',', '.')); 
-                            lng = parseFloat(parts[1].trim().replace(',', '.')); 
+                        // Extraction ULTRA AGRESSIVE des coordonnées GPS
+                        let txt = String(row[idxXY]).replace(/,/g, '.'); 
+                        let matches = txt.match(/-?\d+(?:\.\d+)?/g);
+                        if (matches && matches.length >= 2) { 
+                            lat = parseFloat(matches[0]); 
+                            lng = parseFloat(matches[1]); 
+                            // Correction auto pour la France
                             if (lat < 20 && lng > 30) { let temp = lat; lat = lng; lng = temp; }
                         }
                     }
-                    if (!isNaN(lat) && !isNaN(lng) && lat !== 0) validPointsCount++;
 
                     let fullData = [];
                     originalHeaders.forEach((head, i) => { 
@@ -349,6 +351,10 @@
                         if(val !== "N/A" && columnValuesSets[head]) columnValuesSets[head].add(val.trim());
                     });
 
+                    // ON AJOUTE LE CANON MEME S'IL N'A PAS DE GPS VALIDE AU DÉPART (il ne s'affichera juste pas, mais on le stocke)
+                    if (!isNaN(lat) && !isNaN(lng) && lat !== 0) {
+                        validPointsCount++;
+                    }
                     dictGeneral[id] = { id: id, lat: lat, lng: lng, fullData: fullData, historique: {} };
                 });
 
@@ -409,8 +415,10 @@
                     }
                 }
 
+                // SÉCURITÉ MAXIMALE POUR LA CARTE LEAFLET
                 Object.values(dictGeneral).forEach(canon => {
-                    if (canon.lat !== 0 && !isNaN(canon.lat)) { 
+                    // On ne pousse dans la carte QUE les canons qui ont des coordonnées PARFAITEMENT valides
+                    if (canon.lat != null && canon.lng != null && !isNaN(canon.lat) && !isNaN(canon.lng) && canon.lat !== 0 && canon.lng !== 0) { 
                         snowCannons.features.push({ "type": "Feature", "geometry": { "type": "Point", "coordinates": [canon.lng, canon.lat] }, "properties": canon });
                     }
                 });
@@ -490,7 +498,6 @@
                 let safeId = "dl-" + header.replace(/[^a-zA-Z0-9]/g, '-');
                 dlHtml += `<datalist id="${safeId}">${Array.from(columnValuesSets[header]).sort().map(v=>`<option value="${v}">`).join('')}</datalist>`;
             }
-            // Le fameux conteneur est désormais bien présent !
             document.getElementById('datalists-container').innerHTML = dlHtml;
 
             if (saisonsList.length > 0) {
