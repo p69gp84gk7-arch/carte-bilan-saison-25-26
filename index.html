@@ -4,7 +4,10 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GMAO Neige - Mode Expert BI</title>
     <script>
-        window.showCrash = function(msg, line) { let o = document.getElementById('loading-overlay'); if (o) { o.style.display = 'flex'; document.getElementById('loading-spinner').style.display = 'none'; document.getElementById('loading-title').innerText = "🛑 ERREUR SYSTEME"; if(document.getElementById('loading-desc')) document.getElementById('loading-desc').style.display = 'none'; if(document.getElementById('loading-step')) document.getElementById('loading-step').style.display = 'none'; document.getElementById('error-box').style.display = 'block'; document.getElementById('error-msg').innerHTML = "<b>Détail :</b> " + msg + (line ? "<br><b>Lieu :</b> " + line : ""); } else { alert("🛑 CRASH : " + msg); } };
+        window.showCrash = function(msg, line) {
+            let o = document.getElementById('loading-overlay');
+            if (o) { o.style.display = 'flex'; document.getElementById('loading-spinner').style.display = 'none'; document.getElementById('loading-title').innerText = "🛑 ERREUR SYSTEME"; if(document.getElementById('loading-desc')) document.getElementById('loading-desc').style.display = 'none'; if(document.getElementById('loading-step')) document.getElementById('loading-step').style.display = 'none'; document.getElementById('error-box').style.display = 'block'; document.getElementById('error-msg').innerHTML = "<b>Détail :</b> " + msg + (line ? "<br><b>Lieu :</b> " + line : ""); } else { alert("🛑 CRASH : " + msg); }
+        };
         window.onerror = function(msg, src, ln) { if (msg.indexOf('Script error') > -1) return false; window.showCrash(msg, ln); return true; };
         window.addEventListener('unhandledrejection', function(e) { window.showCrash(e.reason ? e.reason.message : "Erreur réseau bloquée", "Réseau/Promesse"); });
     </script>
@@ -42,7 +45,7 @@
         input[type=range]{width:100%;margin:0;accent-color:#3498db;cursor:pointer;}
         .val-badge{color:#e74c3c;font-weight:bold;}
         .dynamic-filter-slot{background:#fff;border:1px solid #e1e8ed;border-radius:6px;padding:10px;margin-bottom:10px;}
-        .filter-select{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:12px;color:#333;margin-bottom:8px;outline:none;}
+        .filter-select{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:12px;color:#333;margin-bottom:8px;outline:none;background:#f9f9f9;}
         .checkbox-list{max-height:120px;overflow-y:auto;padding:5px;font-size:12px;color:#555;}
         .checkbox-list label{display:block;margin-bottom:6px;cursor:pointer;}
         .legend-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:#34495e;font-weight:600;cursor:pointer;padding:4px;border-radius:4px;}
@@ -70,7 +73,7 @@
         .piste-chart-container{background:#fff;border:1px solid #eee;padding:15px;border-radius:6px;margin-top:15px;}
         .btn-action-primary{background:#3498db;color:white;border:none;padding:12px;border-radius:6px;cursor:pointer;font-size:13px;margin-top:15px;width:100%;font-weight:bold;}
         .edit-input{width:100%;box-sizing:border-box;padding:10px;margin-top:4px;margin-bottom:12px;border:1px solid #ccc;border-radius:4px;font-size:13px;}
-        .edit-label{font-size:11px;font-weight:bold;color:#555;}
+        .edit-label{font-size:11px;font-weight:bold;color:#555;text-transform:uppercase;}
         #dynamic-edit-fields{background:#f9f9f9;padding:15px;border:1px solid #ddd;border-radius:6px;max-height:45vh;overflow-y:auto;}
         #compare-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:800px;max-width:95%;background:white;z-index:9999;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);border:1px solid #ccc;flex-direction:column;overflow:hidden;}
         .comp-header{background:#2c3e50;color:white;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:bold;}
@@ -124,7 +127,7 @@
             </details>
             <details class="panel-section" open><summary>2. Filtres Rapides</summary><div class="section-content" style="padding-top: 5px;"><b style="font-size:12px;">Pistes :</b><div class="checkbox-list" id="piste-checkboxes"></div><b style="font-size:12px;">Type Canon :</b><div class="checkbox-list" id="type-checkboxes"></div><b style="font-size:12px;">Vanne :</b><div class="checkbox-list" id="vanne-checkboxes"></div><b style="font-size:12px;">Module :</b><div class="checkbox-list" id="module-checkboxes"></div></div></details>
             <details class="panel-section"><summary>3. Filtres sur-mesure</summary><div class="section-content" id="dynamic-filters-container"></div></details>
-            <details class="panel-section" open><summary>4. Calques & Tracés (KMZ)</summary><div class="section-content" style="padding-top: 5px;"><p style="font-size:11px; color:#666; margin-bottom:10px;"><b>1. Cloud (Depuis onglet KMZ) :</b></p><div id="cloud-layers-container"></div><hr style="margin:15px 0; border-top:1px dashed #ccc;"><p style="font-size:11px; color:#666; margin-bottom:10px;"><b>2. Import Manuel depuis votre PC :</b></p><input type="file" id="kml-upload" accept=".kml,.kmz" style="display:none;" onchange="window.handleKMLUpload(event)"><button class="btn-action-primary" style="margin-top:0; background:#8e44ad;" onclick="document.getElementById('kml-upload').click()">📂 Importer / Parcourir...</button><div id="custom-layers-list" style="margin-top:15px;"></div></div></details>
+            <details class="panel-section" open><summary>4. Calques & Tracés (KMZ)</summary><div class="section-content" style="padding-top: 5px;"><p style="font-size:11px; color:#666; margin-bottom:10px;"><b>1. Cloud (Depuis onglet KMZ) :</b></p><div id="cloud-layers-container"></div><hr style="margin:15px 0; border-top:1px dashed #ccc;"><p style="font-size:11px; color:#666; margin-bottom:10px;"><b>2. Import Manuel depuis PC :</b></p><input type="file" id="kml-upload" accept=".kml,.kmz" style="display:none;" onchange="window.handleKMLUpload(event)"><button class="btn-action-primary" style="margin-top:0; background:#8e44ad;" onclick="document.getElementById('kml-upload').click()">📂 Importer / Parcourir...</button><div id="custom-layers-list" style="margin-top:15px;"></div></div></details>
         </div>
 
         <div id="map-container">
@@ -155,7 +158,10 @@
     </div>
 
     <script>
-        // ⚠️ LIEN GOOGLE APPS SCRIPT (À VÉRIFIER) ⚠️
+        // =======================================================
+        // 1. CONFIGURATION & VARIABLES GLOBALES 
+        // =======================================================
+        // ⚠️ REMPLACEZ L'URL ICI ⚠️
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
         
         window.map = null; window.satLayer = null;
@@ -172,28 +178,53 @@
         window.keyPiste = ""; window.keyType = ""; window.keyRep = ""; window.keyTransfo = ""; window.keyVanne = ""; window.keyModule = "";
         window.localDB = null; window.bootAttempt = 0; window.tempTicketPayloads = {};
 
+        // FONCTIONS UTILITAIRES
         window.getV = function(p, key) { if(!key || !p || !p.fullData) return "N/A"; let o = p.fullData.find(x => x.k === key); return o ? o.v.toString().trim() : "N/A"; };
         window.getTicketsForCanon = function(idCanon) { return window.rawTickets.filter(t => t.idCanon === idCanon); };
         window.getActiveTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); };
         window.getHistoryTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); };
 
-        window.toggleRightSidebar = function() { let sb = document.getElementById('right-sidebar'); if(!sb) return; if(sb.classList.contains('open')) { sb.classList.remove('open'); } else { sb.classList.add('open'); if(window.selectedCannonsMap.size === 0 && !window.currentlyEditingId) { window.triggerGlobalFilterChart(); } else { window.renderSelectionPanel(); } } };
-        window.toggleMultiSelect = function() { window.isMultiSelect = !window.isMultiSelect; const btn = document.getElementById('btn-multi-toggle'); if(!btn) return; if(window.isMultiSelect) { btn.classList.add('active'); btn.innerText = "🔲 Multi-Sélection : ACTIVÉE"; } else { btn.classList.remove('active'); btn.innerText = "🔲 Multi-Sélection : OFF"; if(window.selectedCannonsMap.size > 1) window.clearSelection(); } window.renderSelectionPanel(); };
+        // ACTIONS BOUTONS ET UI
+        window.toggleRightSidebar = function() {
+            let sb = document.getElementById('right-sidebar'); if(!sb) return;
+            if(sb.classList.contains('open')) { sb.classList.remove('open'); } 
+            else { sb.classList.add('open'); if(window.selectedCannonsMap.size === 0 && !window.currentlyEditingId) { window.triggerGlobalFilterChart(); } else { window.renderSelectionPanel(); } }
+        };
+
+        window.toggleMultiSelect = function() {
+            window.isMultiSelect = !window.isMultiSelect; const btn = document.getElementById('btn-multi-toggle'); if(!btn) return;
+            if(window.isMultiSelect) { btn.classList.add('active'); btn.innerText = "🔲 Multi-Sélection : ACTIVÉE"; } 
+            else { btn.classList.remove('active'); btn.innerText = "🔲 Multi-Sélection : OFF"; if(window.selectedCannonsMap.size > 1) window.clearSelection(); }
+            window.renderSelectionPanel();
+        };
+
         window.closeRightSidebar = function() { let sb = document.getElementById('right-sidebar'); if(sb) sb.classList.remove('open'); };
         window.clearSelection = function() { window.selectedCannonsMap.clear(); window.updateMap(); window.renderSelectionPanel(); window.triggerGlobalFilterChart(); };
-        window.cancelEdit = function() { window.currentlyEditingId = null; let vs = document.getElementById('view-selection'); if(vs) vs.style.display = 'block'; let ve = document.getElementById('view-edit'); if(ve) ve.style.display = 'none'; let rh = document.getElementById('right-header'); if(rh) rh.classList.remove('editing'); let rt = document.getElementById('right-title'); if(rt) rt.innerText = "📌 Fiche Détaillée"; window.updateMap(); window.renderSelectionPanel(); };
+        
+        window.cancelEdit = function() {
+            window.currentlyEditingId = null; let vs = document.getElementById('view-selection'); if(vs) vs.style.display = 'block'; 
+            let ve = document.getElementById('view-edit'); if(ve) ve.style.display = 'none';
+            let rh = document.getElementById('right-header'); if(rh) rh.classList.remove('editing'); 
+            let rt = document.getElementById('right-title'); if(rt) rt.innerText = "📌 Fiche Détaillée";
+            window.updateMap(); window.renderSelectionPanel();
+        };
 
+        // SAUVEGARDE EDITION CANON
         window.saveEditData = async function() {
             if (!window.currentlyEditingId) return;
             const btn = document.getElementById('btn-save-edit'); if(btn) { btn.innerText = "⏳ Envoi..."; btn.disabled = true; }
             let fieldsObj = {}; document.querySelectorAll('.dyn-field').forEach(inp => { fieldsObj[inp.getAttribute('data-key')] = inp.value; });
             const payload = { id: document.getElementById('edit-id').value, lat: parseFloat(document.getElementById('edit-lat').value), lng: parseFloat(document.getElementById('edit-lng').value), fields: fieldsObj };
             try {
-                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) }); const result = await response.json();
+                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
                 if(result.status === "success") {
-                    const layer = window.selectedCannonsMap.get(window.currentlyEditingId); const p = layer.feature.properties; p.fullData.forEach(item => { if(fieldsObj[item.k] !== undefined) item.v = fieldsObj[item.k]; });
-                    let tLower = window.getV(p, window.keyType).toLowerCase().trim(); if (["demak lenko", "demac lenko"].includes(tLower)) p.couleur_defaut = "#0000FF"; else if (["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) p.couleur_defaut = "#008000"; else p.couleur_defaut = window.technoColors[tLower] || "#FFD700";
-                    layer.feature.geometry.coordinates = [payload.lng, payload.lat]; layer.setLatLng([payload.lat, payload.lng]); window.cancelEdit();
+                    const layer = window.selectedCannonsMap.get(window.currentlyEditingId); const p = layer.feature.properties;
+                    p.fullData.forEach(item => { if(fieldsObj[item.k] !== undefined) item.v = fieldsObj[item.k]; });
+                    let tLower = window.getV(p, window.keyType).toLowerCase().trim();
+                    if (["demak lenko", "demac lenko"].includes(tLower)) p.couleur_defaut = "#0000FF"; else if (["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) p.couleur_defaut = "#008000"; else p.couleur_defaut = window.technoColors[tLower] || "#FFD700";
+                    layer.feature.geometry.coordinates = [payload.lng, payload.lat]; layer.setLatLng([payload.lat, payload.lng]);
+                    window.cancelEdit();
                 } else { alert("Erreur Google : " + result.message); }
             } catch (err) { alert("Échec réseau."); }
             if(btn) { btn.innerText = "✅ Sauvegarder"; btn.disabled = false; }
@@ -206,7 +237,11 @@
             let formContainer = document.getElementById('dynamic-edit-fields'); 
             if(formContainer) {
                 formContainer.innerHTML = "";
-                p.fullData.forEach(item => { let kLow = item.k.toLowerCase(); if(kLow.includes('regard') || kLow.includes('xy') || kLow.includes('gps')) return; let safeId = "dl-" + item.k.replace(/[^a-zA-Z0-9]/g, '-'); formContainer.innerHTML += `<div style="margin-bottom:10px;"><div class="edit-label">${item.k}</div><input type="text" class="edit-input dyn-field" data-key="${item.k}" value="${item.v}" list="${safeId}"></div>`; });
+                p.fullData.forEach(item => {
+                    let kLow = item.k.toLowerCase(); if(kLow.includes('regard') || kLow.includes('xy') || kLow.includes('gps')) return;
+                    let safeId = "dl-" + item.k.replace(/[^a-zA-Z0-9]/g, '-');
+                    formContainer.innerHTML += `<div style="margin-bottom:10px;"><div class="edit-label">${item.k}</div><input type="text" class="edit-input dyn-field" data-key="${item.k}" value="${item.v}" list="${safeId}"></div>`;
+                });
             }
             let chk = document.getElementById('allow-move-chk'); if(chk) chk.checked = false; let vs = document.getElementById('view-selection'); if(vs) vs.style.display = 'none'; let ve = document.getElementById('view-edit'); if(ve) ve.style.display = 'block';
             let rh = document.getElementById('right-header'); if(rh) rh.classList.add('editing'); let rt = document.getElementById('right-title'); if(rt) rt.innerText = "✏️ Édition Complète"; window.updateMap(); 
@@ -219,6 +254,7 @@
             });
         };
 
+        // SURBRILLANCE LEGENDE
         window.highlightLegend = function(theme, val) {
             if (theme === 'historique') return; if(!window.geojsonLayer) return;
             window.geojsonLayer.eachLayer(function(layer) {
@@ -231,12 +267,14 @@
                     let tLower = window.getV(p, window.keyType).toLowerCase();
                     if (val === 'demac' && ["demak lenko", "demac lenko"].includes(tLower)) match = true; else if (val === 'sufag' && ["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) match = true; else if (val === 'techno' && !["demak lenko", "demac lenko", "sufag", "street", "taurus", "taurax", "peak"].includes(tLower) && tLower !== "n/a") match = true;
                 } else if (theme === 'repeteur') { if (window.getV(p, window.keyRep) === val) match = true; } else if (theme === 'transfo') { if (window.getV(p, window.keyTransfo) === val) match = true; }
+
                 if (match) { layer.setOpacity(1); layer.setZIndexOffset(2000); if(layer._icon) { layer._icon.style.opacity = "1"; if(!layer._icon.style.transform.includes('scale(1.3)')) layer._icon.style.transform += ' scale(1.3)'; } } else { layer.setOpacity(0.2); layer.setZIndexOffset(0); if(layer._icon) { layer._icon.style.opacity = "0.2"; layer._icon.style.transform = layer._icon.style.transform.replace(' scale(1.3)', ''); } }
             });
         };
 
         window.resetHighlight = function() { if(!window.geojsonLayer) return; window.geojsonLayer.eachLayer(function(layer) { layer.setOpacity(1); if(layer._icon) { layer._icon.style.opacity = "1"; layer._icon.style.transform = layer._icon.style.transform.replace(' scale(1.3)', ''); } }); window.updateMap(); };
 
+        // EDITEUR TICKETS COMPLET (ET VERIFICATION)
         window.editFullTicket = function(canonId, defaut) {
             let safeDef = defaut.replace(/[^a-zA-Z0-9]/g, ""); let idDiv = `ticket-edit-${canonId}-${safeDef}`; let el = document.getElementById(idDiv); if(!el) return;
             let ticket = window.rawTickets.find(t => t.idCanon === canonId && t.defaut === defaut); if(!ticket) return;
@@ -260,19 +298,21 @@
                 let oldValRaw = d.v.toString().trim(); let newValRaw = (fieldsObj[d.k] !== undefined) ? fieldsObj[d.k].trim() : oldValRaw;
                 if (fieldsObj[d.k] !== undefined && newValRaw !== oldValRaw) {
                     hasChanges = true; let oldDisplay = oldValRaw === "" ? "<i>(vide)</i>" : oldValRaw; let newDisplay = newValRaw === "" ? "<i>(vide)</i>" : newValRaw;
-                    diffHtml += `<div style="margin-bottom:5px; font-size:12px; border-bottom:1px dotted #ccc; padding-bottom:3px; display:flex; justify-content:space-between; align-items:center;"><span style="color:#555; font-weight:bold;">${d.k} :</span> <span style="text-align:right; flex-grow:1; margin-left:10px;"><span style="color:#e74c3c; text-decoration:line-through; font-size:11px;">${oldDisplay}</span><br>➔ <span style="color:#27ae60; font-weight:bold;">${newDisplay}</span></span></div>`;
+                    diffHtml += `<div style="margin-bottom:5px; font-size:12px; border-bottom:1px dotted #ccc; padding-bottom:3px; display:flex; justify-content:space-between; align-items:center;"><span style="color:#555; font-weight:bold;">${d.k} :</span> <span style="text-align:right; flex-grow:1; margin-left:10px;"><span style="color:#e74c3c; text-decoration:line-through; font-size:11px;">${oldDisplay}</span> <br>➔ <span style="color:#27ae60; font-weight:bold;">${newDisplay}</span></span></div>`;
                 }
             });
             if (!hasChanges) { alert("Aucune modification n'a été détectée."); window.renderSelectionPanel(); return; }
             window.tempTicketPayloads[idDiv] = { payload: { action: "update_ticket", idCanon: canonId, defaut: defaut, fields: fieldsObj }, newStatut: newStatutForLocal };
             let el = document.getElementById(idDiv);
-            if(el) { el.innerHTML = `<div style="background:#fff3cd; padding:15px; border-radius:6px; border:2px solid #f39c12; margin-top:10px;"><div style="font-size:14px; font-weight:bold; color:#d35400; margin-bottom:15px; text-transform:uppercase;">⚠️ Vérification :</div>${diffHtml}<div style="display:flex; gap:10px; margin-top:20px;"><button onclick="window.renderSelectionPanel()" style="flex:1; padding:10px; background:#bdc3c7; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Annuler</button><button onclick="window.confirmSaveTicket('${canonId}', '${defaut.replace(/'/g, "\\'")}', '${idDiv}')" style="flex:2; padding:10px; background:#27ae60; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Envoyer 🚀</button></div></div>`; }
+            if(el) { el.innerHTML = `<div style="background:#fff3cd; padding:15px; border-radius:6px; border:2px solid #f39c12; margin-top:10px;"><div style="font-size:14px; font-weight:bold; color:#d35400; margin-bottom:15px; text-transform:uppercase;">⚠️ Vérification finale :</div>${diffHtml}<div style="display:flex; gap:10px; margin-top:20px;"><button onclick="window.renderSelectionPanel()" style="flex:1; padding:10px; background:#bdc3c7; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Annuler</button><button onclick="window.confirmSaveTicket('${canonId}', '${defaut.replace(/'/g, "\\'")}', '${idDiv}')" style="flex:2; padding:10px; background:#27ae60; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Valider et Envoyer 🚀</button></div></div>`; }
         };
 
         window.confirmSaveTicket = async function(canonId, defaut, idDiv) {
-            let temp = window.tempTicketPayloads[idDiv]; if(!temp) return; let el = document.getElementById(idDiv); if(el) el.innerHTML = `<div style="text-align:center; padding:20px; font-weight:bold; color:#3498db; font-size:14px;">Enregistrement Google... ⏳</div>`;
+            let temp = window.tempTicketPayloads[idDiv]; if(!temp) return;
+            let el = document.getElementById(idDiv); if(el) el.innerHTML = `<div style="text-align:center; padding:20px; font-weight:bold; color:#3498db; font-size:14px;">Enregistrement Google... ⏳</div>`;
             try {
-                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(temp.payload) }); const result = await response.json();
+                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(temp.payload) });
+                const result = await response.json();
                 if(result.status === "success") {
                     let ticket = window.rawTickets.find(t => t.idCanon === canonId && t.defaut === defaut);
                     if(ticket) {
@@ -287,12 +327,14 @@
         };
 
         // ==============================================================
-        // 6. COMPARAISONS GRAPHIQUES
+        // 6. COMPARAISONS ET GRAPHIQUES DASHBOARD
         // ==============================================================
         window.openGlobalCompareModal = function(show) {
-            let m = document.getElementById('compare-modal'); if(!m) return; if(!show) { m.style.display = 'none'; return; }
+            let m = document.getElementById('compare-modal'); if(!m) return;
+            if(!show) { m.style.display = 'none'; return; }
             let s1 = document.getElementById('comp-s1'); let s2 = document.getElementById('comp-s2'); let pList = document.getElementById('comp-piste');
-            if(s1) s1.innerHTML = ""; if(s2) s2.innerHTML = ""; window.saisonsList.forEach((s, i) => { if(s1) s1.innerHTML += `<option value="${s}" ${i===0?'selected':''}>${s}</option>`; if(s2) s2.innerHTML += `<option value="${s}" ${i===1?'selected':''}>${s}</option>`; });
+            if(s1) s1.innerHTML = ""; if(s2) s2.innerHTML = "";
+            window.saisonsList.forEach((s, i) => { if(s1) s1.innerHTML += `<option value="${s}" ${i===0?'selected':''}>${s}</option>`; if(s2) s2.innerHTML += `<option value="${s}" ${i===1?'selected':''}>${s}</option>`; });
             if(pList) { pList.innerHTML = `<option value="all">Toutes les pistes</option>`; Array.from(window.columnValuesSets[window.keyPiste] || []).sort().forEach(p => { pList.innerHTML += `<option value="${p}">${p}</option>`; }); }
             m.style.display = 'flex'; window.renderGlobalComparison();
         };
@@ -413,67 +455,454 @@
             }, 50);
         };
 
-        window.renderSelectionPanel = function() {
-            if(window.selectedCannonsMap.size === 0) { window.triggerGlobalFilterChart(); return; }
-            let sc = document.getElementById('sel-count'); if(sc) sc.innerText = window.selectedCannonsMap.size;
-            let listDiv = document.getElementById('selected-list'); if(!listDiv) return;
-            listDiv.innerHTML = "";
-            let rt = document.getElementById('right-title'); if(rt) rt.innerText = "📌 Fiche Canon";
+        // ==============================================================
+        // 7. BASE DE DONNÉES LOCALE (INDEXEDDB)
+        // ==============================================================
+        window.initLocalDB = function() {
+            try {
+                if (!window.indexedDB) return;
+                const request = window.indexedDB.open("GMAONeigeDB", 2);
+                request.onupgradeneeded = function(event) { window.localDB = event.target.result; if (!window.localDB.objectStoreNames.contains("kmz_layers")) window.localDB.createObjectStore("kmz_layers", { keyPath: "id" }); };
+                request.onsuccess = function(event) { window.localDB = event.target.result; window.loadSavedLayersFromDB(); };
+            } catch(e) {}
+        };
+        window.saveLayerToDB = function(id, name, geojson, color, weight) {
+            if(!window.localDB) return; const tx = window.localDB.transaction("kmz_layers", "readwrite"); tx.objectStore("kmz_layers").put({ id: id, name: name, geojson: geojson, isVisible: true, color: color, weight: weight });
+        };
+        window.deleteLayerFromDB = function(id) {
+            if(!window.localDB) return; const tx = window.localDB.transaction("kmz_layers", "readwrite"); tx.objectStore("kmz_layers").delete(id);
+        };
+        window.updateLayerDataInDB = function(id, updates) {
+            if(!window.localDB) return; const tx = window.localDB.transaction("kmz_layers", "readwrite"); const store = tx.objectStore("kmz_layers");
+            const req = store.get(id); req.onsuccess = function() { let data = req.result; if(data) { Object.assign(data, updates); store.put(data); } };
+        };
+        window.loadSavedLayersFromDB = function() {
+            if(!window.localDB) return; const tx = window.localDB.transaction("kmz_layers", "readonly"); const req = tx.objectStore("kmz_layers").getAll();
+            req.onsuccess = function() { req.result.forEach(item => { window.addGeoJsonToMap(item.id, item.name, item.geojson, item.isVisible, item.color || '#e67e22', item.weight || 4); }); };
+        };
+
+        // ==============================================================
+        // 8. RÉSEAU ET DONNÉES GOOGLE SHEETS
+        // ==============================================================
+        window.setStep = function(step, desc) {
+            let elStep = document.getElementById('loading-step'); let elDesc = document.getElementById('loading-desc');
+            if (elStep) elStep.innerText = "Étape " + step + "/4"; if (elDesc) elDesc.innerText = desc;
+        };
+
+        window.fetchWithTimeout = async function(resource, options = {}) {
+            let finalUrl = resource;
+            if(!resource.includes('raw.githubusercontent')) { finalUrl += (resource.includes('?') ? '&' : '?') + 't=' + new Date().getTime(); }
+            const controller = window.AbortController ? new AbortController() : null; if (controller) options.signal = controller.signal;
+            const timeoutPromise = new Promise((_, reject) => { setTimeout(() => { if (controller) controller.abort(); reject(new Error("Délai d'attente dépassé (15s).")); }, 15000); });
+            return Promise.race([fetch(finalUrl, options), timeoutPromise]);
+        };
+
+        window.fetchGoogleSheetsData = async function() {
+            window.setStep(1, "Connexion au serveur Google...");
+            const response = await window.fetchWithTimeout(GOOGLE_API_URL);
+            if (!response.ok) throw new Error("Accès refusé. Vérifiez l'URL de votre script.");
+            let textData = await response.text(); let data;
+            try { data = JSON.parse(textData); } catch(e) { throw new Error("Format invalide."); }
             
-            window.selectedCannonsMap.forEach((layer, id) => {
-                const p = layer.feature.properties; let active = window.getActiveTickets(p.id); let history = window.getHistoryTickets(p.id);
-                let mainContent = ""; let histHtml = "";
+            window.setStep(2, "Analyse du Tableau Général...");
+            if (!data.general || data.general.length < 2) throw new Error(`L'onglet principal est introuvable ou vide.`);
+            const genHeaders = data.general[0].map(h => (h||"").toString().toLowerCase().trim());
+            const originalHeaders = data.general[0].map(h => (h||"").toString().trim()); 
+            const findCol = (keywords) => { let idx = genHeaders.findIndex(h => keywords.some(k => h.includes(k))); return idx !== -1 ? originalHeaders[idx] : null; };
 
-                if (history.length > 0) {
-                    histHtml = `<details class="ticket-history"><summary>📁 Historique d'interventions passées (${history.length})</summary><ul style="padding-left:15px; margin-top:10px;">`;
-                    history.forEach(t => {
-                        let dateStr = isNaN(new Date(t.date).getTime()) ? (t.date || "Inconnue") : new Date(t.date).toLocaleDateString('fr-FR');
-                        let cause = t.fullData.find(x => x.k.toLowerCase().includes('cause') || x.k.toLowerCase().includes('intervention') || x.k.toLowerCase().includes('commentaire'));
-                        histHtml += `<li style="margin-bottom:8px; font-size:11.5px; border-bottom:1px solid #eee; padding-bottom:5px;"><b>${dateStr}</b> - <span style="color:#e74c3c;">${t.defaut}</span> <br><span style="color:#666;">Intervention : ${cause ? cause.v : "Non précisée"}</span></li>`;
-                    });
-                    histHtml += `</ul></details>`;
+            const idxId = 2; const idxXY = genHeaders.findIndex(h => h.includes('xy') || h.includes('gps'));
+            if (idxXY === -1) throw new Error("La colonne 'xy' est introuvable.");
+
+            window.keyPiste = findCol(['pistes', 'piste']); window.keyType = findCol(['type canon', 'type']);
+            window.keyRep = findCol(['répéteur', 'repeteur', 'épéteur', 'epeteur', 'peteur']);
+            window.keyTransfo = findCol(['transfo']); window.keyVanne = findCol(['vanne']); window.keyModule = findCol(['module']);
+
+            originalHeaders.forEach(h => { let hl = h.toLowerCase(); if(!hl.includes('xy') && !hl.includes('gps') && !hl.includes('photo')) { window.availableColumns.push(h); window.columnValuesSets[h] = new Set(); } });
+
+            let dictGeneral = {}; let validPointsCount = 0;
+            data.general.slice(1).forEach(row => {
+                let idRaw = row[idxId]; if (idRaw == null || idRaw === "") return;
+                let id = idRaw.toString().replace(/^YA\s*/i, '').trim(); if (!id) return;
+                let lat = 0, lng = 0;
+                if (row[idxXY]) {
+                    let txt = String(row[idxXY]).replace(/,/g, '.'); let matches = txt.match(/-?\d+(?:\.\d+)?/g);
+                    if (matches && matches.length >= 2) { lat = parseFloat(matches[0]); lng = parseFloat(matches[1]); if (lat < 20 && lng > 30) { let temp = lat; lat = lng; lng = temp; } }
                 }
-
-                if (window.mainTheme === 'historique') {
-                    let s = window.saisonsList[window.histSeasonIdx]; let hd = p.historique[s] || {eau:0, air:0, temps:0};
-                    mainContent = `
-                        <div class="hist-card"><div style="font-size:14px; color:#555; margin-bottom:10px; text-transform:uppercase;">Saison <b>${s}</b></div><div style="display:flex; justify-content: space-around;"><div><div style="font-size:24px; font-weight:bold; color:#2980b9;">${hd.eau}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">m³ Eau</div></div><div><div style="font-size:24px; font-weight:bold; color:#e67e22;">${hd.air}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">Air</div></div><div><div style="font-size:24px; font-weight:bold; color:#27ae60;">${hd.temps}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">Heures</div></div></div></div>
-                        <div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; color:#34495e; text-align:center;">Comparatif sur la piste (${window.getV(p, window.keyPiste)})</div><div style="height: 160px; position:relative; margin-top:10px;"><canvas id="chart-${p.id}"></canvas></div></div>
-                        <div class="piste-chart-container" style="background:#fafbfc;"><div style="font-size:11px; font-weight:bold; color:#555; text-align:center;">➕ Comparer avec une autre saison : <select onchange="window.drawSecondPisteChart('${p.id}', this.value)" style="padding:4px; border-radius:4px; border:1px solid #ccc; outline:none;"><option value="">-- Choisir --</option>${window.saisonsList.filter(x => x !== s).map(x => `<option value="${x}">${x}</option>`).join('')}</select></div><div style="height: 160px; position:relative; margin-top:10px;"><canvas id="chart2-${p.id}"></canvas></div></div>`;
-                } 
-                else if (window.mainTheme === 'defauts') {
-                    if (active.length === 0) { mainContent = `<div style="background:#eafaf1; color:#27ae60; padding:15px; border-radius:6px; text-align:center; font-weight:bold; border:1px solid #d5f5e3; margin-bottom:15px;">✅ Aucun défaut en cours</div>${histHtml}`; } 
-                    else {
-                        mainContent = active.map(t => {
-                            let borderCol = t.statut.includes('faire') ? '#e74c3c' : '#f39c12';
-                            let safeDef = t.defaut.replace(/'/g, "\\'"); let safeId = p.id.replace(/'/g, "\\'");
-                            let idDiv = `ticket-edit-${safeId}-${t.defaut.replace(/[^a-zA-Z0-9]/g, "")}`;
-                            return `
-                                <div class="ticket-card" style="border-left-color:${borderCol};">
-                                    <div style="font-weight:bold; font-size:14px; color:#333; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;"><span style="flex-grow:1; margin-right:10px;">${t.defaut}</span><button onclick="window.editFullTicket('${safeId}', '${safeDef}')" style="background:none; border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; flex-shrink:0;">Éditer ✏️</button></div>
-                                    <div id="${idDiv}"><span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${borderCol}20; color:${borderCol}; font-weight:bold; display:inline-block; margin-bottom:8px;">STATUT : ${t.statut.toUpperCase()}</span></div>
-                                </div>`;
-                        }).join('') + histHtml;
-                    }
-                } 
-                else {
-                    let badges = `<span class="badge"><b>Modèle:</b> ${window.getV(p, window.keyType)}</span> <span class="badge"><b>Rép:</b> ${window.getV(p, window.keyRep)}</span> <span class="badge"><b>Trans:</b> ${window.getV(p, window.keyTransfo)}</span> <span class="badge"><b>Vanne:</b> ${window.getV(p, window.keyVanne)}</span> <span class="badge"><b>Module:</b> ${window.getV(p, window.keyModule)}</span>`;
-                    let fullDataHTML = `<details style="margin-top:15px; font-size:12px; background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #e1e8ed;"><summary style="cursor:pointer; font-weight:600; color:#34495e;">➕ Caractéristiques Complètes</summary><div style="margin-top:12px; display:grid; grid-template-columns: 1fr; gap:8px;">`;
-                    p.fullData.forEach(item => { if(!item.k.toLowerCase().includes('xy') && !item.k.toLowerCase().includes('gps')) { fullDataHTML += `<div style="border-bottom:1px solid #f0f0f0; padding-bottom:4px;"><span style="color:#7f8c8d;">${item.k} :</span> <b style="color:#2c3e50; float:right;">${item.v}</b></div>`; } });
-                    fullDataHTML += `</div></details>`; mainContent = `<div style="margin-bottom:10px;">${badges}</div>${fullDataHTML}`;
-                    if (active.length > 0) mainContent += `<div style="margin-top:15px; padding:10px; background:#fdf0ed; border-radius:6px; font-size:12px; color:#e74c3c; font-weight:bold; border:1px solid #fadbd8;">⚠️ Ce canon a ${active.length} défaut(s) en cours.</div>`;
-                }
-
-                let editBtn = (window.mainTheme === 'type' && !window.isMultiSelect) ? `<button class="btn-action-primary" onclick="window.startEdit('${p.id}')">✏️ Éditer ce canon</button>` : '';
-
-                listDiv.innerHTML += `
-                    <div class="sel-details">
-                        <div class="sel-details-header"><span>📍 Canon <b>${p.id}</b></span><span style="font-weight:normal; font-size:12px; background:#e0e6ed; padding:4px 10px; border-radius:12px; color:#34495e;">${window.getV(p, window.keyPiste)}</span></div>
-                        <div class="sel-details-body">${mainContent}${editBtn}</div>
-                    </div>`;
-                    
-                if(window.mainTheme === 'historique' && !window.isMultiSelect) setTimeout(() => window.drawPisteCompareChart(p), 50);
+                let fullData = [];
+                originalHeaders.forEach((head, i) => { 
+                    let val = (i < row.length && row[i] != null && row[i] !== "") ? row[i].toString() : "N/A";
+                    fullData.push({k: head, v: val}); if(val !== "N/A" && window.columnValuesSets[head]) window.columnValuesSets[head].add(val.trim());
+                });
+                if (!isNaN(lat) && !isNaN(lng) && lat !== 0) validPointsCount++;
+                dictGeneral[id] = { id: id, lat: lat, lng: lng, fullData: fullData, historique: {} };
             });
+            if (validPointsCount === 0) throw new Error("Aucun point GPS valide détecté.");
+
+            window.setStep(3, "Analyse de l'Historique...");
+            if (data.historique && data.historique.length > 1) {
+                const histHeaders = data.historique[0].map(h => (h||"").toString().toLowerCase().trim());
+                const idxCanons = 1; let colsEau = {}, colsAir = {}, colsTemps = {}; let saisonsSet = new Set();
+                histHeaders.forEach((h, i) => {
+                    let match = h.match(/(eau|air|marche).*?(\d{2}\/\d{2})/i);
+                    if (match) { let t = match[1].toLowerCase(); let s = match[2]; saisonsSet.add(s); if (t.includes('eau')) colsEau[s] = i; if (t.includes('air')) colsAir[s] = i; if (t.includes('marche')) colsTemps[s] = i; }
+                });
+                window.saisonsList = Array.from(saisonsSet).sort((a,b) => parseInt(a.split('/')[0]) - parseInt(b.split('/')[0]));
+                window.histSeasonIdx = window.saisonsList.length > 0 ? window.saisonsList.length - 1 : 0;
+                data.historique.slice(1).forEach(row => {
+                    let rawId = row[idxCanons];
+                    if (rawId != null && rawId !== "") {
+                        let id = rawId.toString().replace(/^YA\s*/i, '').trim();
+                        if (id && dictGeneral[id]) { window.saisonsList.forEach(s => { dictGeneral[id].historique[s] = { eau: colsEau[s]?parseFloat(row[colsEau[s]])||0:0, air: colsAir[s]?parseFloat(row[colsAir[s]])||0:0, temps: colsTemps[s]?parseFloat(row[colsTemps[s]])||0:0 }; }); }
+                    }
+                });
+            }
+
+            window.setStep(4, "Préparation des Pannes & GitHub...");
+            if (data.tickets && data.tickets.length > 1) {
+                const tHeaders = data.tickets[0].map(h => (h||"").toString().toLowerCase().trim());
+                const originalTHeaders = data.tickets[0].map(h => (h||"").toString().trim());
+                const idxTEtat = tHeaders.findIndex(h => h.includes('état') || h.includes('etat'));
+                const idxTDate = tHeaders.findIndex(h => h.includes('date'));
+                const idxTRegard = tHeaders.findIndex(h => h.includes('n°regard') || h.includes('regard') || h.includes('canon'));
+                const idxTDefaut = tHeaders.findIndex(h => h.includes('defaut') || h.includes('défaut') || h.includes('panne'));
+
+                if(idxTRegard > -1) {
+                    window.rawTickets = data.tickets.slice(1).map(row => {
+                        let fullTData = [];
+                        originalTHeaders.forEach((h, i) => { 
+                            if(h.trim() !== "") { let val = (i < row.length && row[i] != null) ? row[i].toString() : ""; fullTData.push({k: h, v: val}); }
+                        });
+                        return {
+                            statut: (idxTEtat>-1 && row[idxTEtat] != null ? row[idxTEtat].toString().toLowerCase().trim() : ""),
+                            date: (idxTDate>-1 && row[idxTDate] != null ? row[idxTDate] : ""),
+                            idCanon: (row[idxTRegard] != null ? row[idxTRegard].toString().replace(/^YA\s*/i, '').trim() : ""), 
+                            defaut: (idxTDefaut>-1 && row[idxTDefaut] ? row[idxTDefaut].toString() : "Défaut non spécifié"),
+                            fullData: fullTData
+                        };
+                    });
+                }
+            }
+
+            if (data.kmz && data.kmz.length > 0) {
+                window.cloudKmzLayers = data.kmz.map((k, index) => {
+                    let col = k.color ? k.color : window.defaultColors[index % window.defaultColors.length];
+                    let wei = k.weight ? parseInt(k.weight) : 4;
+                    return { ...k, isVisible: false, leafletLayer: null, color: col, weight: wei };
+                });
+            }
+
+            Object.values(dictGeneral).forEach(canon => {
+                if (canon.lat !== 0 && !isNaN(canon.lat)) { window.snowCannons.features.push({ "type": "Feature", "geometry": { "type": "Point", "coordinates": [canon.lng, canon.lat] }, "properties": canon }); }
+            });
+
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('loading-title').innerText = "✅ Chargement Réussi !";
+            document.getElementById('loading-title').style.color = "#27ae60";
+            if (document.getElementById('loading-step')) document.getElementById('loading-step').style.display = 'none';
+            document.getElementById('loading-desc').innerHTML = `${window.snowCannons.features.length} canons placés.`;
+            
+            setTimeout(() => { window.initAppUI(); document.getElementById('loading-overlay').style.display = 'none'; }, 800);
+        };
+
+        // ==============================================================
+        // 9. GESTION DES CALQUES KML/KMZ (LOGIQUE LEAFLET)
+        // ==============================================================
+        window.buildGeoJsonStyle = function(hexColor, weight) {
+            let finalWeight = weight ? parseInt(weight) : 4;
+            return {
+                style: function (feature) { return { color: hexColor, weight: finalWeight, opacity: 0.8, fillColor: hexColor }; },
+                pointToLayer: function(feature, latlng) { return L.circleMarker(latlng, {radius: 6, color: hexColor, fillColor: hexColor, fillOpacity: 0.8, weight: 1}); },
+                onEachFeature: function (feature, layer) { if (feature.properties && feature.properties.name) { layer.bindPopup(`<b style='color:${hexColor}'>` + feature.properties.name + "</b><br>" + (feature.properties.description || "")); } }
+            };
+        };
+
+        window.fetchGitHubKMZ = async function(url) {
+            const response = await window.fetchWithTimeout(url);
+            if (!response.ok) throw new Error("GitHub refuse l'accès. Vérifiez l'URL.");
+            let kmlString = "";
+            if (url.toLowerCase().endsWith('.kmz')) {
+                const blob = await response.blob(); const arrayBuffer = await blob.arrayBuffer(); const zip = await JSZip.loadAsync(arrayBuffer);
+                const kmlFile = Object.values(zip.files).find(f => f.name.toLowerCase().endsWith('.kml'));
+                if (!kmlFile) throw new Error("Aucun fichier KML trouvé dans le KMZ.");
+                kmlString = await kmlFile.async("string");
+            } else { kmlString = await response.text(); }
+            const parser = new DOMParser(); const xmlDoc = parser.parseFromString(kmlString, "text/xml"); return toGeoJSON.kml(xmlDoc);
+        };
+
+        window.renderCloudLayersList = function() {
+            const container = document.getElementById('cloud-layers-container'); container.innerHTML = "";
+            if (window.cloudKmzLayers.length === 0) { container.innerHTML = `<p style="font-size:11px; color:#888; font-style:italic;">Aucun calque configuré dans l'onglet 'kmz'.</p>`; return; }
+            window.cloudKmzLayers.forEach((layer, idx) => {
+                container.innerHTML += `
+                    <div class="kml-layer-item" style="border-color:#e1e8ed; background:#fafbfc; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+                        <input type="checkbox" id="cloud-cbx-${idx}" ${layer.isVisible ? 'checked' : ''} onchange="window.toggleCloudLayer(${idx})" style="margin:0 5px 0 0;">
+                        <input type="color" class="layer-color-picker" value="${layer.color}" onchange="window.changeCloudLayerStyle(${idx}, this.value, null)" title="Couleur">
+                        <input type="number" class="layer-weight-picker" value="${layer.weight || 4}" min="1" max="15" onchange="window.changeCloudLayerStyle(${idx}, null, this.value)" title="Épaisseur">
+                        <label style="cursor:pointer; display:flex; flex-direction:column; flex-grow:1; margin-left:8px; min-width:120px;" for="cloud-cbx-${idx}">
+                            <span style="color:#2c3e50; font-size:12px;">${layer.nom}</span><span style="font-size:10px; color:#7f8c8d; font-weight:normal;">${layer.commentaire}</span>
+                        </label>
+                        <span id="cloud-status-${idx}" style="min-width:20px; text-align:right;"></span>
+                    </div>`;
+            });
+        };
+
+        window.toggleCloudLayer = async function(idx) {
+            let layerObj = window.cloudKmzLayers[idx]; let cbx = document.getElementById('cloud-cbx-' + idx); let statusSpan = document.getElementById('cloud-status-' + idx);
+            if (!cbx.checked) { if(layerObj.leafletLayer) map.removeLayer(layerObj.leafletLayer); layerObj.isVisible = false; statusSpan.innerText = ""; return; }
+            if (layerObj.leafletLayer) { map.addLayer(layerObj.leafletLayer); layerObj.isVisible = true; return; }
+            statusSpan.innerText = " ⏳"; cbx.disabled = true;
+            try {
+                const geojson = await window.fetchGitHubKMZ(layerObj.url);
+                layerObj.leafletLayer = L.geoJSON(geojson, window.buildGeoJsonStyle(layerObj.color, layerObj.weight)).addTo(map);
+                layerObj.isVisible = true; if(layerObj.leafletLayer.getBounds().isValid()) { map.fitBounds(layerObj.leafletLayer.getBounds()); }
+                statusSpan.innerText = " ✅";
+            } catch(err) { statusSpan.innerText = " ❌"; alert("Impossible de charger le calque " + layerObj.nom + " : " + err.message); cbx.checked = false; }
+            cbx.disabled = false;
+        };
+
+        window.changeCloudLayerStyle = function(idx, newColor, newWeight) {
+            let layerObj = window.cloudKmzLayers[idx];
+            if (newColor !== null) layerObj.color = newColor; if (newWeight !== null) layerObj.weight = parseInt(newWeight);
+            fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify({ action: 'update_kmz', nom: layerObj.nom, color: layerObj.color, weight: layerObj.weight }) });
+            if(layerObj.leafletLayer) {
+                layerObj.leafletLayer.setStyle({ color: layerObj.color, fillColor: layerObj.color, weight: layerObj.weight });
+                layerObj.leafletLayer.eachLayer(function (layer) { if (layer instanceof L.CircleMarker) { layer.setStyle({ color: layerObj.color, fillColor: layerObj.color }); } });
+            }
+        };
+
+        window.handleKMLUpload = async function(event) {
+            const file = event.target.files[0]; if(!file) return;
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('loading-title').innerText = "Importation locale..."; document.getElementById('loading-desc').innerText = "Analyse de " + file.name;
+            setTimeout(async () => {
+                try {
+                    const fileName = file.name; const layerId = 'layer_' + Date.now();
+                    let kmlString = ""; let defaultColor = '#e67e22'; let defaultWeight = 4;
+                    if (fileName.toLowerCase().endsWith('.kmz')) {
+                        const arrayBuffer = await file.arrayBuffer(); const zip = await JSZip.loadAsync(arrayBuffer);
+                        const kmlFile = Object.values(zip.files).find(f => f.name.toLowerCase().endsWith('.kml'));
+                        if (!kmlFile) throw new Error("Aucun fichier KML trouvé à l'intérieur du KMZ.");
+                        kmlString = await kmlFile.async("string");
+                    } else if (fileName.toLowerCase().endsWith('.kml')) { kmlString = await file.text(); } else { throw new Error("Format non supporté."); }
+                    const parser = new DOMParser(); const xmlDoc = parser.parseFromString(kmlString, "text/xml"); const geojson = toGeoJSON.kml(xmlDoc);
+                    window.saveLayerToDB(layerId, fileName, geojson, defaultColor, defaultWeight); window.addGeoJsonToMap(layerId, fileName, geojson, true, defaultColor, defaultWeight);
+                    document.getElementById('loading-overlay').style.display = 'none';
+                } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Erreur lors de l'import : " + err.message); }
+                event.target.value = ""; 
+            }, 100);
+        };
+
+        window.addGeoJsonToMap = function(id, name, geojson, isVisible, hexColor, weight) {
+            let finalWeight = weight || 4;
+            const layer = L.geoJSON(geojson, window.buildGeoJsonStyle(hexColor, finalWeight));
+            if(isVisible) layer.addTo(map);
+            window.externalLayers[id] = { name: name, layer: layer, isVisible: isVisible, color: hexColor, weight: finalWeight };
+            window.renderCustomLayersList();
+            if(isVisible && layer.getBounds && typeof layer.getBounds === 'function') { let b = layer.getBounds(); if(b.isValid()) map.fitBounds(b); }
+        };
+
+        window.renderCustomLayersList = function() {
+            const container = document.getElementById('custom-layers-list'); container.innerHTML = "";
+            for (let id in window.externalLayers) {
+                const ext = window.externalLayers[id];
+                container.innerHTML += `
+                    <div class="kml-layer-item">
+                        <input type="checkbox" id="loc-cbx-${id}" ${ext.isVisible ? 'checked' : ''} onchange="window.toggleExtLayer('${id}')" style="margin:0 5px 0 0;">
+                        <input type="color" class="layer-color-picker" value="${ext.color}" onchange="window.changeExtLayerStyle('${id}', this.value, null)" title="Couleur">
+                        <input type="number" class="layer-weight-picker" value="${ext.weight || 4}" min="1" max="15" onchange="window.changeExtLayerStyle('${id}', null, this.value)" title="Épaisseur">
+                        <label for="loc-cbx-${id}" style="cursor:pointer; flex-grow:1; margin-left:8px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#34495e;">${ext.name}</label>
+                        <button onclick="window.deleteExtLayer('${id}')" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:16px;">🗑️</button>
+                    </div>`;
+            }
+        };
+
+        window.toggleExtLayer = function(id) {
+            const ext = window.externalLayers[id]; ext.isVisible = !ext.isVisible;
+            if(ext.isVisible) { map.addLayer(ext.layer); } else { map.removeLayer(ext.layer); }
+            window.updateLayerDataInDB(id, { isVisible: ext.isVisible }); window.renderCustomLayersList();
+        };
+
+        window.changeExtLayerStyle = function(id, newColor, newWeight) {
+            if(window.externalLayers[id]) {
+                if (newColor !== null) window.externalLayers[id].color = newColor; if (newWeight !== null) window.externalLayers[id].weight = parseInt(newWeight);
+                let col = window.externalLayers[id].color; let w = window.externalLayers[id].weight;
+                if(window.externalLayers[id].layer) {
+                    window.externalLayers[id].layer.setStyle({color: col, fillColor: col, weight: w});
+                    window.externalLayers[id].layer.eachLayer(function (layer) { if (layer instanceof L.CircleMarker) { layer.setStyle({ color: col, fillColor: col }); } });
+                }
+                window.updateLayerDataInDB(id, { color: col, weight: w });
+            }
+        };
+
+        window.deleteExtLayer = function(id) { map.removeLayer(window.externalLayers[id].layer); delete window.externalLayers[id]; window.deleteLayerFromDB(id); window.renderCustomLayersList(); };
+
+        // ==============================================================
+        // 10. ASSEMBLAGE DES OUTILS ET INTERFACE PRINCIPALE
+        // ==============================================================
+        window.initAppUI = function() {
+            function hslToHex(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
+            let q=l<0.5?l*(1+s):l+s-l*s;let p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
+            const toHex=x=>{const hex=Math.round(x*255).toString(16);return hex.length===1?'0'+hex:hex;};return `#${toHex(r)}${toHex(g)}${toHex(b)}`;}
+            function generatePalette(arr, s = 0.7, l = 0.5) { let pal = {}; arr.forEach((item, i) => { pal[item] = hslToHex(i / arr.length, s, l); }); return pal; }
+
+            let tSet = new Set(), rSet = new Set(), trSet = new Set(), pSet = new Set(), vSet = new Set(), mSet = new Set();
+            
+            window.snowCannons.features.forEach(f => {
+                let p = f.properties;
+                let t = window.getV(p, window.keyType); if(t!=="N/A") tSet.add(t.toLowerCase()); 
+                let r = window.getV(p, window.keyRep); if(r!=="N/A") rSet.add(r); 
+                let tr = window.getV(p, window.keyTransfo); if(tr!=="N/A") trSet.add(tr); 
+                let pi = window.getV(p, window.keyPiste); if(pi!=="N/A") pSet.add(pi);
+                let va = window.getV(p, window.keyVanne); if(va!=="N/A") vSet.add(va);
+                let mo = window.getV(p, window.keyModule); if(mo!=="N/A") mSet.add(mo);
+            });
+
+            Array.from(tSet).sort().forEach((t, i) => { window.technoColors[t] = hslToHex(0.14, 1.0, tSet.size > 1 ? 0.8 - (i / (tSet.size - 1)) * 0.4 : 0.6); });
+            window.repColors = generatePalette(Array.from(rSet).sort(), 0.8, 0.45); 
+            window.transfoColors = generatePalette(Array.from(trSet).sort(), 0.65, 0.55);
+
+            window.snowCannons.features.forEach(f => {
+                let typeLower = window.getV(f.properties, window.keyType).toLowerCase(); let color = "#FFD700";
+                if (["demak lenko", "demac lenko"].includes(typeLower)) color = "#0000FF";
+                else if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeLower)) color = "#008000";
+                else color = window.technoColors[typeLower] || "#FFD700";
+                f.properties.couleur_defaut = color;
+            });
+
+            let dlContainer = document.getElementById('datalists-container');
+            if (!dlContainer) { dlContainer = document.createElement('div'); dlContainer.id = 'datalists-container'; document.body.appendChild(dlContainer); }
+            let dlHtml = "";
+            for(let header in window.columnValuesSets) {
+                let safeId = "dl-" + header.replace(/[^a-zA-Z0-9]/g, '-');
+                dlHtml += `<datalist id="${safeId}">${Array.from(window.columnValuesSets[header]).sort().map(v=>`<option value="${v}">`).join('')}</datalist>`;
+            }
+            dlContainer.innerHTML = dlHtml;
+
+            if (window.saisonsList.length > 0) {
+                let sld = document.getElementById('season-slider');
+                sld.max = window.saisonsList.length - 1; sld.value = window.histSeasonIdx;
+                document.getElementById('season-display').innerText = window.saisonsList[window.histSeasonIdx];
+            }
+
+            function buildCbs(id, set, cls) { const c = document.getElementById(id); c.innerHTML = ''; [...set].sort().forEach(v => { let l=document.createElement('label'); let cb=document.createElement('input'); cb.type='checkbox'; cb.className=cls; cb.value=v; l.appendChild(cb); l.appendChild(document.createTextNode(' '+v)); c.appendChild(l); }); }
+            buildCbs('individual-pistes', pSet, 'piste-cb'); buildCbs('individual-types', tSet, 'type-cb'); buildCbs('individual-vannes', vSet, 'vanne-cb'); buildCbs('individual-modules', mSet, 'module-cb');
+
+            function setupCbs(allId, cls, cbk) { const aBtn = document.getElementById(allId); const cbs = document.querySelectorAll('.'+cls); const getVals = () => aBtn.checked ? ['all'] : Array.from(cbs).filter(c=>c.checked).map(c=>c.value); aBtn.addEventListener('change', e => { if(e.target.checked) cbs.forEach(c=>c.checked=false); cbk(getVals()); }); cbs.forEach(c => c.addEventListener('change', () => { if(c.checked) aBtn.checked=false; else if(Array.from(cbs).every(x=>!x.checked)) aBtn.checked=true; cbk(getVals()); })); }
+            setupCbs('check-all-pistes', 'piste-cb', vals => { window.currentPistes = vals; window.updateMap(); window.triggerGlobalFilterChart(); }); 
+            setupCbs('check-all-types', 'type-cb', vals => { window.currentTypes = vals; window.updateMap(); window.triggerGlobalFilterChart(); }); 
+            setupCbs('check-all-vannes', 'vanne-cb', vals => { window.currentVannes = vals; window.updateMap(); window.triggerGlobalFilterChart(); }); 
+            setupCbs('check-all-modules', 'module-cb', vals => { window.currentModules = vals; window.updateMap(); window.triggerGlobalFilterChart(); });
+
+            window.generateDynamicFiltersUI();
+            window.renderCloudLayersList();
+            window.calculateMaxes();
+
+            window.geojsonLayer = L.geoJSON(window.snowCannons, {
+                pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: L.divIcon({ className: 'custom-cannon-icon', html: `<div></div>` }) }); },
+                onEachFeature: function (feature, layer) {
+                    layer.on('click', function(e) {
+                        L.DomEvent.stopPropagation(e);
+                        if (window.currentlyEditingId) return; 
+                        const id = feature.properties.id;
+                        if (!window.isMultiSelect) window.selectedCannonsMap.clear(); 
+                        if (window.selectedCannonsMap.has(id)) window.selectedCannonsMap.delete(id); else window.selectedCannonsMap.set(id, layer);
+                        window.updateMap(); window.renderSelectionPanel();
+                        if (window.selectedCannonsMap.size > 0) document.getElementById('right-sidebar').classList.add('open');
+                    });
+                }
+            }).addTo(map);
+
+            if (window.snowCannons.features.length > 0) {
+                let bounds = window.geojsonLayer.getBounds();
+                if(bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30] });
+            }
+            
+            window.attachEvents();
+            window.updateLegend(); window.updateMap(); window.triggerGlobalFilterChart();
+        };
+
+        window.generateDynamicFiltersUI = function() {
+            let container = document.getElementById('dynamic-filters-container'); container.innerHTML = "";
+            let optionsHTML = `<option value="">-- Choisir un critère --</option>` + window.availableColumns.map(c => `<option value="${c}">${c.toUpperCase()}</option>`).join('');
+            for(let i=0; i<4; i++) {
+                container.innerHTML += `<div class="dynamic-filter-slot"><select class="filter-select" id="filter-sel-${i}" data-idx="${i}">${optionsHTML}</select><div class="checkbox-list" id="filter-cbx-${i}" style="display:none;"></div></div>`;
+            }
+        };
+
+        window.renderCheckboxesForFilter = function(idx, colName) {
+            let cbxContainer = document.getElementById(`filter-cbx-${idx}`);
+            if(!colName) { cbxContainer.style.display = 'none'; window.activeFilters[idx] = {key:"", vals:[]}; window.updateMap(); window.triggerGlobalFilterChart(); return; }
+            
+            cbxContainer.style.display = 'block';
+            let vals = Array.from(window.columnValuesSets[colName] || []).sort();
+            let html = `<label><input type="checkbox" class="cb-all-${idx}" checked> <b>Tout sélectionner</b></label><hr style="margin:4px 0; border-top:1px solid #eee;">`;
+            vals.forEach(v => html += `<label><input type="checkbox" class="cb-val-${idx}" value="${v}"> ${v}</label>`);
+            cbxContainer.innerHTML = html;
+            window.activeFilters[idx] = {key: colName, vals: ['all']};
+
+            let allBtn = cbxContainer.querySelector(`.cb-all-${idx}`); let cbs = cbxContainer.querySelectorAll(`.cb-val-${idx}`);
+            const updateLogic = () => { window.activeFilters[idx].vals = allBtn.checked ? ['all'] : Array.from(cbs).filter(c=>c.checked).map(c=>c.value); window.updateMap(); window.triggerGlobalFilterChart(); };
+            allBtn.addEventListener('change', e => { if(e.target.checked) cbs.forEach(c=>c.checked=false); updateLogic(); });
+            cbs.forEach(c => c.addEventListener('change', () => { if(c.checked) allBtn.checked=false; else if(Array.from(cbs).every(x=>!x.checked)) allBtn.checked=true; updateLogic(); }));
+        };
+
+        window.attachEvents = function() {
+            document.querySelectorAll('input[name="main_theme"]').forEach(r => {
+                r.addEventListener('change', e => {
+                    window.mainTheme = e.target.value;
+                    document.querySelectorAll('.theme-details, .theme-details-hist').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.radio-card').forEach(el => {
+                        el.style.borderBottomLeftRadius = '6px'; el.style.borderBottomRightRadius = '6px';
+                        el.style.marginBottom = '8px'; el.style.borderColor = '#e1e8ed';
+                        if(el.id === 'lbl-historique') el.style.borderColor = '#2ecc71';
+                    });
+                    let activeDetails = document.getElementById('details-' + window.mainTheme);
+                    let activeLabel = document.getElementById('lbl-' + window.mainTheme);
+                    if (activeDetails && activeLabel) {
+                        activeDetails.style.display = 'block';
+                        activeLabel.style.borderBottomLeftRadius = '0';
+                        activeLabel.style.borderBottomRightRadius = '0';
+                        activeLabel.style.marginBottom = '0';
+                        if(window.mainTheme === 'historique') { activeLabel.style.borderColor = '#2ecc71'; } 
+                        else { activeLabel.style.borderColor = '#3498db'; }
+                    }
+                    if(window.mainTheme === 'historique') window.calculateMaxes();
+                    window.updateLegend(); window.updateMap(); window.triggerGlobalFilterChart();
+                });
+            });
+
+            document.querySelectorAll('input[name="hist_metric"]').forEach(r => { r.addEventListener('change', e => { window.histMetric = e.target.value; window.calculateMaxes(); window.updateLegend(); window.updateMap(); window.triggerGlobalFilterChart(); }); });
+            document.getElementById('season-slider').addEventListener('input', e => { window.histSeasonIdx = parseInt(e.target.value); document.getElementById('season-display').innerText = window.saisonsList[window.histSeasonIdx]; window.calculateMaxes(); window.updateLegend(); window.updateMap(); window.triggerGlobalFilterChart(); });
+            document.getElementById('slider-min').addEventListener('input', e => { let val = parseFloat(e.target.value); if(val > window.currentMaxThreshold[window.histMetric]) { val = window.currentMaxThreshold[window.histMetric]; e.target.value = val; } window.currentMinThreshold[window.histMetric] = val; document.getElementById('val-min').innerText = val; window.updateMap(); window.triggerGlobalFilterChart();});
+            document.getElementById('slider-max').addEventListener('input', e => { let val = parseFloat(e.target.value); if(val < window.currentMinThreshold[window.histMetric]) { val = window.currentMinThreshold[window.histMetric]; e.target.value = val; } window.currentMaxThreshold[window.histMetric] = val; document.getElementById('val-max').innerText = val; window.updateMap(); window.triggerGlobalFilterChart();});
+            document.getElementById('dynamic-filters-container').addEventListener('change', e => { if(e.target.classList.contains('filter-select')) window.renderCheckboxesForFilter(e.target.getAttribute('data-idx'), e.target.value); });
+        
+            if(window.map) {
+                window.map.on('click', function(e) {
+                    if (window.currentlyEditingId && document.getElementById('allow-move-chk').checked) { 
+                        document.getElementById('edit-lat').value = e.latlng.lat.toFixed(7); 
+                        document.getElementById('edit-lng').value = e.latlng.lng.toFixed(7); 
+                        let layer = window.selectedCannonsMap.get(window.currentlyEditingId);
+                        if(layer) { layer.setLatLng(e.latlng); layer.feature.geometry.coordinates = [e.latlng.lng, e.latlng.lat]; }
+                    }
+                });
+            }
+        };
+
+        window.calculateMaxes = function() {
+            if(!window.saisonsList[window.histSeasonIdx]) return;
+            let s = window.saisonsList[window.histSeasonIdx]; window.absoluteMaxes = { eau: 0, air: 0, temps: 0 };
+            window.snowCannons.features.forEach(f => {
+                if (f.properties.historique[s]) {
+                    window.absoluteMaxes.eau = Math.max(window.absoluteMaxes.eau, f.properties.historique[s].eau);
+                    window.absoluteMaxes.air = Math.max(window.absoluteMaxes.air, f.properties.historique[s].air);
+                    window.absoluteMaxes.temps = Math.max(window.absoluteMaxes.temps, f.properties.historique[s].temps);
+                }
+            });
+            window.currentMaxThreshold = { ...window.absoluteMaxes }; window.currentMinThreshold = { eau:0, air:0, temps:0 };
+            document.getElementById('slider-min').max = window.absoluteMaxes[window.histMetric] || 1; document.getElementById('slider-max').max = window.absoluteMaxes[window.histMetric] || 1;
+            document.getElementById('slider-min').value = 0; document.getElementById('slider-max').value = window.absoluteMaxes[window.histMetric] || 1;
+            document.getElementById('val-min').innerText = 0; document.getElementById('val-max').innerText = window.absoluteMaxes[window.histMetric] || 1;
         };
 
         window.getColorByFilter = function(ratio, props) {
@@ -489,14 +918,12 @@
         };
 
         window.updateLegend = function() {
-            let elDef = document.getElementById('legend-defauts');
-            if (window.mainTheme === 'defauts' && elDef) { elDef.innerHTML = `<div class="legend-item" onmouseenter="window.highlightLegend('defauts', 'urgent')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #e74c3c;"></div> Urgent (À faire)</div><div class="legend-item" onmouseenter="window.highlightLegend('defauts', 'encours')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #f39c12;"></div> En cours</div><div class="legend-item" onmouseenter="window.highlightLegend('defauts', 'ras')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #bdc3c7;"></div> RAS</div>`;}
-            else if (window.mainTheme === 'type') { let elTy = document.getElementById('legend-type'); if(elTy) elTy.innerHTML = `<div class="legend-item" onmouseenter="window.highlightLegend('type', 'demac')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #0000FF;"></div> Demac Lenko</div><div class="legend-item" onmouseenter="window.highlightLegend('type', 'sufag')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #008000;"></div> Sufag / Peak</div><div class="legend-item" onmouseenter="window.highlightLegend('type', 'techno')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: linear-gradient(to right, #f1c40f, #e67e22);"></div> Technoalpin</div>`;}
-            else if (window.mainTheme === 'repeteur') { let h=''; Object.keys(window.repColors).sort().forEach(k => h += `<div class="legend-item" onmouseenter="window.highlightLegend('repeteur', '${k.replace(/'/g, "\\'")}')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: ${window.repColors[k]};"></div> Répéteur ${k}</div>`); let elRep = document.getElementById('legend-repeteur'); if(elRep) elRep.innerHTML = h;}
-            else if (window.mainTheme === 'transfo') { let h=''; Object.keys(window.transfoColors).sort().forEach(k => h += `<div class="legend-item" onmouseenter="window.highlightLegend('transfo', '${k.replace(/'/g, "\\'")}')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: ${window.transfoColors[k]};"></div> Transfo ${k}</div>`); let elTr = document.getElementById('legend-transfo'); if(elTr) elTr.innerHTML = h;}
+            if (window.mainTheme === 'defauts') { document.getElementById('legend-defauts').innerHTML = `<div class="legend-item" onmouseenter="window.highlightLegend('defauts', 'urgent')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #e74c3c;"></div> Urgent (À faire)</div><div class="legend-item" onmouseenter="window.highlightLegend('defauts', 'encours')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #f39c12;"></div> En cours</div><div class="legend-item" onmouseenter="window.highlightLegend('defauts', 'ras')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #bdc3c7;"></div> RAS</div>`;}
+            else if (window.mainTheme === 'type') { document.getElementById('legend-type').innerHTML = `<div class="legend-item" onmouseenter="window.highlightLegend('type', 'demac')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #0000FF;"></div> Demac Lenko</div><div class="legend-item" onmouseenter="window.highlightLegend('type', 'sufag')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: #008000;"></div> Sufag / Peak</div><div class="legend-item" onmouseenter="window.highlightLegend('type', 'techno')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: linear-gradient(to right, #f1c40f, #e67e22);"></div> Technoalpin</div>`;}
+            else if (window.mainTheme === 'repeteur') { let h=''; Object.keys(window.repColors).sort().forEach(k => h += `<div class="legend-item" onmouseenter="window.highlightLegend('repeteur', '${k.replace(/'/g, "\\'")}')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: ${window.repColors[k]};"></div> Répéteur ${k}</div>`); document.getElementById('legend-repeteur').innerHTML = h;}
+            else if (window.mainTheme === 'transfo') { let h=''; Object.keys(window.transfoColors).sort().forEach(k => h += `<div class="legend-item" onmouseenter="window.highlightLegend('transfo', '${k.replace(/'/g, "\\'")}')" onmouseleave="window.resetHighlight()"><div class="color-box" style="background: ${window.transfoColors[k]};"></div> Transfo ${k}</div>`); document.getElementById('legend-transfo').innerHTML = h;}
             else if (window.mainTheme === 'historique') {
                 let hL = document.getElementById('legend-historique');
-                if(!hL) return;
                 if (window.histMetric === 'eau') hL.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #add8e6, #2980b9);"></div><div class="legend-labels"><span>0 m³</span><span>Max</span></div>`;
                 else if (window.histMetric === 'air') hL.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #fadb5e, #d35400);"></div><div class="legend-labels"><span>0</span><span>Max</span></div>`;
                 else if (window.histMetric === 'temps') hL.innerHTML = `<div class="gradient-bar" style="background: linear-gradient(to right, #abebc6, #27ae60);"></div><div class="legend-labels"><span>0 h</span><span>Max</span></div>`;
@@ -559,25 +986,21 @@
             });
         };
 
-        // BOOT FORCE
-        window.addEventListener('DOMContentLoaded', async () => {
-            if(window.bootAttempt > 0) return;
-            window.bootAttempt = 1;
-            try {
-                window.setStep(0, "Initialisation de la carte...");
-                let retries = 0;
-                while ((typeof L === 'undefined' || typeof JSZip === 'undefined') && retries < 50) { await new Promise(r => setTimeout(r, 100)); retries++; }
-                if (typeof L === 'undefined') throw new Error("Impossible de charger la carte (Leaflet). Vérifiez votre pare-feu.");
-
-                window.satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 18 });
-                window.map = L.map('map', {zoomControl: false, layers: [window.satLayer]}).setView([42.766, 0.564], 14);
-                L.control.zoom({ position: 'bottomright' }).addTo(window.map);
-
-                window.initLocalDB();
-                await window.fetchGoogleSheetsData();
-
-            } catch (err) { window.showCrash(err.message, "Boot Principal"); }
-        });
+        // BOOT FORCE EN DERNIER RECOURS SI DOMContentLoaded NE SE DECLENCHE PAS
+        setTimeout(function() {
+            if (!window.map) {
+                console.log("Démarrage de secours activé...");
+                try {
+                    let satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 18 });
+                    window.map = L.map('map', {zoomControl: false, layers: [satLayer]}).setView([42.766, 0.564], 14);
+                    L.control.zoom({ position: 'bottomright' }).addTo(window.map);
+                    window.initLocalDB();
+                    window.fetchGoogleSheetsData();
+                } catch(e) {
+                    window.showCrash(e.message, "Moteur Démarrage Secours");
+                }
+            }
+        }, 1500);
 
     </script>
 </body>
