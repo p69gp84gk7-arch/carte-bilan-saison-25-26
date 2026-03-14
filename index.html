@@ -67,9 +67,10 @@
         .cannon-circle:hover { transform: scale(1.15); z-index: 1000 !important; cursor: pointer; }
 
         /* BANDEAU DROIT (FICHES CANON) */
-        #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 400px; background: #f8f9fa; z-index: 2001; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 420px; background: #f8f9fa; z-index: 2001; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         #right-sidebar.open { transform: translateX(0); }
         .right-header { background: #34495e; color: white; padding: 15px; font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
+        .right-header.editing { background: #e74c3c; }
         .right-content { padding: 15px; overflow-y: auto; flex-grow: 1; }
         
         .sel-details { background: #fff; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden;}
@@ -88,19 +89,24 @@
         
         /* FORMULAIRE ÉDITION */
         .edit-input { width: 100%; box-sizing: border-box; padding: 8px; margin-top: 4px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-        .edit-label { font-size: 12px; font-weight: bold; color: #555; }
+        .edit-label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase;}
         .toggle-move { background:#fdf0ed; padding:10px; border:1px dashed #e74c3c; border-radius:4px; font-size:12px; font-weight:bold; color:#c0392b; cursor:pointer; display:flex; align-items:center; gap:8px;}
+        
+        /* Zone dynamique formulaire */
+        #dynamic-edit-fields { background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; max-height: 45vh; overflow-y: auto;}
+
+        @media (max-width: 768px) {
+            #sidebar { position: absolute; height: 100%; width: 85%; transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+            #right-sidebar { width: 85%; }
+            #chart-modal { width: 90%; left: 5%; top: 5%; height: 50vh;}
+            #btn-menu-mobile { display: block; }
+            .close-btn { display: block; }
+        }
     </style>
 </head>
 <body>
-    <datalist id="list-types"></datalist>
-    <datalist id="list-pistes"></datalist>
-    <datalist id="list-vannes"></datalist>
-    <datalist id="list-modules"></datalist>
-    <datalist id="list-reps"></datalist>
-    <datalist id="list-transfos"></datalist>
-
-    <div id="loading-overlay">
+    <div id="datalists-container"></div> <div id="loading-overlay">
         <div class="spinner" id="loading-spinner"></div>
         <h2 style="color:#0078A8; margin:0;" id="loading-title">GMAO AppSheet...</h2>
         <p style="color:#666; font-weight:bold;" id="loading-desc">Connexion à Google en cours</p>
@@ -140,25 +146,30 @@
                 </div>
 
                 <div id="view-edit" style="display:none;">
-                    <label class="toggle-move" style="margin-bottom:15px;"><input type="checkbox" id="allow-move-chk"> Autoriser le déplacement du canon sur la carte</label>
+                    <label class="toggle-move" style="margin-bottom:15px;"><input type="checkbox" id="allow-move-chk"> Autoriser le déplacement sur la carte</label>
                     <h3 style="margin-top:0; color:#e74c3c;">Édition N°<span id="edit-id-display"></span></h3><input type="hidden" id="edit-id">
-                    <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="edit-label">Type de canon</div><input type="text" id="edit-type" class="edit-input" list="list-types"></div><div style="flex:1;"><div class="edit-label">Piste associée</div><input type="text" id="edit-piste" class="edit-input" list="list-pistes"></div></div>
-                    <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="edit-label">Vanne</div><input type="text" id="edit-vanne" class="edit-input" list="list-vannes"></div><div style="flex:1;"><div class="edit-label">Module</div><input type="text" id="edit-module" class="edit-input" list="list-modules"></div></div>
-                    <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="edit-label">Répéteur</div><input type="text" id="edit-rep" class="edit-input" list="list-reps"></div><div style="flex:1;"><div class="edit-label">Transfo</div><input type="text" id="edit-transfo" class="edit-input" list="list-transfos"></div></div>
-                    <hr style="border-top:1px solid #eee; margin:10px 0;"><div style="display:flex; gap:10px;"><div style="flex:1;"><div class="edit-label">Latitude</div><input type="number" step="0.0000001" id="edit-lat" class="edit-input"></div><div style="flex:1;"><div class="edit-label">Longitude</div><input type="number" step="0.0000001" id="edit-lng" class="edit-input"></div></div>
-                    <div style="display:flex; gap:10px; margin-top:15px;"><button onclick="cancelEdit()" style="flex:1; background:#95a5a6; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Annuler</button><button id="btn-save-edit" style="flex:2; background:#27ae60; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✅ Sauvegarder</button></div>
+                    
+                    <div style="display:flex; gap:10px; margin-bottom: 10px;">
+                        <div style="flex:1;"><div class="edit-label">Latitude</div><input type="number" step="0.0000001" id="edit-lat" class="edit-input" style="background:#fff3cd; font-weight:bold;"></div>
+                        <div style="flex:1;"><div class="edit-label">Longitude</div><input type="number" step="0.0000001" id="edit-lng" class="edit-input" style="background:#fff3cd; font-weight:bold;"></div>
+                    </div>
+                    
+                    <div id="dynamic-edit-fields"></div>
+                    
+                    <div style="display:flex; gap:10px; margin-top:15px;"><button onclick="cancelEdit()" style="flex:1; background:#95a5a6; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Annuler</button><button id="btn-save-edit" style="flex:2; background:#27ae60; color:white; padding:10px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✅ Sauvegarder (Tableau Général)</button></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
+        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzI2FLqyfjMUkuaH-er98Og7U5Q0WxVUD0ci_7sCZ2ZkQwG_5_V2ei5OHb8mSrkChkOLw/exec";
         
         let snowCannons = { "type": "FeatureCollection", "features": [] };
         let rawTickets = [];
         let saisonsList = []; 
         let isMultiSelect = false;
+        let columnValuesSets = {}; // Pour générer les listes déroulantes de suggestions
         
         const map = L.map('map', {zoomControl: false}).setView([42.766, 0.564], 14);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
@@ -193,26 +204,24 @@
                 catch(e) { throw new Error("Les données reçues sont bloquées. Avez-vous mis l'accès du script sur 'Tous les utilisateurs' ?"); }
                 
                 // 1. GENERAL
-                updateDesc("Analyse de l'onglet Tableau Général...");
+                updateDesc("Analyse du Tableau Général...");
                 if (!data.general || data.general.length < 2) {
                     let ongletsVus = data.debug_onglets ? data.debug_onglets.join(" / ") : "Aucun onglet visible";
-                    throw new Error(`L'onglet principal est introuvable ou ne contient qu'une seule ligne.<br><br><b>👉 Onglets vus par le script :</b><br> [ ${ongletsVus} ]<br><br>Vérifiez que le nom correspond bien à "tableau général" ou "général".`);
+                    throw new Error(`L'onglet principal est introuvable ou vide.<br><br><b>👉 Onglets vus par le script :</b><br> [ ${ongletsVus} ]<br><br>Vérifiez que le nom correspond bien à "tableau général" ou "général".`);
                 }
                 
                 const genHeaders = data.general[0].map(h => (h||"").toString().toLowerCase().trim());
+                const originalHeaders = data.general[0].map(h => (h||"").toString().trim()); // Pour garder la vraie casse
                 
-                // LA CORRECTION CLEF EST ICI : On force l'index 2 (Colonne 3) pour le N° de Regard
-                const idxId = 2; // C'est la colonne 3
-                
+                const idxId = 2; // Colonne C confirmée par l'utilisateur
                 const idxXY = getIdx(genHeaders, ['xy', 'gps']);
+                
                 if (idxXY === -1) throw new Error("La colonne 'xy' (coordonnées GPS) est introuvable dans le tableau général.");
 
-                const idxPiste = getIdx(genHeaders, ['pistes', 'piste']);
-                const idxType = getIdx(genHeaders, ['type canon', 'type']);
-                const idxVanne = getIdx(genHeaders, ['type de vanne', 'vanne']);
-                const idxModule = getIdx(genHeaders, ['type de module', 'module']);
-                const idxRep = getIdx(genHeaders, ['peteur', 'repeteur']);
-                const idxTrans = getIdx(genHeaders, ['transfo']);
+                // Initialisation des Sets pour les listes déroulantes
+                originalHeaders.forEach(h => columnValuesSets[h] = new Set());
+
+                const getVal = (row, names) => { let i = getIdx(genHeaders, names); return i > -1 ? row[i] : "N/A"; };
 
                 let dictGeneral = {};
                 let validPointsCount = 0;
@@ -228,31 +237,38 @@
                         let parts = row[idxXY].toString().split(',');
                         if (parts.length === 2) { lat = parseFloat(parts[0].trim()); lng = parseFloat(parts[1].trim()); }
                     }
-
                     if(lat && lng) validPointsCount++;
 
                     let fullData = [];
-                    genHeaders.forEach((head, i) => { if(row[i] != null && row[i] !== "") fullData.push({k: head, v: row[i]}); });
+                    originalHeaders.forEach((head, i) => { 
+                        let val = row[i];
+                        if(val != null && val !== "") {
+                            fullData.push({k: head, v: val}); 
+                            columnValuesSets[head].add(val.toString()); // Alimente les suggestions
+                        }
+                    });
 
                     dictGeneral[id] = {
                         id: id, lat: lat, lng: lng,
-                        piste: (idxPiste>-1 && row[idxPiste]) ? row[idxPiste].toString() : "Inconnue",
-                        type: (idxType>-1 && row[idxType]) ? row[idxType].toString() : "Inconnu",
-                        vanne: (idxVanne>-1 && row[idxVanne]) ? row[idxVanne].toString() : "N/A",
-                        module: (idxModule>-1 && row[idxModule]) ? row[idxModule].toString() : "N/A",
-                        rep: (idxRep>-1 && row[idxRep]) ? row[idxRep].toString() : "N/A",
-                        transfo: (idxTrans>-1 && row[idxTrans]) ? row[idxTrans].toString() : "N/A",
+                        piste: getVal(row, ['pistes', 'piste']),
+                        type: getVal(row, ['type canon', 'type']),
+                        vanne: getVal(row, ['type de vanne', 'vanne']),
+                        module: getVal(row, ['type de module', 'module']),
+                        rep: getVal(row, ['répéteur', 'repeteur', 'épéteur', 'epeteur']),
+                        transfo: getVal(row, ['transfo']),
                         fullData: fullData,
                         historique: {}
                     };
                 });
 
-                if (validPointsCount === 0) throw new Error("Les canons ont été trouvés, mais aucun point GPS valide n'a été détecté dans la colonne 'xy'. (Format attendu : 'Lat, Long')");
+                if (validPointsCount === 0) throw new Error("Aucun point GPS valide détecté dans la colonne 'xy'. (Format attendu : 'Lat, Long')");
 
+                // 2. HISTORIQUE
                 updateDesc("Analyse de l'Historique...");
                 if (data.historique && data.historique.length > 1) {
                     const histHeaders = data.historique[0].map(h => (h||"").toString().toLowerCase().trim());
-                    const idxCanons = getIdx(histHeaders, ['canons', 'n° regard']);
+                    const idxCanons = 1; // Colonne B "ref" confirmée par l'utilisateur
+                    
                     let colsEau = {}, colsAir = {}, colsTemps = {};
                     let saisonsSet = new Set();
 
@@ -268,21 +284,20 @@
                     });
                     saisonsList = Array.from(saisonsSet).sort().reverse();
 
-                    if(idxCanons > -1) {
-                        data.historique.slice(1).forEach(row => {
-                            let rawId = row[idxCanons];
-                            if (rawId != null && rawId !== "") {
-                                let id = rawId.toString().replace(/[^0-9]/g, '');
-                                if (id && dictGeneral[id]) {
-                                    saisonsList.forEach(s => {
-                                        dictGeneral[id].historique[s] = { eau: colsEau[s]?parseFloat(row[colsEau[s]])||0:0, air: colsAir[s]?parseFloat(row[colsAir[s]])||0:0, temps: colsTemps[s]?parseFloat(row[colsTemps[s]])||0:0 };
-                                    });
-                                }
+                    data.historique.slice(1).forEach(row => {
+                        let rawId = row[idxCanons];
+                        if (rawId != null && rawId !== "") {
+                            let id = rawId.toString().replace(/[^0-9]/g, '');
+                            if (id && dictGeneral[id]) {
+                                saisonsList.forEach(s => {
+                                    dictGeneral[id].historique[s] = { eau: colsEau[s]?parseFloat(row[colsEau[s]])||0:0, air: colsAir[s]?parseFloat(row[colsAir[s]])||0:0, temps: colsTemps[s]?parseFloat(row[colsTemps[s]])||0:0 };
+                                });
                             }
-                        });
-                    }
+                        }
+                    });
                 }
 
+                // 3. TICKETS
                 updateDesc("Analyse des Tickets...");
                 if (data.tickets && data.tickets.length > 1) {
                     const tHeaders = data.tickets[0].map(h => (h||"").toString().toLowerCase().trim());
@@ -303,6 +318,7 @@
                     }
                 }
 
+                // MERGE GEOJSON
                 Object.values(dictGeneral).forEach(canon => {
                     if (canon.lat && canon.lng) { 
                         snowCannons.features.push({ "type": "Feature", "geometry": { "type": "Point", "coordinates": [canon.lng, canon.lat] }, "properties": canon });
@@ -341,8 +357,12 @@
             let tSet = new Set(), rSet = new Set(), trSet = new Set(), pSet = new Set(), vSet = new Set(), mSet = new Set();
             snowCannons.features.forEach(f => {
                 let p = f.properties;
-                if(p.type) tSet.add(p.type.toString().toLowerCase()); if(p.piste) pSet.add(p.piste); if(p.rep) rSet.add(p.rep); 
-                if(p.transfo) trSet.add(p.transfo); if(p.vanne) vSet.add(p.vanne); if(p.module) mSet.add(p.module);
+                if(p.type && p.type !== "Inconnu") tSet.add(p.type.toString().toLowerCase()); 
+                if(p.piste && p.piste !== "Inconnue") pSet.add(p.piste); 
+                if(p.rep && p.rep !== "N/A") rSet.add(p.rep); 
+                if(p.transfo && p.transfo !== "N/A") trSet.add(p.transfo); 
+                if(p.vanne && p.vanne !== "N/A") vSet.add(p.vanne); 
+                if(p.module && p.module !== "N/A") mSet.add(p.module);
             });
 
             Array.from(tSet).sort().forEach((t, i) => { technoColors[t] = hslToHex(0.14, 1.0, tSet.size > 1 ? 0.8 - (i / (tSet.size - 1)) * 0.4 : 0.6); });
@@ -356,8 +376,13 @@
                 f.properties.couleur_defaut = color;
             });
 
-            const fillDL = (id, set) => document.getElementById(id).innerHTML = Array.from(set).sort().map(v => `<option value="${v}">`).join('');
-            fillDL('list-types', tSet); fillDL('list-pistes', pSet); fillDL('list-vannes', vSet); fillDL('list-modules', mSet); fillDL('list-reps', rSet); fillDL('list-transfos', trSet);
+            // Génération des datalists globaux pour le HTML
+            let dlHtml = "";
+            for(let header in columnValuesSets) {
+                let safeId = "dl-" + header.replace(/[^a-zA-Z0-9]/g, '-');
+                dlHtml += `<datalist id="${safeId}">${Array.from(columnValuesSets[header]).sort().map(v=>`<option value="${v}">`).join('')}</datalist>`;
+            }
+            document.getElementById('datalists-container').innerHTML = dlHtml;
 
             if (saisonsList.length > 0) currentSeason = saisonsList[0];
             generateSeasonMenu(); calculateMaxes();
@@ -425,22 +450,46 @@
             currentMaxThreshold = { ...absoluteMaxes };
         }
 
+        // SAUVEGARDE GOOGLE SHEETS (DYNAMIQUE POUR TOUTES LES COLONNES)
         document.getElementById('btn-save-edit').addEventListener('click', async () => {
             if (!currentlyEditingId) return;
             const btn = document.getElementById('btn-save-edit'); btn.innerText = "⏳ Envoi..."; btn.disabled = true;
-            const payload = { id: document.getElementById('edit-id').value, lat: parseFloat(document.getElementById('edit-lat').value), lon: parseFloat(document.getElementById('edit-lng').value), type: document.getElementById('edit-type').value, piste: document.getElementById('edit-piste').value, rep: document.getElementById('edit-rep').value, transfo: document.getElementById('edit-transfo').value, vanne: document.getElementById('edit-vanne').value, module: document.getElementById('edit-module').value };
+            
+            // On récupère tous les champs générés dynamiquement
+            let fieldsObj = {};
+            document.querySelectorAll('.dyn-field').forEach(inp => {
+                fieldsObj[inp.getAttribute('data-key')] = inp.value;
+            });
+
+            const payload = { 
+                id: document.getElementById('edit-id').value, 
+                lat: parseFloat(document.getElementById('edit-lat').value), 
+                lng: parseFloat(document.getElementById('edit-lng').value), 
+                fields: fieldsObj 
+            };
 
             try {
                 const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
                 if(result.status === "success") {
                     const layer = selectedCannonsMap.get(currentlyEditingId); const p = layer.feature.properties;
-                    p.type = payload.type; p.piste = payload.piste; p.rep = payload.rep; p.transfo = payload.transfo; p.vanne = payload.vanne; p.module = payload.module;
                     
+                    // Mise à jour de l'objet local
+                    p.fullData.forEach(item => { if(fieldsObj[item.k] !== undefined) item.v = fieldsObj[item.k]; });
+                    
+                    // Rafraîchir les propriétés de raccourci (pour la carte)
+                    const getV = (keys) => { let o = p.fullData.find(x => keys.some(k => x.k.toLowerCase().includes(k))); return o ? o.v : "N/A"; };
+                    p.type = getV(['type canon', 'type']);
+                    p.piste = getV(['pistes', 'piste']);
+                    p.rep = getV(['répéteur', 'repeteur', 'épéteur', 'epeteur']);
+                    p.transfo = getV(['transfo']);
+                    p.vanne = getV(['type de vanne', 'vanne']);
+                    p.module = getV(['type de module', 'module']);
+
                     let tLower = p.type.toLowerCase().trim();
                     if (["demak lenko", "demac lenko"].includes(tLower)) p.couleur_defaut = "#0000FF"; else if (["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) p.couleur_defaut = "#008000"; else p.couleur_defaut = technoColors[tLower] || "#FFD700";
 
-                    layer.feature.geometry.coordinates = [payload.lon, payload.lat]; layer.setLatLng([payload.lat, payload.lon]);
+                    layer.feature.geometry.coordinates = [payload.lng, payload.lat]; layer.setLatLng([payload.lat, payload.lng]);
                     cancelEdit();
                 } else alert("Erreur : " + result.message);
             } catch (err) { alert("Échec réseau."); }
@@ -480,28 +529,27 @@
                     <div class="sel-details">
                         <div class="sel-details-header">Canon N° ${p.id} <span style="font-weight:normal; font-size:12px;">(${p.piste})</span></div>
                         <div class="sel-details-body">
-                            <b>Type:</b> ${p.type} <br>
+                            <b>Modèle:</b> ${p.type} <br>
                             ${ticketsHTML}
                         </div>
                     </div>`;
                 } else {
-                    let fullDataHTML = `<details style="margin-top:10px; font-size:11px; background:#f0f0f0; padding:8px; border-radius:4px;"><summary style="cursor:pointer; font-weight:bold;">🔍 Voir toutes les données de l'AppSheet</summary><ul style="padding-left:15px; margin-top:5px; color:#555;">`;
-                    p.fullData.forEach(item => { fullDataHTML += `<li><b>${item.k.toUpperCase()}:</b> ${item.v}</li>`; });
+                    let fullDataHTML = `<details style="margin-top:10px; font-size:11px; background:#f0f0f0; padding:8px; border-radius:4px;" open><summary style="cursor:pointer; font-weight:bold;">🔍 Données Tableau Général</summary><ul style="padding-left:15px; margin-top:5px; color:#555; list-style:none;">`;
+                    p.fullData.forEach(item => { 
+                        // Cacher les données purement techniques non pertinentes à la lecture
+                        if(!item.k.toLowerCase().includes('xy') && !item.k.toLowerCase().includes('gps')) {
+                            fullDataHTML += `<li><b style="color:#2c3e50;">${item.k.toUpperCase()}:</b> ${item.v}</li>`; 
+                        }
+                    });
                     fullDataHTML += `</ul></details>`;
 
                     listDiv.innerHTML += `
                     <div class="sel-details">
                         <div class="sel-details-header">Canon N° ${p.id} <span style="font-weight:normal; font-size:12px;">(${p.piste})</span></div>
                         <div class="sel-details-body">
-                            <div class="tech-grid">
-                                <div><b>Modèle :</b> <span style="color:${p.couleur_defaut}">${p.type}</span></div>
-                                <div><b>Rép / Trans :</b> ${p.rep} / ${p.transfo}</div>
-                                <div><b>Vanne :</b> ${p.vanne}</div>
-                                <div><b>Module :</b> ${p.module}</div>
-                            </div>
                             ${fullDataHTML}
                             ${ticketsHTML}
-                            <button class="btn-edit-small" onclick="startEdit('${p.id}')">✏️ Éditer ce canon</button>
+                            <button class="btn-edit-small" onclick="startEdit('${p.id}')">✏️ Modifier toutes les données</button>
                         </div>
                     </div>`;
                 }
@@ -511,14 +559,28 @@
         function startEdit(id) {
             currentlyEditingId = id; const layer = selectedCannonsMap.get(id); const p = layer.feature.properties;
             document.getElementById('edit-id-display').innerText = p.id; document.getElementById('edit-id').value = p.id;
-            document.getElementById('edit-type').value = p.type; document.getElementById('edit-piste').value = p.piste;
-            document.getElementById('edit-vanne').value = p.vanne; document.getElementById('edit-module').value = p.module;
-            document.getElementById('edit-rep').value = p.rep; document.getElementById('edit-transfo').value = p.transfo;
             document.getElementById('edit-lat').value = layer.getLatLng().lat.toFixed(7); document.getElementById('edit-lng').value = layer.getLatLng().lng.toFixed(7);
             
+            // Générer le formulaire complet
+            let formContainer = document.getElementById('dynamic-edit-fields');
+            formContainer.innerHTML = "";
+            p.fullData.forEach(item => {
+                let kLow = item.k.toLowerCase();
+                // Ne pas générer d'input pour l'ID et le GPS car ils sont gérés séparément
+                if(kLow.includes('n° regard') || kLow.includes('regard') || kLow.includes('xy') || kLow.includes('gps')) return;
+                
+                let safeId = "dl-" + item.k.replace(/[^a-zA-Z0-9]/g, '-');
+                formContainer.innerHTML += `
+                    <div style="margin-bottom:8px;">
+                        <div class="edit-label">${item.k}</div>
+                        <input type="text" class="edit-input dyn-field" style="margin-bottom:0;" data-key="${item.k}" value="${item.v}" list="${safeId}">
+                    </div>
+                `;
+            });
+
             document.getElementById('allow-move-chk').checked = false; 
             document.getElementById('view-selection').style.display = 'none'; document.getElementById('view-edit').style.display = 'block';
-            document.getElementById('right-header').classList.add('editing'); document.getElementById('right-title').innerText = "✏️ Mode Édition";
+            document.getElementById('right-header').classList.add('editing'); document.getElementById('right-title').innerText = "✏️ Mode Édition Totale";
             updateMap(); 
         }
 
