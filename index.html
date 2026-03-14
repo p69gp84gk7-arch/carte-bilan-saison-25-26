@@ -110,20 +110,23 @@
         .comp-controls { display: flex; gap: 15px; background: #fff; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd; align-items: flex-end;}
         .comp-chart-box { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; height: 200px; position: relative;}
 
-        .kml-layer-item { display:flex; justify-content:space-between; align-items:center; background:#fff; padding:10px; border:1px solid #ddd; border-radius:4px; margin-bottom:8px; font-size:12px; font-weight:bold; }
-        .layer-color-picker { width:24px; height:24px; padding:0; border:none; border-radius:4px; cursor:pointer; flex-shrink:0; outline:1px solid #ddd;}
+        /* CALQUES KML/KMZ - UI AJOUTÉE POUR COULEUR ET EPAISSEUR */
+        .kml-layer-item { display:flex; align-items:center; background:#fff; padding:8px 10px; border:1px solid #ddd; border-radius:4px; margin-bottom:8px; font-size:12px; font-weight:bold; }
+        .layer-color-picker { width:24px; height:24px; padding:0; border:none; border-radius:4px; cursor:pointer; flex-shrink:0; outline:1px solid #ccc;}
+        .layer-weight-picker { width:35px; height:22px; padding:2px; border:1px solid #ccc; border-radius:4px; text-align:center; font-size:12px; margin-left:5px;}
         
         @media (max-width: 768px) { #sidebar { width: 85%; } #right-sidebar { width: 85%; } #compare-modal { width: 95%; } }
     </style>
 </head>
 <body>
+    
     <div id="datalists-container"></div> 
 
     <div id="loading-overlay">
         <div class="spinner" id="loading-spinner"></div>
         <h2 style="color:#3498db; margin:0;" id="loading-title">Connexion à la Base...</h2>
         <p style="color:#666; font-weight:bold; font-size:16px;" id="loading-desc">Veuillez patienter</p>
-        <p style="color:#888; font-size:12px;" id="loading-step">Étape 1/4</p>
+        <p style="color:#888; font-size:12px;" id="loading-step">Initialisation</p>
         <div id="error-box"><p id="error-msg"></p></div>
     </div>
 
@@ -144,7 +147,7 @@
     <div id="app-container">
         
         <button id="toggle-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰ Menu</button>
-        
+
         <div id="sidebar" class="open">
             <div class="sidebar-header-bg">Outils d'Analyse</div>
             
@@ -234,20 +237,21 @@
             </details>
 
             <details class="panel-section" open>
-                <summary>4. Calques Distants (GitHub)</summary>
+                <summary>4. Calques & Tracés (KMZ)</summary>
                 <div class="section-content" style="padding-top: 5px;">
                     <p style="font-size:11px; color:#666; margin-bottom:10px; line-height:1.4;">
-                        Calques synchronisés via votre onglet 'kmz' (liens GitHub).
+                        <b>1. Cloud (Depuis onglet KMZ Sheets) :</b>
                     </p>
                     <div id="cloud-layers-container"></div>
                     
                     <hr style="margin:15px 0; border-top:1px dashed #ccc;">
                     
                     <p style="font-size:11px; color:#666; margin-bottom:10px; line-height:1.4;">
-                        Import local (sauvegardé sur ce PC) :
+                        <b>2. Import Manuel depuis votre PC :</b><br>
+                        (Sera sauvegardé dans ce navigateur)
                     </p>
                     <input type="file" id="kml-upload" accept=".kml,.kmz" style="display:none;" onchange="handleKMLUpload(event)">
-                    <button class="btn-action-primary" style="margin-top:0; background:#8e44ad;" onclick="document.getElementById('kml-upload').click()">📂 Importer fichier PC</button>
+                    <button class="btn-action-primary" style="margin-top:0; background:#8e44ad;" onclick="document.getElementById('kml-upload').click()">📂 Parcourir...</button>
                     <div id="custom-layers-list" style="margin-top:15px;"></div>
                 </div>
             </details>
@@ -299,57 +303,50 @@
     </div>
 
     <script>
-        // ======= VÉRIFIEZ L'URL APPS SCRIPT =======
+        // =======================================================
+        // 1. VARIABLES GLOBALES & FONCTIONS VITALES (ANTI-ERREURS)
+        // =======================================================
+        
+        // ⚠️ REMETTRE VOTRE URL ICI ⚠️
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
-        // ===========================================
         
         let snowCannons = { "type": "FeatureCollection", "features": [] };
         let rawTickets = []; let saisonsList = []; let cloudKmzLayers = [];
         let isMultiSelect = false; let columnValuesSets = {}; let availableColumns = [];
-        
         let mainTheme = 'defauts'; let histMetric = 'eau'; let histSeasonIdx = 0;
         let absoluteMaxes = { eau: 0, air: 0, temps: 0 }; 
         let currentMaxThreshold = { eau: 100, air: 100, temps: 100 }; 
         let currentMinThreshold = { eau: 0, air: 0, temps: 0 };
-        
         let activeFilters = [ {key:"", vals:[]}, {key:"", vals:[]}, {key:"", vals:[]}, {key:"", vals:[]} ];
         let currentPistes = ['all'], currentTypes = ['all'], currentVannes = ['all'], currentModules = ['all'];
+        let geojsonLayer = null; let chartInstances = {}; let selectedCannonsMap = new Map(); let currentlyEditingId = null; 
+        let technoColors = {}, repColors = {}, transfoColors = {};
+        let externalLayers = {}; 
+        const defaultColors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e67e22', '#1abc9c', '#34495e'];
+        let keyPiste = "", keyType = "", keyRep = "", keyTransfo = "", keyVanne = "", keyModule = "";
 
+        // LA FONCTION GETV EST BIEN DÉCLARÉE TOUT EN HAUT POUR EVITER LE BUG
+        const getV = function(p, key) { 
+            if(!key) return "N/A"; 
+            let o = p.fullData.find(x => x.k === key); 
+            return o ? o.v.toString().trim() : "N/A"; 
+        };
+        const getTicketsForCanon = function(idCanon) { return rawTickets.filter(t => t.idCanon === idCanon); };
+        const getActiveTickets = function(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); };
+        const getHistoryTickets = function(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); };
+
+        // ==========================================
+        // 2. INITIALISATION CARTE
+        // ==========================================
         const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 18 });
         const topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 18 });
-        
         const map = L.map('map', {zoomControl: false, layers: [satLayer]}).setView([42.766, 0.564], 14);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         let currentMapMode = 'sat';
 
-        let geojsonLayer = null; let chartInstances = {}; let selectedCannonsMap = new Map(); let currentlyEditingId = null; 
-        let technoColors = {}, repColors = {}, transfoColors = {};
-        let externalLayers = {}; // Stockage local KMZ
-        
-        // Palette de couleurs auto pour les calques GitHub
-        const defaultColors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e67e22', '#1abc9c', '#34495e'];
-
-        let keyPiste = "", keyType = "", keyRep = "", keyTransfo = "", keyVanne = "", keyModule = "";
-
-        function toggleMapMode() {
-            const btn = document.getElementById('btn-map-mode');
-            if (currentMapMode === 'sat') {
-                map.removeLayer(satLayer); map.addLayer(topoLayer); currentMapMode = 'topo';
-                btn.innerHTML = "🛰️ Vue Satellite Standard"; btn.classList.add('active');
-            } else {
-                map.removeLayer(topoLayer); map.addLayer(satLayer); currentMapMode = 'sat';
-                btn.innerHTML = "🗺️ Vue Topographie / 3D"; btn.classList.remove('active');
-            }
-        }
-
-        function setStep(step, desc) {
-            document.getElementById('loading-step').innerText = "Étape " + step + "/4";
-            document.getElementById('loading-desc').innerText = desc;
-        }
-
-        // ==========================================
-        // BASE DE DONNEES LOCALE DU NAVIGATEUR (INDEXEDDB) 
-        // ==========================================
+        // ==============================================================
+        // 3. BASE DE DONNEES LOCALE (INDEXEDDB) POUR LES KMZ PERSONNELS
+        // ==============================================================
         let localDB;
         try {
             const request = indexedDB.open("GMAONeigeDB", 2);
@@ -364,13 +361,13 @@
                 loadSavedLayersFromDB(); 
             };
         } catch(e) {
-            console.warn("IndexedDB non disponible : " + e.message);
+            console.warn("IndexedDB non disponible.");
         }
 
-        function saveLayerToDB(id, name, geojson, color) {
+        function saveLayerToDB(id, name, geojson, color, weight) {
             if(!localDB) return;
             const tx = localDB.transaction("kmz_layers", "readwrite");
-            tx.objectStore("kmz_layers").put({ id: id, name: name, geojson: geojson, isVisible: true, color: color });
+            tx.objectStore("kmz_layers").put({ id: id, name: name, geojson: geojson, isVisible: true, color: color, weight: weight });
         }
 
         function deleteLayerFromDB(id) {
@@ -399,15 +396,19 @@
             const req = tx.objectStore("kmz_layers").getAll();
             req.onsuccess = function() {
                 req.result.forEach(item => { 
-                    const col = item.color || '#e67e22'; // fallback color
-                    addGeoJsonToMap(item.id, item.name, item.geojson, item.isVisible, col); 
+                    addGeoJsonToMap(item.id, item.name, item.geojson, item.isVisible, item.color || '#e67e22', item.weight || 4); 
                 });
             };
         }
 
         // ==========================================
-        // FETCH DATA
+        // 4. LECTURE DES DONNEES GOOGLE SHEETS
         // ==========================================
+        function setStep(step, desc) {
+            document.getElementById('loading-step').innerText = "Étape " + step + "/4";
+            document.getElementById('loading-desc').innerText = desc;
+        }
+
         async function fetchWithTimeout(resource, options = {}) {
             const { timeout = 15000 } = options;
             const controller = new AbortController();
@@ -425,7 +426,7 @@
                 if (!response.ok) throw new Error("Accès refusé. Le script est-il bien public ?");
                 let textData = await response.text();
                 let data;
-                try { data = JSON.parse(textData); } catch(e) { throw new Error("Les données reçues sont bloquées ou l'URL du script n'est pas la bonne."); }
+                try { data = JSON.parse(textData); } catch(e) { throw new Error("Les données reçues sont bloquées."); }
                 
                 setStep(2, "Analyse de la base Général...");
                 if (!data.general || data.general.length < 2) throw new Error(`L'onglet principal est introuvable ou vide.`);
@@ -433,21 +434,15 @@
                 const genHeaders = data.general[0].map(h => (h||"").toString().toLowerCase().trim());
                 const originalHeaders = data.general[0].map(h => (h||"").toString().trim()); 
                 
-                const findCol = (keywords) => {
-                    let idx = genHeaders.findIndex(h => keywords.some(k => h.includes(k)));
-                    return idx !== -1 ? originalHeaders[idx] : null;
-                };
+                const findCol = (keywords) => { let idx = genHeaders.findIndex(h => keywords.some(k => h.includes(k))); return idx !== -1 ? originalHeaders[idx] : null; };
 
                 const idxId = 2; // Forcé sur Colonne C
                 const idxXY = genHeaders.findIndex(h => h.includes('xy') || h.includes('gps'));
                 if (idxXY === -1) throw new Error("La colonne 'xy' (coordonnées GPS) est introuvable.");
 
-                keyPiste = findCol(['pistes', 'piste']);
-                keyType = findCol(['type canon', 'type']);
+                keyPiste = findCol(['pistes', 'piste']); keyType = findCol(['type canon', 'type']);
                 keyRep = findCol(['répéteur', 'repeteur', 'épéteur', 'epeteur', 'peteur']);
-                keyTransfo = findCol(['transfo']);
-                keyVanne = findCol(['vanne']);
-                keyModule = findCol(['module']);
+                keyTransfo = findCol(['transfo']); keyVanne = findCol(['vanne']); keyModule = findCol(['module']);
 
                 originalHeaders.forEach(h => {
                     let hl = h.toLowerCase();
@@ -486,12 +481,12 @@
                     dictGeneral[id] = { id: id, lat: lat, lng: lng, fullData: fullData, historique: {} };
                 });
 
-                if (validPointsCount === 0) throw new Error("Aucun point GPS valide détecté dans la colonne 'xy'.");
+                if (validPointsCount === 0) throw new Error("Aucun point GPS valide détecté.");
 
                 setStep(3, "Analyse de l'Historique...");
                 if (data.historique && data.historique.length > 1) {
                     const histHeaders = data.historique[0].map(h => (h||"").toString().toLowerCase().trim());
-                    const idxCanons = 1; // Colonne B "ref"
+                    const idxCanons = 1; // Colonne B
                     
                     let colsEau = {}, colsAir = {}, colsTemps = {};
                     let saisonsSet = new Set();
@@ -544,10 +539,9 @@
                 }
 
                 if (data.kmz && data.kmz.length > 0) {
-                    // On attribue une couleur par defaut depuis la palette si dispo
                     cloudKmzLayers = data.kmz.map((k, index) => {
                         let col = defaultColors[index % defaultColors.length];
-                        return { ...k, isVisible: false, leafletLayer: null, color: col };
+                        return { ...k, isVisible: false, leafletLayer: null, color: col, weight: 4 };
                     });
                 }
 
@@ -585,11 +579,24 @@
             }
         }
 
-        fetchGoogleSheetsData();
+        // ==========================================
+        // 5. GESTION DES CALQUES (COULEUR & EPAISSEUR)
+        // ==========================================
+        
+        // Fonction universelle pour créer le style Leaflet des KML
+        function buildGeoJsonStyle(hexColor, weight) {
+            let finalWeight = weight ? parseInt(weight) : 4;
+            return {
+                style: function (feature) { return { color: hexColor, weight: finalWeight, opacity: 0.8, fillColor: hexColor }; },
+                pointToLayer: function(feature, latlng) { return L.circleMarker(latlng, {radius: 6, color: hexColor, fillColor: hexColor, fillOpacity: 0.8, weight: 1}); },
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties && feature.properties.name) {
+                        layer.bindPopup(`<b style='color:${hexColor}'>` + feature.properties.name + "</b><br>" + (feature.properties.description || ""));
+                    }
+                }
+            };
+        }
 
-        // ==========================================
-        // GESTION DES CALQUES (GITHUB & LOCAUX) - AVEC COULEUR
-        // ==========================================
         async function fetchGitHubKMZ(url) {
             const response = await fetch(url);
             if (!response.ok) throw new Error("GitHub refuse l'accès. Vérifiez que le dépôt est public et l'URL Raw.");
@@ -605,13 +612,12 @@
             } else {
                 kmlString = await response.text();
             }
-
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(kmlString, "text/xml");
             return toGeoJSON.kml(xmlDoc);
         }
 
-        // GITHUB LAYERS
+        // ---- CLOUD LAYERS (GITHUB) ----
         function renderCloudLayersList() {
             const container = document.getElementById('cloud-layers-container');
             container.innerHTML = "";
@@ -621,10 +627,11 @@
             }
             cloudKmzLayers.forEach((layer, idx) => {
                 container.innerHTML += `
-                    <div class="kml-layer-item" style="border-color:#e1e8ed; background:#fafbfc;">
+                    <div class="kml-layer-item" style="border-color:#e1e8ed; background:#fafbfc; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
                         <input type="checkbox" id="cloud-cbx-${idx}" ${layer.isVisible ? 'checked' : ''} onchange="toggleCloudLayer(${idx})" style="margin:0 5px 0 0;">
-                        <input type="color" class="layer-color-picker" value="${layer.color}" onchange="changeCloudLayerColor(${idx}, this.value)" title="Changer la couleur">
-                        <label style="cursor:pointer; display:flex; flex-direction:column; flex-grow:1; margin-left:8px;" for="cloud-cbx-${idx}">
+                        <input type="color" class="layer-color-picker" value="${layer.color}" onchange="changeCloudLayerStyle(${idx}, this.value, null)" title="Couleur">
+                        <input type="number" class="layer-weight-picker" value="${layer.weight || 4}" min="1" max="15" onchange="changeCloudLayerStyle(${idx}, null, this.value)" title="Épaisseur">
+                        <label style="cursor:pointer; display:flex; flex-direction:column; flex-grow:1; margin-left:8px; min-width:120px;" for="cloud-cbx-${idx}">
                             <span style="color:#2c3e50; font-size:12px;">${layer.nom}</span>
                             <span style="font-size:10px; color:#7f8c8d; font-weight:normal;">${layer.commentaire}</span>
                         </label>
@@ -656,7 +663,7 @@
 
             try {
                 const geojson = await fetchGitHubKMZ(layerObj.url);
-                layerObj.leafletLayer = L.geoJSON(geojson, buildGeoJsonStyle(layerObj.color)).addTo(map);
+                layerObj.leafletLayer = L.geoJSON(geojson, buildGeoJsonStyle(layerObj.color, layerObj.weight)).addTo(map);
                 layerObj.isVisible = true;
                 if(layerObj.leafletLayer.getBounds().isValid()) { map.fitBounds(layerObj.leafletLayer.getBounds()); }
                 statusSpan.innerText = " ✅";
@@ -668,19 +675,20 @@
             cbx.disabled = false;
         }
 
-        window.changeCloudLayerColor = function(idx, newColor) {
+        window.changeCloudLayerStyle = function(idx, newColor, newWeight) {
             let layerObj = cloudKmzLayers[idx];
-            layerObj.color = newColor;
+            if (newColor !== null) layerObj.color = newColor;
+            if (newWeight !== null) layerObj.weight = parseInt(newWeight);
+            
             if(layerObj.leafletLayer) {
-                layerObj.leafletLayer.setStyle({ color: newColor, fillColor: newColor });
-                // Mettre a jour les markers s'ils existent
+                layerObj.leafletLayer.setStyle({ color: layerObj.color, fillColor: layerObj.color, weight: layerObj.weight });
                 layerObj.leafletLayer.eachLayer(function (layer) {
-                    if (layer instanceof L.CircleMarker) { layer.setStyle({ color: newColor, fillColor: newColor }); }
+                    if (layer instanceof L.CircleMarker) { layer.setStyle({ color: layerObj.color, fillColor: layerObj.color }); }
                 });
             }
         }
 
-        // LOCAL LAYERS
+        // ---- LOCAL LAYERS (PC) ----
         async function handleKMLUpload(event) {
             const file = event.target.files[0];
             if(!file) return;
@@ -694,7 +702,8 @@
                 try {
                     const fileName = file.name; const layerId = 'layer_' + Date.now();
                     let kmlString = "";
-                    let newColor = '#e67e22'; // Default color for PC import
+                    let defaultColor = '#e67e22'; 
+                    let defaultWeight = 4;
 
                     if (fileName.toLowerCase().endsWith('.kmz')) {
                         const arrayBuffer = await file.arrayBuffer();
@@ -712,8 +721,8 @@
                     const xmlDoc = parser.parseFromString(kmlString, "text/xml");
                     const geojson = toGeoJSON.kml(xmlDoc);
 
-                    saveLayerToDB(layerId, fileName, geojson, newColor);
-                    addGeoJsonToMap(layerId, fileName, geojson, true, newColor);
+                    saveLayerToDB(layerId, fileName, geojson, defaultColor, defaultWeight);
+                    addGeoJsonToMap(layerId, fileName, geojson, true, defaultColor, defaultWeight);
                     
                     document.getElementById('loading-overlay').style.display = 'none';
                 } catch (err) {
@@ -724,23 +733,14 @@
             }, 100);
         }
 
-        function buildGeoJsonStyle(hexColor) {
-            return {
-                style: function (feature) { return { color: hexColor, weight: 4, opacity: 0.8, fillColor: hexColor }; },
-                pointToLayer: function(feature, latlng) { return L.circleMarker(latlng, {radius: 6, color: hexColor, fillColor: hexColor, fillOpacity: 0.8}); },
-                onEachFeature: function (feature, layer) {
-                    if (feature.properties && feature.properties.name) {
-                        layer.bindPopup(`<b style='color:${hexColor}'>` + feature.properties.name + "</b><br>" + (feature.properties.description || ""));
-                    }
-                }
-            };
-        }
-
-        function addGeoJsonToMap(id, name, geojson, isVisible, hexColor) {
-            const layer = L.geoJSON(geojson, buildGeoJsonStyle(hexColor));
+        function addGeoJsonToMap(id, name, geojson, isVisible, hexColor, weight) {
+            let finalWeight = weight || 4;
+            const layer = L.geoJSON(geojson, buildGeoJsonStyle(hexColor, finalWeight));
+            
             if(isVisible) layer.addTo(map);
-            externalLayers[id] = { name: name, layer: layer, isVisible: isVisible, color: hexColor };
+            externalLayers[id] = { name: name, layer: layer, isVisible: isVisible, color: hexColor, weight: finalWeight };
             renderCustomLayersList();
+            
             if(isVisible && layer.getBounds && typeof layer.getBounds === 'function') { 
                 let b = layer.getBounds(); if(b.isValid()) map.fitBounds(b); 
             }
@@ -753,8 +753,9 @@
                 container.innerHTML += `
                     <div class="kml-layer-item">
                         <input type="checkbox" id="loc-cbx-${id}" ${ext.isVisible ? 'checked' : ''} onchange="toggleExtLayer('${id}')" style="margin:0 5px 0 0;">
-                        <input type="color" class="layer-color-picker" value="${ext.color}" onchange="changeExtLayerColor('${id}', this.value)" title="Changer la couleur">
-                        <label for="loc-cbx-${id}" style="cursor:pointer; flex-grow:1; margin-left:8px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#34495e;">${ext.name}</label>
+                        <input type="color" class="layer-color-picker" value="${ext.color}" onchange="changeExtLayerStyle('${id}', this.value, null)" title="Couleur">
+                        <input type="number" class="layer-weight-picker" value="${ext.weight || 4}" min="1" max="15" onchange="changeExtLayerStyle('${id}', null, this.value)" title="Épaisseur">
+                        <label for="loc-cbx-${id}" style="cursor:pointer; flex-grow:1; margin-left:8px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#34495e;">${ext.name}</label>
                         <button onclick="deleteExtLayer('${id}')" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:16px;">🗑️</button>
                     </div>`;
             }
@@ -767,16 +768,21 @@
             renderCustomLayersList();
         }
 
-        window.changeExtLayerColor = function(id, newColor) {
+        window.changeExtLayerStyle = function(id, newColor, newWeight) {
             if(externalLayers[id]) {
-                externalLayers[id].color = newColor;
+                if (newColor !== null) externalLayers[id].color = newColor;
+                if (newWeight !== null) externalLayers[id].weight = parseInt(newWeight);
+                
+                let col = externalLayers[id].color;
+                let w = externalLayers[id].weight;
+
                 if(externalLayers[id].layer) {
-                    externalLayers[id].layer.setStyle({color: newColor, fillColor: newColor});
+                    externalLayers[id].layer.setStyle({color: col, fillColor: col, weight: w});
                     externalLayers[id].layer.eachLayer(function (layer) {
-                        if (layer instanceof L.CircleMarker) { layer.setStyle({ color: newColor, fillColor: newColor }); }
+                        if (layer instanceof L.CircleMarker) { layer.setStyle({ color: col, fillColor: col }); }
                     });
                 }
-                updateLayerDataInDB(id, { color: newColor });
+                updateLayerDataInDB(id, { color: col, weight: w });
             }
         }
 
@@ -787,9 +793,14 @@
         }
 
         // ==========================================
-        // APP INIT & UI
+        // 6. INITIALISATION & UI LOGIC
         // ==========================================
         function initApp() {
+            function hslToHex(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
+            let q=l<0.5?l*(1+s):l+s-l*s;let p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
+            const toHex=x=>{const hex=Math.round(x*255).toString(16);return hex.length===1?'0'+hex:hex;};return `#${toHex(r)}${toHex(g)}${toHex(b)}`;}
+            function generatePalette(arr, s = 0.7, l = 0.5) { let pal = {}; arr.forEach((item, i) => { pal[item] = hslToHex(i / arr.length, s, l); }); return pal; }
+
             let tSet = new Set(), rSet = new Set(), trSet = new Set(), pSet = new Set(), vSet = new Set(), mSet = new Set();
             
             snowCannons.features.forEach(f => {
@@ -802,14 +813,16 @@
                 let mo = getV(p, keyModule); if(mo!=="N/A") mSet.add(mo);
             });
 
-            // Generate Colors
-            function hslToHex(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
-            let q=l<0.5?l*(1+s):l+s-l*s;let p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
-            const toHex=x=>{const hex=Math.round(x*255).toString(16);return hex.length===1?'0'+hex:hex;};return `#${toHex(r)}${toHex(g)}${toHex(b)}`;}
-            function generatePalette(arr, s = 0.7, l = 0.5) { let pal = {}; arr.forEach((item, i) => { pal[item] = hslToHex(i / arr.length, s, l); }); return pal; }
-
             Array.from(tSet).sort().forEach((t, i) => { technoColors[t] = hslToHex(0.14, 1.0, tSet.size > 1 ? 0.8 - (i / (tSet.size - 1)) * 0.4 : 0.6); });
             repColors = generatePalette(Array.from(rSet).sort(), 0.8, 0.45); transfoColors = generatePalette(Array.from(trSet).sort(), 0.65, 0.55);
+
+            snowCannons.features.forEach(f => {
+                let typeLower = getV(f.properties, keyType).toLowerCase(); let color = "#FFD700";
+                if (["demak lenko", "demac lenko"].includes(typeLower)) color = "#0000FF";
+                else if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeLower)) color = "#008000";
+                else color = technoColors[typeLower] || "#FFD700";
+                f.properties.couleur_defaut = color;
+            });
 
             let dlContainer = document.getElementById('datalists-container');
             if (!dlContainer) { dlContainer = document.createElement('div'); dlContainer.id = 'datalists-container'; document.body.appendChild(dlContainer); }
@@ -1079,6 +1092,62 @@
             });
         }
 
+        function drawPisteCompareChart(targetCannon) {
+            let canvasId = `chart-${targetCannon.id}`; let ctx = document.getElementById(canvasId); if(!ctx) return;
+            if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+            let s = saisonsList[histSeasonIdx]; let pName = getV(targetCannon, keyPiste);
+            let pisteCannons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === pName && f.properties.historique[s]);
+            pisteCannons.sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
+            let bgColors = pisteCannons.map(f => f.properties.id === targetCannon.id ? '#e74c3c' : '#3498db');
+            chartInstances[canvasId] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: pisteCannons.map(f => f.properties.id), datasets: [{ data: pisteCannons.map(f => f.properties.historique[s][histMetric]), backgroundColor: bgColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: {font:{size:10}} } } } });
+        }
+
+        window.drawSecondPisteChart = function(targetId, seasonStr) {
+            let canvasId = `chart2-${targetId}`; let ctx = document.getElementById(canvasId); if(!ctx) return;
+            if(chartInstances[canvasId]) { chartInstances[canvasId].destroy(); }
+            if(!seasonStr) return;
+            let targetCannon = snowCannons.features.find(f => f.properties.id === targetId).properties;
+            let pName = getV(targetCannon, keyPiste);
+            let pisteCannons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === pName && f.properties.historique[seasonStr]);
+            pisteCannons.sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
+            let bgColors = pisteCannons.map(f => f.properties.id === targetId ? '#e74c3c' : '#9b59b6');
+            chartInstances[canvasId] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: pisteCannons.map(f => f.properties.id), datasets: [{ data: pisteCannons.map(f => f.properties.historique[seasonStr][histMetric]), backgroundColor: bgColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: {font:{size:10}} } } } });
+        }
+
+        window.openGlobalCompareModal = function() {
+            let s1 = document.getElementById('comp-s1'); let s2 = document.getElementById('comp-s2');
+            s1.innerHTML = ""; s2.innerHTML = "";
+            saisonsList.forEach((s, i) => { s1.innerHTML += `<option value="${s}" ${i===0?'selected':''}>${s}</option>`; s2.innerHTML += `<option value="${s}" ${i===1?'selected':''}>${s}</option>`; });
+            document.getElementById('compare-modal').style.display = 'flex';
+            renderGlobalComparison();
+        }
+
+        window.renderGlobalComparison = function() {
+            let s1 = document.getElementById('comp-s1').value; let s2 = document.getElementById('comp-s2').value;
+            let metric = document.getElementById('comp-metric').value;
+            document.getElementById('comp-title-1').innerText = `Saison ${s1} - ${metric.toUpperCase()}`;
+            document.getElementById('comp-title-2').innerText = `Saison ${s2} - ${metric.toUpperCase()}`;
+
+            let pistes = Array.from(columnValuesSets[keyPiste] || []).sort();
+            let d1 = [], d2 = [];
+
+            pistes.forEach(p => {
+                let sum1 = 0; let sum2 = 0;
+                snowCannons.features.forEach(f => {
+                    if (getV(f.properties, keyPiste) === p) {
+                        if(f.properties.historique[s1]) sum1 += f.properties.historique[s1][metric];
+                        if(f.properties.historique[s2]) sum2 += f.properties.historique[s2][metric];
+                    }
+                });
+                d1.push(sum1); d2.push(sum2);
+            });
+
+            if(chartInstances['c1']) chartInstances['c1'].destroy();
+            chartInstances['c1'] = new Chart(document.getElementById('comp-canvas-1').getContext('2d'), { type: 'bar', data: { labels: pistes, datasets: [{ data: d1, backgroundColor: '#3498db' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            if(chartInstances['c2']) chartInstances['c2'].destroy();
+            chartInstances['c2'] = new Chart(document.getElementById('comp-canvas-2').getContext('2d'), { type: 'bar', data: { labels: pistes, datasets: [{ data: d2, backgroundColor: '#e67e22' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        }
+
         function getColorByFilter(ratio, props) {
             const inter = (c1,c2,f) => { let r=c1.slice(); for(let i=0;i<3;i++)r[i]=Math.round(r[i]+f*(c2[i]-c1[i])); return `rgb(${r[0]},${r[1]},${r[2]})`;};
             if (mainTheme === 'defauts') { let act = getActiveTickets(props.id); if (act.length === 0) return '#bdc3c7'; if (act.some(t => t.statut.includes('faire'))) return '#e74c3c'; return '#f39c12'; }
@@ -1155,7 +1224,6 @@
                 });
             } catch(e) { console.error(e); }
         }
-
     </script>
 </body>
 </html>
