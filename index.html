@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GMAO Neige - Mode Expert BI</title>
     
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('loading-title').innerText = "🛑 CRASH SYSTÈME";
+            document.getElementById('loading-title').style.color = "#e74c3c";
+            document.getElementById('loading-desc').style.display = 'none';
+            document.getElementById('error-box').style.display = 'block';
+            document.getElementById('error-msg').innerHTML = "<b>Erreur technique :</b> " + message + "<br><b>Ligne :</b> " + lineno;
+            return true;
+        };
+    </script>
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,7 +29,7 @@
         #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;}
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #error-box { display: none; background: #fdf0ed; border: 2px solid #e74c3c; padding: 20px; border-radius: 8px; max-width: 600px; color: #c0392b; margin-top:20px;}
+        #error-box { display: none; background: #fdf0ed; border: 2px solid #e74c3c; padding: 20px; border-radius: 8px; max-width: 600px; color: #c0392b; margin-top:20px; text-align: left;}
 
         /* BOUTON MENU & LEGENDE FLOTTANTE GAUCHE */
         #toggle-menu-btn { position: absolute; top: 15px; left: 15px; z-index: 3000; background: #2c3e50; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.2s; }
@@ -70,7 +82,7 @@
         #btn-multi-toggle { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.3s; }
         #btn-multi-toggle.active { background: #3498db; color: white; border-color: #2980b9; }
 
-        /* BANDEAU DROIT (FICHES CANON & ANALYSE FILTRE) */
+        /* BANDEAU DROIT */
         #right-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 450px; background: #fff; z-index: 2001; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -5px 0 25px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         #right-sidebar.open { transform: translateX(0); }
         .right-header { background: #fff; border-bottom:1px solid #eee; padding: 20px; font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; color:#2c3e50;}
@@ -80,7 +92,7 @@
         .sel-details-header { padding: 15px; font-weight: bold; font-size: 15px; background: #fdfdfe; border-bottom: 1px solid #f0f0f0; color: #2c3e50; display:flex; justify-content:space-between; align-items:center;}
         .sel-details-body { padding: 15px; font-size: 13px; color: #444; line-height: 1.5; }
         
-        .badge { display: inline-block; background: #f0f3f5; color: #2c3e50; padding: 5px 10px; border-radius: 4px; font-size: 11px; margin: 0 4px 6px 0; border: 1px solid #e1e8ed; }
+        .badge { display: inline-block; background: #f0f3f5; color: #2c3e50; padding: 5px 10px; border-radius: 4px; font-size: 11.5px; margin: 0 4px 6px 0; border: 1px solid #e1e8ed; }
         .ticket-card { background: #fff; border: 1px solid #eee; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .hist-card { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 15px; border-radius: 8px; text-align: center; margin-bottom:15px; border:1px solid #b0c4de;}
         
@@ -101,12 +113,6 @@
         .comp-body { padding: 20px; max-height: 70vh; overflow-y: auto; background: #f4f6f8; }
         .comp-controls { display: flex; gap: 15px; background: #fff; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd; align-items: flex-end;}
         .comp-chart-box { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; height: 200px; position: relative;}
-
-        @media (max-width: 768px) {
-            #sidebar { width: 85%; }
-            #right-sidebar { width: 85%; }
-            #compare-modal { width: 95%; }
-        }
     </style>
 </head>
 <body>
@@ -115,7 +121,8 @@
     <div id="loading-overlay">
         <div class="spinner" id="loading-spinner"></div>
         <h2 style="color:#3498db; margin:0;" id="loading-title">GMAO AppSheet...</h2>
-        <p style="color:#666; font-weight:bold;" id="loading-desc">Initialisation en cours</p>
+        <p style="color:#666; font-weight:bold; font-size:16px;" id="loading-desc">Initialisation en cours</p>
+        <p style="color:#888; font-size:12px;" id="loading-step">Étape 0/4</p>
         <div id="error-box"><p id="error-msg"></p></div>
     </div>
 
@@ -183,7 +190,7 @@
         </div>
 
         <div id="map-container">
-            <button id="btn-multi-toggle" onclick="toggleMultiSelect()">🔲 Multi-Sélection : OFF</button>
+            <button id="btn-multi-toggle" onclick="toggleMultiSelect()">🔲 Sélection Multiple : OFF</button>
             <div id="map"></div>
         </div>
 
@@ -196,7 +203,7 @@
             <div class="right-content">
                 <div id="view-selection">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;" id="multi-tools">
-                        <span style="font-size:13px; color:#555;"><b id="sel-count">0</b> sélectionné(s)</span>
+                        <span style="font-size:13px; color:#555;"><b id="sel-count">0</b> canon(s) sélectionné(s)</span>
                         <button onclick="clearSelection()" style="background:#bdc3c7; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;">Tout vider ✕</button>
                     </div>
                     <div id="selected-list"></div>
@@ -229,8 +236,9 @@
     </div>
 
     <script>
-        // ======= URL APPS SCRIPT =======
+        // ======= VÉRIFIEZ QUE L'URL EST BIEN LA VÔTRE =======
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
+        // =====================================================
         
         let snowCannons = { "type": "FeatureCollection", "features": [] };
         let rawTickets = []; let saisonsList = []; 
@@ -248,28 +256,42 @@
         let geojsonLayer = null; let chartInstances = {}; let selectedCannonsMap = new Map(); let currentlyEditingId = null; 
         let technoColors = {}, repColors = {}, transfoColors = {};
         
-        // MAPPING CLÉS FIXES (DYNAMIQUE)
         let keyPiste = "", keyType = "", keyRep = "", keyTransfo = "", keyVanne = "", keyModule = "";
+
+        function setStep(step, desc) {
+            document.getElementById('loading-step').innerText = "Étape " + step + "/4";
+            document.getElementById('loading-desc').innerText = desc;
+        }
 
         function showError(msg) {
             document.getElementById('loading-spinner').style.display = 'none';
             document.getElementById('loading-title').innerText = "🛑 Erreur détectée";
             document.getElementById('loading-title').style.color = "#e74c3c";
             document.getElementById('loading-desc').style.display = 'none';
+            document.getElementById('loading-step').style.display = 'none';
             document.getElementById('error-box').style.display = 'block';
             document.getElementById('error-msg').innerHTML = msg;
         }
 
-        // LECTURE DES DONNEES
+        const getIdx = (headers, nomsCherches) => {
+            let i = headers.findIndex(h => nomsCherches.some(n => h && h.includes(n)));
+            return i !== -1 ? i : -1;
+        };
+
+        // LECTURE DES DONNEES (AVEC TRACEUR D'ÉTAPES)
         async function fetchGoogleSheetsData() {
             try {
+                setStep(1, "Connexion au serveur Google...");
                 const response = await fetch(GOOGLE_API_URL);
-                if (!response.ok) throw new Error("Accès refusé. Le script est-il bien public ?");
+                if (!response.ok) throw new Error("Google a refusé l'accès. (Erreur " + response.status + ")");
+                
                 let textData = await response.text();
                 let data;
-                try { data = JSON.parse(textData); } catch(e) { throw new Error("Les données reçues sont bloquées par Google."); }
+                try { data = JSON.parse(textData); } catch(e) { throw new Error("Les données reçues sont invalides. (Erreur de format JSON)"); }
                 
-                if (!data.general || data.general.length < 2) throw new Error(`L'onglet principal est introuvable ou vide.`);
+                setStep(2, "Analyse de la base Général...");
+                if (!data || !data.general) throw new Error(`L'onglet principal n'a pas été renvoyé par le script.`);
+                if (data.general.length < 2) throw new Error(`Le Tableau Général semble vide. Vérifiez qu'il contient bien des données sous la ligne 1.`);
                 
                 const genHeaders = data.general[0].map(h => (h||"").toString().toLowerCase().trim());
                 const originalHeaders = data.general[0].map(h => (h||"").toString().trim()); 
@@ -279,9 +301,9 @@
                     return idx !== -1 ? originalHeaders[idx] : null;
                 };
 
-                const idxId = 2; // Colonne C
+                const idxId = 2; // Forcé sur Colonne C
                 const idxXY = genHeaders.findIndex(h => h.includes('xy') || h.includes('gps'));
-                if (idxXY === -1) throw new Error("La colonne 'xy' (coordonnées GPS) est introuvable.");
+                if (idxXY === -1) throw new Error("La colonne 'xy' (coordonnées GPS) est introuvable dans le Tableau Général.");
 
                 keyPiste = findCol(['pistes', 'piste']);
                 keyType = findCol(['type canon', 'type']);
@@ -298,6 +320,8 @@
                 });
 
                 let dictGeneral = {};
+                let validPointsCount = 0;
+
                 data.general.slice(1).forEach(row => {
                     let idRaw = row[idxId];
                     if (idRaw == null || idRaw === "") return;
@@ -314,24 +338,24 @@
                             lng = parseFloat(parts[1].trim().replace(',', '.')); 
                         }
                     }
-                    if (isNaN(lat) || isNaN(lng)) { lat = 0; lng = 0; }
+                    if (!isNaN(lat) && !isNaN(lng) && lat !== 0) validPointsCount++;
 
                     let fullData = [];
                     originalHeaders.forEach((head, i) => { 
-                        let val = row[i];
-                        if(val != null && val !== "") {
-                            fullData.push({k: head, v: val}); 
-                            if(columnValuesSets[head]) columnValuesSets[head].add(val.toString());
-                        }
+                        let val = (i < row.length && row[i] != null && row[i] !== "") ? row[i] : "N/A";
+                        fullData.push({k: head, v: val}); 
+                        if(val !== "N/A" && columnValuesSets[head]) columnValuesSets[head].add(val.toString());
                     });
 
                     dictGeneral[id] = { id: id, lat: lat, lng: lng, fullData: fullData, historique: {} };
                 });
 
+                if (validPointsCount === 0) throw new Error("Aucun point GPS valide détecté dans la colonne 'xy'.");
+
+                setStep(3, "Analyse de l'Historique...");
                 if (data.historique && data.historique.length > 1) {
                     const histHeaders = data.historique[0].map(h => (h||"").toString().toLowerCase().trim());
-                    const idxCanons = 1; // Colonne B "ref"
-                    
+                    const idxCanons = 1; // Colonne B
                     let colsEau = {}, colsAir = {}, colsTemps = {};
                     let saisonsSet = new Set();
 
@@ -358,6 +382,7 @@
                     });
                 }
 
+                setStep(4, "Analyse des Tickets de panne...");
                 if (data.tickets && data.tickets.length > 1) {
                     const tHeaders = data.tickets[0].map(h => (h||"").toString().toLowerCase().trim());
                     const originalTHeaders = data.tickets[0].map(h => (h||"").toString().trim());
@@ -369,12 +394,12 @@
                     if(idxTRegard > -1) {
                         rawTickets = data.tickets.slice(1).map(row => {
                             let fullTData = [];
-                            originalTHeaders.forEach((h, i) => { if (row[i] != null && row[i] !== "") fullTData.push({k: h, v: row[i]}); });
+                            originalTHeaders.forEach((h, i) => { if (i < row.length && row[i] != null && row[i] !== "") fullTData.push({k: h, v: row[i]}); });
                             return {
                                 statut: (idxTEtat>-1 && row[idxTEtat] != null ? row[idxTEtat].toString().toLowerCase().trim() : ""),
-                                date: (idxTDate>-1 ? row[idxTDate] : ""),
+                                date: (idxTDate>-1 && row[idxTDate] != null ? row[idxTDate] : ""),
                                 idCanon: (row[idxTRegard] != null ? row[idxTRegard].toString().replace(/[^0-9]/g, '') : ""), 
-                                defaut: (idxTDefaut>-1 && row[idxTDefaut] ? row[idxTDefaut].toString() : "Défaut"),
+                                defaut: (idxTDefaut>-1 && row[idxTDefaut] ? row[idxTDefaut].toString() : "Défaut non spécifié"),
                                 fullData: fullTData
                             };
                         });
@@ -382,18 +407,19 @@
                 }
 
                 Object.values(dictGeneral).forEach(canon => {
-                    if (canon.lat && canon.lng) { 
+                    if (canon.lat !== 0 && canon.lng !== 0 && !isNaN(canon.lat)) { 
                         snowCannons.features.push({ "type": "Feature", "geometry": { "type": "Point", "coordinates": [canon.lng, canon.lat] }, "properties": canon });
                     }
                 });
 
                 document.getElementById('loading-overlay').style.display = 'none';
-                initApp();
+                try { initApp(); } catch(err) { showError("Erreur lors du rendu de la carte : " + err.message); }
 
             } catch (error) { showError(error.message); }
         }
 
-        // ACCESSEURS
+        fetchGoogleSheetsData();
+
         function getV(p, key) { if(!key) return "N/A"; let o = p.fullData.find(x => x.k === key); return o ? o.v.toString() : "N/A"; }
         function getTicketsForCanon(idCanon) { return rawTickets.filter(t => t.idCanon === idCanon); }
         function getActiveTickets(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); }
@@ -465,7 +491,6 @@
             updateLegend(); updateMap();
         }
 
-        // UI FILTRES DYNAMIQUES
         function generateDynamicFiltersUI() {
             let container = document.getElementById('dynamic-filters-container'); container.innerHTML = "";
             let optionsHTML = `<option value="">-- Choisir un critère --</option>` + availableColumns.map(c => `<option value="${c}">${c.toUpperCase()}</option>`).join('');
@@ -579,18 +604,11 @@
             document.getElementById('right-header').classList.remove('editing'); document.getElementById('right-title').innerText = "📊 Analyse des Filtres";
             
             let visibleCannons = snowCannons.features.filter(f => f.properties._isVisible);
-            let targetGroupKey = keyPiste; // Grouper par piste par defaut
+            let targetGroupKey = keyPiste || activeFilters.find(f => f.key).key; 
             let counts = {};
-            visibleCannons.forEach(f => {
-                let v = getV(f.properties, targetGroupKey); counts[v] = (counts[v] || 0) + 1;
-            });
+            visibleCannons.forEach(f => { let v = getV(f.properties, targetGroupKey); counts[v] = (counts[v] || 0) + 1; });
             
-            let html = `
-                <div style="background:#eafaf1; padding:15px; border-radius:6px; text-align:center; margin-bottom:15px;">
-                    <span style="font-size:24px; font-weight:bold; color:#27ae60;">${visibleCannons.length}</span><br>
-                    <span style="font-size:12px; color:#555; text-transform:uppercase;">Canons trouvés</span>
-                </div>
-                <div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; text-align:center;">Répartition par Piste</div><div class="piste-chart-wrapper"><canvas id="global-filter-chart"></canvas></div></div>`;
+            let html = `<div style="background:#eafaf1; padding:15px; border-radius:6px; text-align:center; margin-bottom:15px; border:1px solid #d5f5e3;"><span style="font-size:24px; font-weight:bold; color:#27ae60;">${visibleCannons.length}</span><br><span style="font-size:12px; color:#555; text-transform:uppercase;">Canons trouvés</span></div><div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; text-align:center; color:#34495e;">Répartition par ${targetGroupKey.toUpperCase()}</div><div class="piste-chart-wrapper"><canvas id="global-filter-chart"></canvas></div></div>`;
             
             document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none';
             document.getElementById('selected-list').innerHTML = html; document.getElementById('right-sidebar').classList.add('open');
@@ -598,10 +616,7 @@
             setTimeout(() => {
                 let ctx = document.getElementById('global-filter-chart'); if(!ctx) return;
                 if(chartInstances['global-filter-chart']) chartInstances['global-filter-chart'].destroy();
-                chartInstances['global-filter-chart'] = new Chart(ctx.getContext('2d'), {
-                    type: 'bar', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: '#3498db', borderRadius: 4 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
+                chartInstances['global-filter-chart'] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: '#3498db', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
             }, 50);
         }
 
@@ -618,10 +633,10 @@
                 let mainContent = ""; let histHtml = "";
 
                 if (history.length > 0) {
-                    histHtml = `<details class="ticket-history"><summary>📁 Historique d'interventions (${history.length})</summary><ul style="padding-left:15px; margin-top:8px;">`;
+                    histHtml = `<details class="ticket-history"><summary>📁 Historique d'interventions passées (${history.length})</summary><ul style="padding-left:15px; margin-top:10px;">`;
                     history.forEach(t => {
                         let dateStr = isNaN(new Date(t.date).getTime()) ? (t.date || "Inconnue") : new Date(t.date).toLocaleDateString('fr-FR');
-                        histHtml += `<li style="margin-bottom:6px; font-size:11px;"><b>${dateStr}</b> - <b>${t.defaut}</b> <br><span style="color:#666;">${t.cause}</span></li>`;
+                        histHtml += `<li style="margin-bottom:8px; font-size:11.5px; border-bottom:1px solid #eee; padding-bottom:5px;"><b>${dateStr}</b> - <span style="color:#e74c3c;">${t.defaut}</span> <br><span style="color:#666;">Intervention : ${t.cause}</span></li>`;
                     });
                     histHtml += `</ul></details>`;
                 }
@@ -643,7 +658,7 @@
                         </div>
                         <div class="piste-chart-container" style="background:#fafbfc;">
                             <div style="font-size:11px; font-weight:bold; color:#555; text-align:center;">➕ Comparer avec une autre saison : 
-                                <select onchange="drawSecondPisteChart('${p.id}', this.value)" style="padding:4px; border-radius:4px; border:1px solid #ccc;">
+                                <select onchange="drawSecondPisteChart('${p.id}', this.value)" style="padding:4px; border-radius:4px; border:1px solid #ccc; outline:none;">
                                     <option value="">-- Choisir --</option>
                                     ${saisonsList.filter(x => x !== s).map(x => `<option value="${x}">${x}</option>`).join('')}
                                 </select>
@@ -652,7 +667,7 @@
                         </div>`;
                 } 
                 else if (mainTheme === 'defauts') {
-                    if (active.length === 0) { mainContent = `<div style="background:#eafaf1; color:#27ae60; padding:15px; border-radius:6px; text-align:center; font-weight:bold; border:1px solid #d5f5e3; margin-bottom:10px;">✅ Aucun défaut en cours</div>${histHtml}`; } 
+                    if (active.length === 0) { mainContent = `<div style="background:#eafaf1; color:#27ae60; padding:15px; border-radius:6px; text-align:center; font-weight:bold; border:1px solid #d5f5e3; margin-bottom:15px;">✅ Aucun défaut en cours</div>${histHtml}`; } 
                     else {
                         mainContent = active.map(t => {
                             let borderCol = t.statut.includes('faire') ? '#e74c3c' : '#f39c12';
@@ -665,7 +680,7 @@
                     }
                 } 
                 else {
-                    let badges = `<span class="badge"><b>Modèle:</b> ${getV(p, keyType)}</span> <span class="badge"><b>Rép:</b> ${getV(p, keyRep)}</span> <span class="badge"><b>Trans:</b> ${getV(p, keyTransfo)}</span> <span class="badge"><b>Vanne:</b> ${getV(p, keyVanne)}</span>`;
+                    let badges = `<span class="badge"><b>Modèle:</b> ${getV(p, keyType)}</span> <span class="badge"><b>Rép:</b> ${getV(p, keyRep)}</span> <span class="badge"><b>Trans:</b> ${getV(p, keyTransfo)}</span> <span class="badge"><b>Vanne:</b> ${getV(p, keyVanne)}</span> <span class="badge"><b>Module:</b> ${getV(p, keyModule)}</span>`;
                     let fullDataHTML = `<details style="margin-top:15px; font-size:12px; background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #e1e8ed;"><summary style="cursor:pointer; font-weight:600; color:#34495e;">➕ Caractéristiques Complètes</summary><div style="margin-top:12px; display:grid; grid-template-columns: 1fr; gap:8px;">`;
                     p.fullData.forEach(item => { if(!item.k.toLowerCase().includes('xy') && !item.k.toLowerCase().includes('gps')) { fullDataHTML += `<div style="border-bottom:1px solid #f0f0f0; padding-bottom:4px;"><span style="color:#7f8c8d;">${item.k} :</span> <b style="color:#2c3e50; float:right;">${item.v}</b></div>`; } });
                     fullDataHTML += `</div></details>`;
@@ -703,9 +718,9 @@
             });
         }
 
-        function drawSecondPisteChart(targetId, seasonStr) {
+        window.drawSecondPisteChart = function(targetId, seasonStr) {
             let canvasId = `chart2-${targetId}`; let ctx = document.getElementById(canvasId); if(!ctx) return;
-            if(chartInstances[canvasId]) { chartInstances[canvasId].destroy(); chartInstances[canvasId] = null; }
+            if(chartInstances[canvasId]) { chartInstances[canvasId].destroy(); }
             if(!seasonStr) return;
 
             let targetCannon = snowCannons.features.find(f => f.properties.id === targetId).properties;
@@ -723,7 +738,7 @@
         }
 
         // COMPARAISON GLOBALE MODAL
-        function openGlobalCompareModal() {
+        window.openGlobalCompareModal = function() {
             let s1 = document.getElementById('comp-s1'); let s2 = document.getElementById('comp-s2');
             s1.innerHTML = ""; s2.innerHTML = "";
             saisonsList.forEach((s, i) => {
@@ -734,7 +749,7 @@
             renderGlobalComparison();
         }
 
-        function renderGlobalComparison() {
+        window.renderGlobalComparison = function() {
             let s1 = document.getElementById('comp-s1').value; let s2 = document.getElementById('comp-s2').value;
             let metric = document.getElementById('comp-metric').value;
             document.getElementById('comp-title-1').innerText = `Saison ${s1} - ${metric.toUpperCase()}`;
