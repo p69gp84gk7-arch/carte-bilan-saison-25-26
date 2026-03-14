@@ -15,19 +15,11 @@
             document.getElementById('error-box').style.display = 'block';
             document.getElementById('error-msg').innerHTML = "<b>Erreur technique :</b> " + msg + (line ? "<br><b>Ligne :</b> " + line : "");
         }
-        
         window.onerror = function(message, source, lineno) { 
-            if (message === 'Script error.' || message.indexOf('Script error') > -1) {
-                console.warn("Erreur fantôme ignorée (probablement une extension du navigateur).");
-                return false; 
-            }
-            showCrash(message, lineno); 
-            return true; 
+            if (message === 'Script error.' || message.indexOf('Script error') > -1) return false; 
+            showCrash(message, lineno); return true; 
         };
-        
-        window.addEventListener('unhandledrejection', function(event) { 
-            showCrash(event.reason ? event.reason.message : "Erreur asynchrone bloquée", "Réseau/Promesse"); 
-        });
+        window.addEventListener('unhandledrejection', function(event) { showCrash(event.reason ? event.reason.message : "Erreur réseau bloquée", "Réseau/Promesse"); });
     </script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
@@ -43,7 +35,6 @@
         #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;}
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         #error-box { display: none; background: #fdf0ed; border: 2px solid #e74c3c; padding: 20px; border-radius: 8px; max-width: 600px; color: #c0392b; margin-top:20px; text-align:left;}
 
         #toggle-menu-btn { position: absolute; top: 15px; left: 15px; z-index: 3000; background: #2c3e50; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.2s; }
@@ -140,14 +131,14 @@
     </div>
 
     <div id="compare-modal">
-        <div class="comp-header"><span>📊 Comparaison Globale de Saisons</span><button onclick="openGlobalCompareModal(false)" style="background:none;border:none;color:white;cursor:pointer;font-size:24px;">&times;</button></div>
+        <div class="comp-header"><span>📊 Comparaison Globale de Saisons</span><button onclick="window.openGlobalCompareModal(false)" style="background:none;border:none;color:white;cursor:pointer;font-size:24px;">&times;</button></div>
         <div class="comp-body">
             <div class="comp-controls">
                 <div style="flex:1; min-width: 120px;"><div class="edit-label">Filtre Piste</div><select id="comp-piste" class="edit-input" style="margin:0;"><option value="all">Toutes les pistes</option></select></div>
                 <div style="flex:1; min-width: 120px;"><div class="edit-label">Donnée</div><select id="comp-metric" class="edit-input" style="margin:0;"><option value="eau">Eau (m³)</option><option value="air">Air</option><option value="temps">Temps de marche</option></select></div>
                 <div style="flex:1; min-width: 120px;"><div class="edit-label">Saison A</div><select id="comp-s1" class="edit-input" style="margin:0;"></select></div>
                 <div style="flex:1; min-width: 120px;"><div class="edit-label">Saison B</div><select id="comp-s2" class="edit-input" style="margin:0;"></select></div>
-                <button class="btn-action-primary" style="margin:0; width:auto; padding:10px 20px;" onclick="renderGlobalComparison()">Comparer</button>
+                <button class="btn-action-primary" style="margin:0; width:auto; padding:10px 20px;" onclick="window.renderGlobalComparison()">Comparer</button>
             </div>
             <div class="comp-chart-box"><div style="position:absolute; top:5px; left:15px; font-weight:bold; font-size:12px; color:#555;" id="comp-title-1">Saison A</div><canvas id="comp-canvas-1"></canvas></div>
             <div class="comp-chart-box"><div style="position:absolute; top:5px; left:15px; font-weight:bold; font-size:12px; color:#555;" id="comp-title-2">Saison B</div><canvas id="comp-canvas-2"></canvas></div>
@@ -163,7 +154,6 @@
             <details class="panel-section" open>
                 <summary>1. Thème & Légende</summary>
                 <div class="section-content" style="padding-top: 10px;">
-                    
                     <div class="theme-block">
                         <label class="radio-card" id="lbl-defauts" style="border-radius: 6px 6px 0 0; margin-bottom: 0; border-color: #3498db;"><input type="radio" name="main_theme" value="defauts" checked> 🚨 Défauts en cours</label>
                         <div class="theme-details" id="details-defauts" style="display: block; border-color: #3498db;">
@@ -242,20 +232,20 @@
             </details>
 
             <details class="panel-section" open>
-                <summary>4. Calques Distants (GitHub)</summary>
+                <summary>4. Calques & Tracés (KMZ)</summary>
                 <div class="section-content" style="padding-top: 5px;">
                     <p style="font-size:11px; color:#666; margin-bottom:10px; line-height:1.4;">
-                        Calques KML/KMZ synchronisés via votre onglet 'kmz'.
+                        <b>1. Cloud (Depuis onglet KMZ Sheets) :</b>
                     </p>
                     <div id="cloud-layers-container"></div>
                     
                     <hr style="margin:15px 0; border-top:1px dashed #ccc;">
                     
                     <p style="font-size:11px; color:#666; margin-bottom:10px; line-height:1.4;">
-                        Import manuel depuis PC (mémoire temporaire) :
+                        <b>2. Import Manuel depuis votre PC :</b>
                     </p>
                     <input type="file" id="kml-upload" accept=".kml,.kmz" style="display:none;" onchange="window.handleKMLUpload(event)">
-                    <button class="btn-action-primary" style="margin-top:0; background:#8e44ad;" onclick="document.getElementById('kml-upload').click()">📂 Parcourir...</button>
+                    <button class="btn-action-primary" style="margin-top:0; background:#8e44ad;" onclick="document.getElementById('kml-upload').click()">📂 Importer / Parcourir...</button>
                     <div id="custom-layers-list" style="margin-top:15px;"></div>
                 </div>
             </details>
@@ -310,10 +300,10 @@
         // 1. CONFIGURATION & VARIABLES GLOBALES 
         // =======================================================
         
-        // ⚠️ LIEN GOOGLE APPS SCRIPT (À VÉRIFIER) ⚠️
+        // ⚠️ LIEN GOOGLE APPS SCRIPT À VÉRIFIER ⚠️
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
         
-        let map;
+        let map, satLayer;
         let snowCannons = { "type": "FeatureCollection", "features": [] };
         let rawTickets = []; let saisonsList = []; let cloudKmzLayers = [];
         let isMultiSelect = false; let columnValuesSets = {}; let availableColumns = [];
@@ -330,39 +320,90 @@
         let keyPiste = "", keyType = "", keyRep = "", keyTransfo = "", keyVanne = "", keyModule = "";
 
         // =======================================================
-        // 2. FONCTIONS DE LECTURE (SÉCURISÉES)
+        // 2. FONCTIONS DE LECTURE (GLOABLES)
         // =======================================================
-        const getV = function(p, key) { 
+        window.getV = function(p, key) { 
             if(!key || !p || !p.fullData) return "N/A"; 
             let o = p.fullData.find(x => x.k === key); 
             return o ? o.v.toString().trim() : "N/A"; 
         };
-        const getTicketsForCanon = function(idCanon) { return rawTickets.filter(t => t.idCanon === idCanon); };
-        const getActiveTickets = function(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); };
-        const getHistoryTickets = function(idCanon) { return getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); };
+        window.getTicketsForCanon = function(idCanon) { return rawTickets.filter(t => t.idCanon === idCanon); };
+        window.getActiveTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); };
+        window.getHistoryTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); };
 
         // ==============================================================
-        // 3. FONCTION DE DEMARRAGE
+        // 3. BASE DE DONNEES LOCALE (INDEXEDDB) 
         // ==============================================================
-        window.addEventListener('DOMContentLoaded', async () => {
+        let localDB;
+        window.initLocalDB = function() {
+            try {
+                if (!window.indexedDB) return;
+                const request = window.indexedDB.open("GMAONeigeDB", 2);
+                request.onupgradeneeded = function(event) {
+                    localDB = event.target.result;
+                    if (!localDB.objectStoreNames.contains("kmz_layers")) localDB.createObjectStore("kmz_layers", { keyPath: "id" });
+                };
+                request.onsuccess = function(event) {
+                    localDB = event.target.result;
+                    window.loadSavedLayersFromDB(); 
+                };
+            } catch(e) {}
+        };
+
+        window.saveLayerToDB = function(id, name, geojson, color, weight) {
+            if(!localDB) return;
+            const tx = localDB.transaction("kmz_layers", "readwrite");
+            tx.objectStore("kmz_layers").put({ id: id, name: name, geojson: geojson, isVisible: true, color: color, weight: weight });
+        };
+
+        window.deleteLayerFromDB = function(id) {
+            if(!localDB) return;
+            const tx = localDB.transaction("kmz_layers", "readwrite");
+            tx.objectStore("kmz_layers").delete(id);
+        };
+
+        window.updateLayerDataInDB = function(id, updates) {
+            if(!localDB) return;
+            const tx = localDB.transaction("kmz_layers", "readwrite");
+            const store = tx.objectStore("kmz_layers");
+            const req = store.get(id);
+            req.onsuccess = function() {
+                let data = req.result;
+                if(data) { Object.assign(data, updates); store.put(data); }
+            };
+        };
+
+        window.loadSavedLayersFromDB = function() {
+            if(!localDB) return;
+            const tx = localDB.transaction("kmz_layers", "readonly");
+            const req = tx.objectStore("kmz_layers").getAll();
+            req.onsuccess = function() {
+                req.result.forEach(item => { window.addGeoJsonToMap(item.id, item.name, item.geojson, item.isVisible, item.color || '#e67e22', item.weight || 4); });
+            };
+        };
+
+        // ==============================================================
+        // 4. DEMARRAGE DE L'APPLICATION
+        // ==============================================================
+        window.onload = async function() {
             try {
                 if (typeof L === 'undefined') throw new Error("La carte n'a pas pu se charger (Bloqué par votre réseau ?).");
                 if (typeof JSZip === 'undefined') throw new Error("Les outils KMZ ne se sont pas chargés.");
 
-                let satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 18 });
+                satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 18 });
                 map = L.map('map', {zoomControl: false, layers: [satLayer]}).setView([42.766, 0.564], 14);
                 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-                initLocalDB();
-                await fetchGoogleSheetsData();
+                window.initLocalDB();
+                await window.fetchGoogleSheetsData();
 
             } catch (err) {
                 showCrash(err.message, "Moteur Démarrage");
             }
-        });
+        };
 
         // ==============================================================
-        // 4. TOUTES LES FONCTIONS DES BOUTONS DE L'INTERFACE
+        // 5. TOUTES LES FONCTIONS DES BOUTONS DE L'INTERFACE
         // ==============================================================
         window.toggleMultiSelect = function() {
             isMultiSelect = !isMultiSelect; const btn = document.getElementById('btn-multi-toggle');
@@ -405,7 +446,7 @@
                 if(result.status === "success") {
                     const layer = selectedCannonsMap.get(currentlyEditingId); const p = layer.feature.properties;
                     p.fullData.forEach(item => { if(fieldsObj[item.k] !== undefined) item.v = fieldsObj[item.k]; });
-                    let tLower = getV(p, keyType).toLowerCase().trim();
+                    let tLower = window.getV(p, keyType).toLowerCase().trim();
                     if (["demak lenko", "demac lenko"].includes(tLower)) p.couleur_defaut = "#0000FF"; else if (["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) p.couleur_defaut = "#008000"; else p.couleur_defaut = technoColors[tLower] || "#FFD700";
                     layer.feature.geometry.coordinates = [payload.lng, payload.lat]; layer.setLatLng([payload.lat, payload.lng]);
                     window.cancelEdit();
@@ -443,19 +484,19 @@
                 let match = false;
                 
                 if (theme === 'defauts') {
-                    let act = getActiveTickets(p.id);
+                    let act = window.getActiveTickets(p.id);
                     if (val === 'urgent' && act.some(t => t.statut.includes('faire'))) match = true;
                     else if (val === 'encours' && act.some(t => t.statut.includes('cours'))) match = true;
                     else if (val === 'ras' && act.length === 0) match = true;
                 } else if (theme === 'type') {
-                    let tLower = getV(p, keyType).toLowerCase();
+                    let tLower = window.getV(p, keyType).toLowerCase();
                     if (val === 'demac' && ["demak lenko", "demac lenko"].includes(tLower)) match = true;
                     else if (val === 'sufag' && ["sufag", "street", "taurus", "taurax", "peak"].includes(tLower)) match = true;
                     else if (val === 'techno' && !["demak lenko", "demac lenko", "sufag", "street", "taurus", "taurax", "peak"].includes(tLower) && tLower !== "n/a") match = true;
                 } else if (theme === 'repeteur') {
-                    if (getV(p, keyRep) === val) match = true;
+                    if (window.getV(p, keyRep) === val) match = true;
                 } else if (theme === 'transfo') {
-                    if (getV(p, keyTransfo) === val) match = true;
+                    if (window.getV(p, keyTransfo) === val) match = true;
                 }
 
                 if (match) {
@@ -517,13 +558,7 @@
             let btn = event.target;
             btn.innerText = "..."; btn.disabled = true;
 
-            let payload = {
-                action: "update_ticket",
-                idCanon: canonId,
-                defaut: defaut,
-                statut: newStatut
-            };
-            
+            let payload = { action: "update_ticket", idCanon: canonId, defaut: defaut, statut: newStatut };
             if(newCause.trim() !== "") payload.fields = { "Cause": newCause };
 
             try {
@@ -578,7 +613,7 @@
                 labels.forEach(p => {
                     let sum1 = 0; let sum2 = 0;
                     snowCannons.features.forEach(f => {
-                        if (getV(f.properties, keyPiste) === p) {
+                        if (window.getV(f.properties, keyPiste) === p) {
                             if(f.properties.historique[s1]) sum1 += f.properties.historique[s1][metric];
                             if(f.properties.historique[s2]) sum2 += f.properties.historique[s2][metric];
                         }
@@ -588,7 +623,7 @@
             } else {
                 document.getElementById('comp-title-1').innerText = `Saison ${s1} - ${metric.toUpperCase()} (Piste: ${targetPiste})`;
                 document.getElementById('comp-title-2').innerText = `Saison ${s2} - ${metric.toUpperCase()} (Piste: ${targetPiste})`;
-                let canons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === targetPiste).sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
+                let canons = snowCannons.features.filter(f => window.getV(f.properties, keyPiste) === targetPiste).sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
                 labels = canons.map(c => c.properties.id);
                 canons.forEach(c => {
                     d1.push(c.properties.historique[s1] ? c.properties.historique[s1][metric] : 0);
@@ -606,8 +641,8 @@
         window.drawPisteCompareChart = function(targetCannon) {
             let canvasId = `chart-${targetCannon.id}`; let ctx = document.getElementById(canvasId); if(!ctx) return;
             if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
-            let s = saisonsList[histSeasonIdx]; let pName = getV(targetCannon, keyPiste);
-            let pisteCannons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === pName && f.properties.historique[s]);
+            let s = saisonsList[histSeasonIdx]; let pName = window.getV(targetCannon, keyPiste);
+            let pisteCannons = snowCannons.features.filter(f => window.getV(f.properties, keyPiste) === pName && f.properties.historique[s]);
             pisteCannons.sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
             let bgColors = pisteCannons.map(f => f.properties.id === targetCannon.id ? '#e74c3c' : '#3498db');
             chartInstances[canvasId] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: pisteCannons.map(f => f.properties.id), datasets: [{ data: pisteCannons.map(f => f.properties.historique[s][histMetric]), backgroundColor: bgColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: {font:{size:10}} } } } });
@@ -618,19 +653,20 @@
             if(chartInstances[canvasId]) { chartInstances[canvasId].destroy(); }
             if(!seasonStr) return;
             let targetCannon = snowCannons.features.find(f => f.properties.id === targetId).properties;
-            let pName = getV(targetCannon, keyPiste);
-            let pisteCannons = snowCannons.features.filter(f => getV(f.properties, keyPiste) === pName && f.properties.historique[seasonStr]);
+            let pName = window.getV(targetCannon, keyPiste);
+            let pisteCannons = snowCannons.features.filter(f => window.getV(f.properties, keyPiste) === pName && f.properties.historique[seasonStr]);
             pisteCannons.sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
             let bgColors = pisteCannons.map(f => f.properties.id === targetId ? '#e74c3c' : '#9b59b6');
             chartInstances[canvasId] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: pisteCannons.map(f => f.properties.id), datasets: [{ data: pisteCannons.map(f => f.properties.historique[seasonStr][histMetric]), backgroundColor: bgColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: {font:{size:10}} } } } });
         };
 
+
         // ==========================================
         // 6. RECUPERATION DES DONNEES GOOGLE SHEETS
         // ==========================================
-        async function fetchGoogleSheetsData() {
+        window.fetchGoogleSheetsData = async function() {
             setStep(1, "Connexion au serveur Google...");
-            const response = await fetchWithTimeout(GOOGLE_API_URL);
+            const response = await window.fetchWithTimeout(GOOGLE_API_URL);
             if (!response.ok) throw new Error("Accès refusé.");
             
             let textData = await response.text();
@@ -771,12 +807,12 @@
                 window.initAppUI(); 
                 document.getElementById('loading-overlay').style.display = 'none';
             }, 800);
-        }
+        };
 
         // ==========================================
         // 7. GESTION DES CALQUES KML/KMZ
         // ==========================================
-        function buildGeoJsonStyle(hexColor, weight) {
+        window.buildGeoJsonStyle = function(hexColor, weight) {
             let finalWeight = weight ? parseInt(weight) : 4;
             return {
                 style: function (feature) { return { color: hexColor, weight: finalWeight, opacity: 0.8, fillColor: hexColor }; },
@@ -787,10 +823,10 @@
                     }
                 }
             };
-        }
+        };
 
-        async function fetchGitHubKMZ(url) {
-            const response = await fetchWithTimeout(url);
+        window.fetchGitHubKMZ = async function(url) {
+            const response = await window.fetchWithTimeout(url);
             if (!response.ok) throw new Error("GitHub refuse l'accès. Vérifiez l'URL.");
             
             let kmlString = "";
@@ -804,13 +840,12 @@
             } else {
                 kmlString = await response.text();
             }
-
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(kmlString, "text/xml");
             return toGeoJSON.kml(xmlDoc);
-        }
+        };
 
-        function renderCloudLayersList() {
+        window.renderCloudLayersList = function() {
             const container = document.getElementById('cloud-layers-container');
             container.innerHTML = "";
             if (cloudKmzLayers.length === 0) {
@@ -830,7 +865,7 @@
                         <span id="cloud-status-${idx}" style="min-width:20px; text-align:right;"></span>
                     </div>`;
             });
-        }
+        };
 
         window.toggleCloudLayer = async function(idx) {
             let layerObj = cloudKmzLayers[idx];
@@ -854,8 +889,8 @@
             cbx.disabled = true;
 
             try {
-                const geojson = await fetchGitHubKMZ(layerObj.url);
-                layerObj.leafletLayer = L.geoJSON(geojson, buildGeoJsonStyle(layerObj.color, layerObj.weight)).addTo(map);
+                const geojson = await window.fetchGitHubKMZ(layerObj.url);
+                layerObj.leafletLayer = L.geoJSON(geojson, window.buildGeoJsonStyle(layerObj.color, layerObj.weight)).addTo(map);
                 layerObj.isVisible = true;
                 if(layerObj.leafletLayer.getBounds().isValid()) { map.fitBounds(layerObj.leafletLayer.getBounds()); }
                 statusSpan.innerText = " ✅";
@@ -917,8 +952,8 @@
                     const xmlDoc = parser.parseFromString(kmlString, "text/xml");
                     const geojson = toGeoJSON.kml(xmlDoc);
 
-                    saveLayerToDB(layerId, fileName, geojson, defaultColor, defaultWeight);
-                    addGeoJsonToMap(layerId, fileName, geojson, true, defaultColor, defaultWeight);
+                    window.saveLayerToDB(layerId, fileName, geojson, defaultColor, defaultWeight);
+                    window.addGeoJsonToMap(layerId, fileName, geojson, true, defaultColor, defaultWeight);
                     
                     document.getElementById('loading-overlay').style.display = 'none';
                 } catch (err) {
@@ -929,20 +964,20 @@
             }, 100);
         };
 
-        function addGeoJsonToMap(id, name, geojson, isVisible, hexColor, weight) {
+        window.addGeoJsonToMap = function(id, name, geojson, isVisible, hexColor, weight) {
             let finalWeight = weight || 4;
-            const layer = L.geoJSON(geojson, buildGeoJsonStyle(hexColor, finalWeight));
+            const layer = L.geoJSON(geojson, window.buildGeoJsonStyle(hexColor, finalWeight));
             
             if(isVisible) layer.addTo(map);
             externalLayers[id] = { name: name, layer: layer, isVisible: isVisible, color: hexColor, weight: finalWeight };
-            renderCustomLayersList();
+            window.renderCustomLayersList();
             
             if(isVisible && layer.getBounds && typeof layer.getBounds === 'function') { 
                 let b = layer.getBounds(); if(b.isValid()) map.fitBounds(b); 
             }
-        }
+        };
 
-        function renderCustomLayersList() {
+        window.renderCustomLayersList = function() {
             const container = document.getElementById('custom-layers-list'); container.innerHTML = "";
             for (let id in externalLayers) {
                 const ext = externalLayers[id];
@@ -955,13 +990,13 @@
                         <button onclick="window.deleteExtLayer('${id}')" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:16px;">🗑️</button>
                     </div>`;
             }
-        }
+        };
 
         window.toggleExtLayer = function(id) {
             const ext = externalLayers[id]; ext.isVisible = !ext.isVisible;
             if(ext.isVisible) { map.addLayer(ext.layer); } else { map.removeLayer(ext.layer); }
-            updateLayerDataInDB(id, { isVisible: ext.isVisible });
-            renderCustomLayersList();
+            window.updateLayerDataInDB(id, { isVisible: ext.isVisible });
+            window.renderCustomLayersList();
         };
 
         window.changeExtLayerStyle = function(id, newColor, newWeight) {
@@ -978,14 +1013,14 @@
                         if (layer instanceof L.CircleMarker) { layer.setStyle({ color: col, fillColor: col }); }
                     });
                 }
-                updateLayerDataInDB(id, { color: col, weight: w });
+                window.updateLayerDataInDB(id, { color: col, weight: w });
             }
         };
 
         window.deleteExtLayer = function(id) {
             map.removeLayer(externalLayers[id].layer); delete externalLayers[id];
-            deleteLayerFromDB(id);
-            renderCustomLayersList();
+            window.deleteLayerFromDB(id);
+            window.renderCustomLayersList();
         };
 
         // ==========================================
@@ -1001,19 +1036,19 @@
             
             snowCannons.features.forEach(f => {
                 let p = f.properties;
-                let t = getV(p, keyType); if(t!=="N/A") tSet.add(t.toLowerCase()); 
-                let r = getV(p, keyRep); if(r!=="N/A") rSet.add(r); 
-                let tr = getV(p, keyTransfo); if(tr!=="N/A") trSet.add(tr); 
-                let pi = getV(p, keyPiste); if(pi!=="N/A") pSet.add(pi);
-                let va = getV(p, keyVanne); if(va!=="N/A") vSet.add(va);
-                let mo = getV(p, keyModule); if(mo!=="N/A") mSet.add(mo);
+                let t = window.getV(p, keyType); if(t!=="N/A") tSet.add(t.toLowerCase()); 
+                let r = window.getV(p, keyRep); if(r!=="N/A") rSet.add(r); 
+                let tr = window.getV(p, keyTransfo); if(tr!=="N/A") trSet.add(tr); 
+                let pi = window.getV(p, keyPiste); if(pi!=="N/A") pSet.add(pi);
+                let va = window.getV(p, keyVanne); if(va!=="N/A") vSet.add(va);
+                let mo = window.getV(p, keyModule); if(mo!=="N/A") mSet.add(mo);
             });
 
             Array.from(tSet).sort().forEach((t, i) => { technoColors[t] = hslToHex(0.14, 1.0, tSet.size > 1 ? 0.8 - (i / (tSet.size - 1)) * 0.4 : 0.6); });
             repColors = generatePalette(Array.from(rSet).sort(), 0.8, 0.45); transfoColors = generatePalette(Array.from(trSet).sort(), 0.65, 0.55);
 
             snowCannons.features.forEach(f => {
-                let typeLower = getV(f.properties, keyType).toLowerCase(); let color = "#FFD700";
+                let typeLower = window.getV(f.properties, keyType).toLowerCase(); let color = "#FFD700";
                 if (["demak lenko", "demac lenko"].includes(typeLower)) color = "#0000FF";
                 else if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeLower)) color = "#008000";
                 else color = technoColors[typeLower] || "#FFD700";
@@ -1045,8 +1080,8 @@
             setupCbs('check-all-modules', 'module-cb', vals => { currentModules = vals; window.updateMap(); window.triggerGlobalFilterChart(); });
 
             window.generateDynamicFiltersUI();
-            renderCloudLayersList();
-            calculateMaxes();
+            window.renderCloudLayersList();
+            window.calculateMaxes();
 
             geojsonLayer = L.geoJSON(snowCannons, {
                 pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: L.divIcon({ className: 'custom-cannon-icon', html: `<div></div>` }) }); },
@@ -1069,7 +1104,7 @@
                 if(bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30] });
             }
             
-            attachEvents();
+            window.attachEvents();
             window.updateLegend(); window.updateMap();
         };
 
@@ -1098,7 +1133,7 @@
             cbs.forEach(c => c.addEventListener('change', () => { if(c.checked) allBtn.checked=false; else if(Array.from(cbs).every(x=>!x.checked)) allBtn.checked=true; updateLogic(); }));
         };
 
-        function attachEvents() {
+        window.attachEvents = function() {
             document.querySelectorAll('input[name="main_theme"]').forEach(r => {
                 r.addEventListener('change', e => {
                     mainTheme = e.target.value;
@@ -1118,13 +1153,13 @@
                         if(mainTheme === 'historique') { activeLabel.style.borderColor = '#2ecc71'; } 
                         else { activeLabel.style.borderColor = '#3498db'; }
                     }
-                    if(mainTheme === 'historique') calculateMaxes();
+                    if(mainTheme === 'historique') window.calculateMaxes();
                     window.updateLegend(); window.updateMap(); window.renderSelectionPanel();
                 });
             });
 
-            document.querySelectorAll('input[name="hist_metric"]').forEach(r => { r.addEventListener('change', e => { histMetric = e.target.value; calculateMaxes(); window.updateLegend(); window.updateMap(); window.renderSelectionPanel(); }); });
-            document.getElementById('season-slider').addEventListener('input', e => { histSeasonIdx = parseInt(e.target.value); document.getElementById('season-display').innerText = saisonsList[histSeasonIdx]; calculateMaxes(); window.updateLegend(); window.updateMap(); window.renderSelectionPanel(); });
+            document.querySelectorAll('input[name="hist_metric"]').forEach(r => { r.addEventListener('change', e => { histMetric = e.target.value; window.calculateMaxes(); window.updateLegend(); window.updateMap(); window.renderSelectionPanel(); }); });
+            document.getElementById('season-slider').addEventListener('input', e => { histSeasonIdx = parseInt(e.target.value); document.getElementById('season-display').innerText = saisonsList[histSeasonIdx]; window.calculateMaxes(); window.updateLegend(); window.updateMap(); window.renderSelectionPanel(); });
             document.getElementById('slider-min').addEventListener('input', e => { let val = parseFloat(e.target.value); if(val > currentMaxThreshold[histMetric]) { val = currentMaxThreshold[histMetric]; e.target.value = val; } currentMinThreshold[histMetric] = val; document.getElementById('val-min').innerText = val; window.updateMap(); });
             document.getElementById('slider-max').addEventListener('input', e => { let val = parseFloat(e.target.value); if(val < currentMinThreshold[histMetric]) { val = currentMinThreshold[histMetric]; e.target.value = val; } currentMaxThreshold[histMetric] = val; document.getElementById('val-max').innerText = val; window.updateMap(); });
             document.getElementById('dynamic-filters-container').addEventListener('change', e => { if(e.target.classList.contains('filter-select')) window.renderCheckboxesForFilter(e.target.getAttribute('data-idx'), e.target.value); });
@@ -1137,9 +1172,9 @@
                     if(layer) { layer.setLatLng(e.latlng); layer.feature.geometry.coordinates = [e.latlng.lng, e.latlng.lat]; }
                 } 
             });
-        }
+        };
 
-        function calculateMaxes() {
+        window.calculateMaxes = function() {
             if(!saisonsList[histSeasonIdx]) return;
             let s = saisonsList[histSeasonIdx]; absoluteMaxes = { eau: 0, air: 0, temps: 0 };
             snowCannons.features.forEach(f => {
@@ -1153,125 +1188,15 @@
             document.getElementById('slider-min').max = absoluteMaxes[histMetric] || 1; document.getElementById('slider-max').max = absoluteMaxes[histMetric] || 1;
             document.getElementById('slider-min').value = 0; document.getElementById('slider-max').value = absoluteMaxes[histMetric] || 1;
             document.getElementById('val-min').innerText = 0; document.getElementById('val-max').innerText = absoluteMaxes[histMetric] || 1;
-        }
-
-        window.triggerGlobalFilterChart = function() {
-            if (selectedCannonsMap.size > 0 || currentlyEditingId) return;
-            let hasDyn = activeFilters.some(f => f.key && f.vals.length > 0 && !f.vals.includes('all'));
-            let hasStat = !currentPistes.includes('all') || !currentTypes.includes('all') || !currentVannes.includes('all') || !currentModules.includes('all');
-            if (!hasDyn && !hasStat) { document.getElementById('right-sidebar').classList.remove('open'); return; }
-            document.getElementById('right-header').classList.remove('editing'); document.getElementById('right-title').innerText = "📊 Analyse des Filtres";
-            
-            let visibleCannons = snowCannons.features.filter(f => f.properties._isVisible);
-            let targetGroupKey = keyPiste || (activeFilters.find(f => f.key) ? activeFilters.find(f => f.key).key : keyType); 
-            let counts = {};
-            visibleCannons.forEach(f => { let v = getV(f.properties, targetGroupKey); counts[v] = (counts[v] || 0) + 1; });
-            
-            let html = `<div style="background:#eafaf1; padding:15px; border-radius:6px; text-align:center; margin-bottom:15px; border:1px solid #d5f5e3;"><span style="font-size:24px; font-weight:bold; color:#27ae60;">${visibleCannons.length}</span><br><span style="font-size:12px; color:#555; text-transform:uppercase;">Canons trouvés</span></div><div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; text-align:center; color:#34495e;">Répartition par ${targetGroupKey.toUpperCase()}</div><div style="height:180px;position:relative;margin-top:10px;"><canvas id="global-filter-chart"></canvas></div></div>`;
-            document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none';
-            document.getElementById('selected-list').innerHTML = html; document.getElementById('right-sidebar').classList.add('open');
-
-            setTimeout(() => {
-                let ctx = document.getElementById('global-filter-chart'); if(!ctx) return;
-                if(chartInstances['global-filter-chart']) chartInstances['global-filter-chart'].destroy();
-                chartInstances['global-filter-chart'] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: '#3498db', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-            }, 50);
-        };
-
-        window.renderSelectionPanel = function() {
-            if(selectedCannonsMap.size === 0) { window.triggerGlobalFilterChart(); return; }
-            document.getElementById('sel-count').innerText = selectedCannonsMap.size;
-            let listDiv = document.getElementById('selected-list'); listDiv.innerHTML = "";
-            document.getElementById('right-title').innerText = "📌 Fiche Canon";
-            
-            selectedCannonsMap.forEach((layer, id) => {
-                const p = layer.feature.properties;
-                let active = getActiveTickets(p.id); let history = getHistoryTickets(p.id);
-                let mainContent = ""; let histHtml = "";
-
-                if (history.length > 0) {
-                    histHtml = `<details class="ticket-history"><summary>📁 Historique d'interventions passées (${history.length})</summary><ul style="padding-left:15px; margin-top:10px;">`;
-                    history.forEach(t => {
-                        let dateStr = isNaN(new Date(t.date).getTime()) ? (t.date || "Inconnue") : new Date(t.date).toLocaleDateString('fr-FR');
-                        histHtml += `<li style="margin-bottom:8px; font-size:11.5px; border-bottom:1px solid #eee; padding-bottom:5px;"><b>${dateStr}</b> - <span style="color:#e74c3c;">${t.defaut}</span> <br><span style="color:#666;">Intervention : ${t.cause || "Non précisée"}</span></li>`;
-                    });
-                    histHtml += `</ul></details>`;
-                }
-
-                if (mainTheme === 'historique') {
-                    let s = saisonsList[histSeasonIdx]; let hd = p.historique[s] || {eau:0, air:0, temps:0};
-                    mainContent = `
-                        <div class="hist-card">
-                            <div style="font-size:14px; color:#555; margin-bottom:10px; text-transform:uppercase;">Saison <b>${s}</b></div>
-                            <div style="display:flex; justify-content: space-around;">
-                                <div><div style="font-size:24px; font-weight:bold; color:#2980b9;">${hd.eau}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">m³ Eau</div></div>
-                                <div><div style="font-size:24px; font-weight:bold; color:#e67e22;">${hd.air}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">Air</div></div>
-                                <div><div style="font-size:24px; font-weight:bold; color:#27ae60;">${hd.temps}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">Heures</div></div>
-                            </div>
-                        </div>
-                        <div class="piste-chart-container">
-                            <div style="font-size:12px; font-weight:bold; color:#34495e; text-align:center;">Comparatif sur la piste (${getV(p, keyPiste)})</div>
-                            <div style="height: 160px; position:relative; margin-top:10px;"><canvas id="chart-${p.id}"></canvas></div>
-                        </div>
-                        <div class="piste-chart-container" style="background:#fafbfc;">
-                            <div style="font-size:11px; font-weight:bold; color:#555; text-align:center;">➕ Comparer avec une autre saison : 
-                                <select onchange="window.drawSecondPisteChart('${p.id}', this.value)" style="padding:4px; border-radius:4px; border:1px solid #ccc; outline:none;">
-                                    <option value="">-- Choisir --</option>
-                                    ${saisonsList.filter(x => x !== s).map(x => `<option value="${x}">${x}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div style="height: 160px; position:relative; margin-top:10px;"><canvas id="chart2-${p.id}"></canvas></div>
-                        </div>`;
-                } 
-                else if (mainTheme === 'defauts') {
-                    if (active.length === 0) { mainContent = `<div style="background:#eafaf1; color:#27ae60; padding:15px; border-radius:6px; text-align:center; font-weight:bold; border:1px solid #d5f5e3; margin-bottom:15px;">✅ Aucun défaut en cours</div>${histHtml}`; } 
-                    else {
-                        mainContent = active.map(t => {
-                            let borderCol = t.statut.includes('faire') ? '#e74c3c' : '#f39c12';
-                            let safeDef = t.defaut.replace(/'/g, "\\'");
-                            let safeId = p.id.replace(/'/g, "\\'");
-                            let safeStat = t.statut.replace(/'/g, "\\'");
-                            let idDiv = `ticket-edit-${safeId}-${safeDef.replace(/[^a-zA-Z0-9]/g, "")}`;
-                            return `
-                                <div class="ticket-card" style="border-left-color:${borderCol};">
-                                    <div style="font-weight:bold; font-size:14px; color:#333; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;">
-                                        <span style="flex-grow:1; margin-right:10px;">${t.defaut}</span>
-                                        <button onclick="window.editTicket('${safeId}', '${safeDef}', '${safeStat}')" style="background:none; border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; flex-shrink:0;">Éditer ✏️</button>
-                                    </div>
-                                    <span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${borderCol}20; color:${borderCol}; font-weight:bold;">STATUT : ${t.statut.toUpperCase()}</span>
-                                    <div id="${idDiv}"></div>
-                                </div>`;
-                        }).join('') + histHtml;
-                    }
-                } 
-                else {
-                    let badges = `<span class="badge"><b>Modèle:</b> ${getV(p, keyType)}</span> <span class="badge"><b>Rép:</b> ${getV(p, keyRep)}</span> <span class="badge"><b>Trans:</b> ${getV(p, keyTransfo)}</span> <span class="badge"><b>Vanne:</b> ${getV(p, keyVanne)}</span> <span class="badge"><b>Module:</b> ${getV(p, keyModule)}</span>`;
-                    let fullDataHTML = `<details style="margin-top:15px; font-size:12px; background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #e1e8ed;"><summary style="cursor:pointer; font-weight:600; color:#34495e;">➕ Caractéristiques Complètes</summary><div style="margin-top:12px; display:grid; grid-template-columns: 1fr; gap:8px;">`;
-                    p.fullData.forEach(item => { if(!item.k.toLowerCase().includes('xy') && !item.k.toLowerCase().includes('gps')) { fullDataHTML += `<div style="border-bottom:1px solid #f0f0f0; padding-bottom:4px;"><span style="color:#7f8c8d;">${item.k} :</span> <b style="color:#2c3e50; float:right;">${item.v}</b></div>`; } });
-                    fullDataHTML += `</div></details>`;
-                    mainContent = `<div style="margin-bottom:10px;">${badges}</div>${fullDataHTML}`;
-                    if (active.length > 0) mainContent += `<div style="margin-top:15px; padding:10px; background:#fdf0ed; border-radius:6px; font-size:12px; color:#e74c3c; font-weight:bold; border:1px solid #fadbd8;">⚠️ Ce canon a ${active.length} défaut(s) en cours.</div>`;
-                }
-
-                let editBtn = (mainTheme === 'type' && !isMultiSelect) ? `<button class="btn-action-primary" onclick="window.startEdit('${p.id}')">✏️ Éditer ce canon</button>` : '';
-
-                listDiv.innerHTML += `
-                    <div class="sel-details">
-                        <div class="sel-details-header"><span>📍 Canon <b>${p.id}</b></span><span style="font-weight:normal; font-size:12px; background:#e0e6ed; padding:4px 10px; border-radius:12px; color:#34495e;">${getV(p, keyPiste)}</span></div>
-                        <div class="sel-details-body">${mainContent}${editBtn}</div>
-                    </div>`;
-                    
-                if(mainTheme === 'historique' && !isMultiSelect) setTimeout(() => window.drawPisteCompareChart(p), 50);
-            });
         };
 
         window.getColorByFilter = function(ratio, props) {
             const inter = (c1,c2,f) => { let r=c1.slice(); for(let i=0;i<3;i++)r[i]=Math.round(r[i]+f*(c2[i]-c1[i])); return `rgb(${r[0]},${r[1]},${r[2]})`;};
-            if (mainTheme === 'defauts') { let act = getActiveTickets(props.id); if (act.length === 0) return '#bdc3c7'; if (act.some(t => t.statut.includes('faire'))) return '#e74c3c'; return '#f39c12'; }
+            if (mainTheme === 'defauts') { let act = window.getActiveTickets(props.id); if (act.length === 0) return '#bdc3c7'; if (act.some(t => t.statut.includes('faire'))) return '#e74c3c'; return '#f39c12'; }
             if (mainTheme === 'historique') { if (histMetric === 'eau') return inter([173,216,230], [41,128,185], ratio); if (histMetric === 'air') return inter([250,219,94], [211,84,0], ratio); if (histMetric === 'temps') return inter([171,235,198], [39,174,96], ratio); }
-            if (mainTheme === 'repeteur') return repColors[getV(props, keyRep)] || '#7f8c8d';
-            if (mainTheme === 'transfo') return transfoColors[getV(props, keyTransfo)] || '#7f8c8d';
-            let typeVal = getV(props, keyType).toLowerCase();
+            if (mainTheme === 'repeteur') return repColors[window.getV(props, keyRep)] || '#7f8c8d';
+            if (mainTheme === 'transfo') return transfoColors[window.getV(props, keyTransfo)] || '#7f8c8d';
+            let typeVal = window.getV(props, keyType).toLowerCase();
             if (["demak lenko", "demac lenko"].includes(typeVal)) return "#0000FF";
             if (["sufag", "street", "taurus", "taurax", "peak"].includes(typeVal)) return "#008000";
             return technoColors[typeVal] || "#FFD700";
@@ -1297,14 +1222,14 @@
             geojsonLayer.eachLayer(function(layer) {
                 const p = layer.feature.properties; let vis = true;
                 
-                if (currentPistes && !currentPistes.includes('all')) { if (!currentPistes.includes(getV(p, keyPiste))) vis = false; }
-                if (currentTypes && !currentTypes.includes('all')) { if (!currentTypes.includes(getV(p, keyType).toLowerCase())) vis = false; }
-                if (currentVannes && !currentVannes.includes('all')) { if (!currentVannes.includes(getV(p, keyVanne))) vis = false; }
-                if (currentModules && !currentModules.includes('all')) { if (!currentModules.includes(getV(p, keyModule))) vis = false; }
+                if (currentPistes && !currentPistes.includes('all')) { if (!currentPistes.includes(window.getV(p, keyPiste))) vis = false; }
+                if (currentTypes && !currentTypes.includes('all')) { if (!currentTypes.includes(window.getV(p, keyType).toLowerCase())) vis = false; }
+                if (currentVannes && !currentVannes.includes('all')) { if (!currentVannes.includes(window.getV(p, keyVanne))) vis = false; }
+                if (currentModules && !currentModules.includes('all')) { if (!currentModules.includes(window.getV(p, keyModule))) vis = false; }
 
                 activeFilters.forEach(filt => {
                     if(filt.key && filt.vals.length > 0 && !filt.vals.includes('all')) {
-                        let val = getV(p, filt.key);
+                        let val = window.getV(p, filt.key);
                         if(!filt.vals.includes(val)) vis = false;
                     }
                 });
@@ -1333,11 +1258,10 @@
                     else if (isSel) { bord = "#2c3e50"; bw = "3px"; layer.setZIndexOffset(1000); }
                     else { layer.setZIndexOffset(0); }
 
-                    let actClass = (mainTheme === 'defauts' && getActiveTickets(p.id).some(t => t.statut.includes('faire'))) ? "alert-urgent" : "";
+                    let actClass = (mainTheme === 'defauts' && window.getActiveTickets(p.id).some(t => t.statut.includes('faire'))) ? "alert-urgent" : "";
 
                     layer.setIcon(L.divIcon({ className: 'custom-cannon-icon', html: `<div class="cannon-circle ${actClass}" style="background-color:${bg};width:${rad*2}px;height:${rad*2}px;line-height:${rad*2}px;border:${bw} solid ${bord};font-size:${fsz};">${p.id}</div>`, iconSize: [rad*2, rad*2], iconAnchor: [rad, rad] }));
                     
-                    // Force opacity to 1 here so resetHighlight always restores them perfectly
                     layer.setOpacity(1);
                     if(layer._icon) {
                         layer._icon.style.opacity = '1';
@@ -1346,6 +1270,7 @@
                 }
             });
         };
+
     </script>
 </body>
 </html>
