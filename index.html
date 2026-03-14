@@ -7,15 +7,17 @@
     
     <script>
         window.showCrash = function(msg, line) {
-            document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-spinner').style.display = 'none';
-            document.getElementById('loading-title').innerText = "🛑 CRASH SYSTÈME";
-            if(document.getElementById('loading-desc')) document.getElementById('loading-desc').style.display = 'none';
-            if(document.getElementById('loading-step')) document.getElementById('loading-step').style.display = 'none';
-            document.getElementById('error-box').style.display = 'block';
-            document.getElementById('error-msg').innerHTML = "<b>Erreur technique :</b> " + msg + (line ? "<br><b>Ligne :</b> " + line : "");
+            let overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                document.getElementById('loading-spinner').style.display = 'none';
+                document.getElementById('loading-title').innerText = "🛑 CRASH SYSTÈME";
+                if(document.getElementById('loading-desc')) document.getElementById('loading-desc').style.display = 'none';
+                if(document.getElementById('loading-step')) document.getElementById('loading-step').style.display = 'none';
+                document.getElementById('error-box').style.display = 'block';
+                document.getElementById('error-msg').innerHTML = "<b>Erreur technique :</b> " + msg + (line ? "<br><b>Ligne :</b> " + line : "");
+            }
         };
-        
         window.onerror = function(message, source, lineno) { 
             if (message === 'Script error.' || message.indexOf('Script error') > -1) {
                 console.warn("Erreur fantôme ignorée.");
@@ -24,7 +26,6 @@
             window.showCrash(message, lineno); 
             return true; 
         };
-        
         window.addEventListener('unhandledrejection', function(event) { 
             window.showCrash(event.reason ? event.reason.message : "Erreur asynchrone bloquée", "Réseau/Promesse"); 
         });
@@ -253,7 +254,7 @@
                     <hr style="margin:15px 0; border-top:1px dashed #ccc;">
                     
                     <p style="font-size:11px; color:#666; margin-bottom:10px; line-height:1.4;">
-                        <b>2. Import Manuel depuis votre PC :</b>
+                        <b>2. Import Manuel depuis PC/Mobile :</b>
                     </p>
                     <input type="file" id="kml-upload" accept=".kml,.kmz" style="display:none;" onchange="window.handleKMLUpload(event)">
                     <button class="btn-action-primary" style="margin-top:0; background:#8e44ad;" onclick="document.getElementById('kml-upload').click()">📂 Importer / Parcourir...</button>
@@ -472,54 +473,80 @@
         };
 
         // ==============================================================
-        // 5. EDITEUR DE TICKETS
+        // 5. EDITEUR COMPLET DE TICKETS (NOUVEAU)
         // ==============================================================
-        window.editTicket = function(canonId, defaut, currentStatut) {
+        window.editFullTicket = function(canonId, defaut) {
             let idDiv = `ticket-edit-${canonId}-${defaut.replace(/[^a-zA-Z0-9]/g, "")}`;
             let el = document.getElementById(idDiv);
             if(!el) return;
             
-            let statuts = ['à faire', 'en cours', 'fait'];
-            let options = statuts.map(s => `<option value="${s}" ${currentStatut === s ? 'selected' : ''}>${s.toUpperCase()}</option>`).join('');
+            let ticket = window.rawTickets.find(t => t.idCanon === canonId && t.defaut === defaut);
+            if(!ticket) return;
 
-            el.innerHTML = `
-                <div style="margin-top:10px; background:#f4f6f8; padding:10px; border-radius:4px; border:1px solid #ddd;">
-                    <div style="font-size:11px; font-weight:bold; color:#555; margin-bottom:5px;">CHANGER LE STATUT :</div>
-                    <select id="sel-statut-${idDiv}" style="width:100%; padding:6px; font-size:12px; margin-bottom:10px;">${options}</select>
-                    <div style="font-size:11px; font-weight:bold; color:#555; margin-bottom:5px;">NOUVEAU COMMENTAIRE (Optionnel) :</div>
-                    <textarea id="txt-cause-${idDiv}" style="width:100%; padding:6px; font-size:12px; box-sizing:border-box; margin-bottom:10px;" rows="2"></textarea>
-                    <div style="display:flex; gap:10px;">
-                        <button onclick="window.renderSelectionPanel()" style="flex:1; padding:6px; background:#bdc3c7; color:white; border:none; border-radius:4px; cursor:pointer;">Annuler</button>
-                        <button onclick="window.saveTicket('${canonId}', '${defaut.replace(/'/g, "\\'")}', '${idDiv}')" style="flex:2; padding:6px; background:#2ecc71; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Mettre à jour</button>
-                    </div>
-                </div>
-            `;
+            let html = '<div style="background:#f4f6f8; padding:10px; border-radius:4px; border:1px solid #ddd; margin-top:10px;">';
+            
+            ticket.fullData.forEach(d => {
+                let kLow = d.k.toLowerCase();
+                // Bloque les modifs des colonnes purement système
+                if (kLow.includes('regard') || kLow === 'id' || kLow.includes('n°')) {
+                    html += `<div style="margin-bottom:8px;"><div class="edit-label">${d.k}</div><input type="text" class="edit-input tick-dyn-field-${idDiv}" data-key="${d.k}" value="${d.v}" readonly style="background:#e1e8ed; color:#7f8c8d; margin-bottom:0; cursor:not-allowed;"></div>`;
+                } 
+                else if (kLow.includes('etat') || kLow.includes('état') || kLow === 'statut') {
+                    let statuts = ['à faire', 'en cours', 'fait'];
+                    let options = statuts.map(s => `<option value="${s}" ${d.v.toString().toLowerCase().includes(s) ? 'selected' : ''}>${s.toUpperCase()}</option>`).join('');
+                    html += `<div style="margin-bottom:8px;"><div class="edit-label">${d.k}</div><select class="edit-input tick-dyn-field-${idDiv}" data-key="${d.k}" style="margin-bottom:0;">${options}</select></div>`;
+                } 
+                else if (kLow.includes('cause') || kLow.includes('intervention') || kLow.includes('commentaire')) {
+                    html += `<div style="margin-bottom:8px;"><div class="edit-label">${d.k}</div><textarea class="edit-input tick-dyn-field-${idDiv}" data-key="${d.k}" style="margin-bottom:0;" rows="2">${d.v}</textarea></div>`;
+                } 
+                else {
+                    html += `<div style="margin-bottom:8px;"><div class="edit-label">${d.k}</div><input type="text" class="edit-input tick-dyn-field-${idDiv}" data-key="${d.k}" value="${d.v}" style="margin-bottom:0;"></div>`;
+                }
+            });
+
+            html += `<div style="display:flex; gap:10px; margin-top:12px;">
+                        <button onclick="window.renderSelectionPanel()" style="flex:1; padding:8px; background:#bdc3c7; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Annuler</button>
+                        <button onclick="window.saveFullTicket('${canonId}', '${defaut.replace(/'/g, "\\'")}', '${idDiv}')" style="flex:2; padding:8px; background:#2ecc71; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✅ Sauvegarder</button>
+                    </div></div>`;
+            el.innerHTML = html;
         };
 
-        window.saveTicket = async function(canonId, defaut, idDiv) {
-            let newStatut = document.getElementById(`sel-statut-${idDiv}`).value;
-            let newCause = document.getElementById(`txt-cause-${idDiv}`).value;
+        window.saveFullTicket = async function(canonId, defaut, idDiv) {
             let btn = event.target;
-            btn.innerText = "..."; btn.disabled = true;
+            btn.innerText = "⏳..."; btn.disabled = true;
 
-            let payload = { action: "update_ticket", idCanon: canonId, defaut: defaut, statut: newStatut };
-            if(newCause.trim() !== "") payload.fields = { "Cause": newCause };
+            let fieldsObj = {};
+            let newStatutForLocal = "";
+
+            document.querySelectorAll(`.tick-dyn-field-${idDiv}`).forEach(inp => {
+                let k = inp.getAttribute('data-key');
+                let v = inp.value;
+                fieldsObj[k] = v;
+                if(k.toLowerCase().includes('etat') || k.toLowerCase().includes('état')) {
+                    newStatutForLocal = v;
+                }
+            });
+
+            let payload = { action: "update_ticket", idCanon: canonId, defaut: defaut, fields: fieldsObj };
 
             try {
                 const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
                 if(result.status === "success") {
                     let ticket = window.rawTickets.find(t => t.idCanon === canonId && t.defaut === defaut);
-                    if(ticket) ticket.statut = newStatut;
+                    if(ticket) {
+                        ticket.fullData.forEach(d => { if(fieldsObj[d.k] !== undefined) d.v = fieldsObj[d.k]; });
+                        if(newStatutForLocal) ticket.statut = newStatutForLocal.toLowerCase();
+                    }
                     window.renderSelectionPanel();
                     window.updateMap();
                 } else {
                     alert("Erreur: " + result.msg);
-                    btn.innerText = "Mettre à jour"; btn.disabled = false;
+                    btn.innerText = "✅ Sauvegarder"; btn.disabled = false;
                 }
             } catch(e) {
                 alert("Échec réseau.");
-                btn.innerText = "Mettre à jour"; btn.disabled = false;
+                btn.innerText = "✅ Sauvegarder"; btn.disabled = false;
             }
         };
 
@@ -669,15 +696,7 @@
 
         window.fetchWithTimeout = async function(resource, options = {}) {
             const noCacheUrl = resource + (resource.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-            if (window.AbortController) {
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 15000);
-                const response = await fetch(noCacheUrl, { ...options, signal: controller.signal });
-                clearTimeout(id);
-                return response;
-            } else {
-                return await fetch(noCacheUrl, options);
-            }
+            return await fetch(noCacheUrl, options);
         };
 
         window.fetchGoogleSheetsData = async function() {
@@ -1288,6 +1307,7 @@
                 }
             });
         };
+
     </script>
 </body>
 </html>
