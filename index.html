@@ -24,15 +24,15 @@
             return true; 
         };
         window.addEventListener('unhandledrejection', function(event) { 
-            window.showCrash(event.reason ? event.reason.message : "Erreur asynchrone bloquée", "Réseau/Promesse"); 
+            window.showCrash(event.reason ? event.reason.message : "Erreur réseau bloquée", "Réseau/Promesse"); 
         });
     </script>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
     
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f4f6f8; overflow: hidden; }
@@ -119,6 +119,7 @@
         .comp-controls { display: flex; gap: 15px; background: #fff; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd; align-items: flex-end; flex-wrap: wrap;}
         .comp-chart-box { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; height: 250px; position: relative;}
 
+        /* CALQUES KML/KMZ - UI COULEUR & EPAISSEUR */
         .kml-layer-item { display:flex; align-items:center; background:#fff; padding:8px 10px; border:1px solid #ddd; border-radius:4px; margin-bottom:8px; font-size:12px; font-weight:bold; }
         .layer-color-picker { width:24px; height:24px; padding:0; border:none; border-radius:4px; cursor:pointer; flex-shrink:0; outline:1px solid #ccc;}
         .layer-weight-picker { width:35px; height:22px; padding:2px; border:1px solid #ccc; border-radius:4px; text-align:center; font-size:12px; margin-left:5px;}
@@ -306,7 +307,7 @@
 
     <script>
         // =======================================================
-        // 1. VARIABLES GLOBALES 
+        // 1. CONFIGURATION & VARIABLES GLOBALES 
         // =======================================================
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
         
@@ -327,7 +328,6 @@
         window.defaultColors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e67e22', '#1abc9c', '#34495e'];
         window.keyPiste = ""; window.keyType = ""; window.keyRep = ""; window.keyTransfo = ""; window.keyVanne = ""; window.keyModule = "";
         window.localDB = null;
-        window.bootAttempt = 0;
 
         // =======================================================
         // 2. FONCTIONS DE LECTURE DONNÉES
@@ -380,7 +380,7 @@
             const payload = { id: document.getElementById('edit-id').value, lat: parseFloat(document.getElementById('edit-lat').value), lng: parseFloat(document.getElementById('edit-lng').value), fields: fieldsObj };
 
             try {
-                const response = await window.fetchWithTimeout(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
                 if(result.status === "success") {
                     const layer = window.selectedCannonsMap.get(window.currentlyEditingId); const p = layer.feature.properties;
@@ -519,7 +519,9 @@
             document.querySelectorAll(`.tick-dyn-field-${idDiv}`).forEach(inp => {
                 let k = inp.getAttribute('data-key');
                 let v = inp.value;
-                fieldsObj[k] = v;
+                if(!k.toLowerCase().includes('regard') && k.toLowerCase() !== 'id') {
+                    fieldsObj[k] = v;
+                }
                 if(k.toLowerCase().includes('etat') || k.toLowerCase().includes('état') || k.toLowerCase() === 'statut') {
                     newStatutForLocal = v;
                 }
@@ -692,10 +694,12 @@
             if (elDesc) elDesc.innerText = desc;
         };
 
-        // TIMEOUT SECURISÉ
         window.fetchWithTimeout = async function(resource, options = {}) {
             const noCacheUrl = resource + (resource.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
             
+            // Si on demande la data KML depuis github on évite d'ajouter ?t=... car ça peut casser l'URL brut
+            let finalUrl = resource.includes('raw.githubusercontent') ? resource : noCacheUrl;
+
             const controller = window.AbortController ? new AbortController() : null;
             if (controller) options.signal = controller.signal;
 
@@ -706,7 +710,7 @@
                 }, 15000);
             });
 
-            return Promise.race([fetch(noCacheUrl, options), timeoutPromise]);
+            return Promise.race([fetch(finalUrl, options), timeoutPromise]);
         };
 
         window.fetchGoogleSheetsData = async function() {
@@ -1237,126 +1241,6 @@
             document.getElementById('val-min').innerText = 0; document.getElementById('val-max').innerText = window.absoluteMaxes[window.histMetric] || 1;
         };
 
-        window.triggerGlobalFilterChart = function() {
-            if (window.selectedCannonsMap.size > 0 || window.currentlyEditingId) return;
-            let hasDyn = window.activeFilters.some(f => f.key && f.vals.length > 0 && !f.vals.includes('all'));
-            let hasStat = !window.currentPistes.includes('all') || !window.currentTypes.includes('all') || !window.currentVannes.includes('all') || !window.currentModules.includes('all');
-            if (!hasDyn && !hasStat) { document.getElementById('right-sidebar').classList.remove('open'); return; }
-            document.getElementById('right-header').classList.remove('editing'); document.getElementById('right-title').innerText = "📊 Analyse des Filtres";
-            
-            let visibleCannons = window.snowCannons.features.filter(f => f.properties._isVisible);
-            let targetGroupKey = window.keyPiste || (window.activeFilters.find(f => f.key) ? window.activeFilters.find(f => f.key).key : window.keyType); 
-            let counts = {};
-            visibleCannons.forEach(f => { let v = window.getV(f.properties, targetGroupKey); counts[v] = (counts[v] || 0) + 1; });
-            
-            let html = `<div style="background:#eafaf1; padding:15px; border-radius:6px; text-align:center; margin-bottom:15px; border:1px solid #d5f5e3;"><span style="font-size:24px; font-weight:bold; color:#27ae60;">${visibleCannons.length}</span><br><span style="font-size:12px; color:#555; text-transform:uppercase;">Canons trouvés</span></div><div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; text-align:center; color:#34495e;">Répartition par ${targetGroupKey.toUpperCase()}</div><div style="height:180px;position:relative;margin-top:10px;"><canvas id="global-filter-chart"></canvas></div></div>`;
-            document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none';
-            document.getElementById('selected-list').innerHTML = html; document.getElementById('right-sidebar').classList.add('open');
-
-            setTimeout(() => {
-                let ctx = document.getElementById('global-filter-chart'); if(!ctx) return;
-                if(window.chartInstances['global-filter-chart']) window.chartInstances['global-filter-chart'].destroy();
-                window.chartInstances['global-filter-chart'] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: '#3498db', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-            }, 50);
-        };
-
-        window.renderSelectionPanel = function() {
-            if(window.selectedCannonsMap.size === 0) { window.triggerGlobalFilterChart(); return; }
-            document.getElementById('sel-count').innerText = window.selectedCannonsMap.size;
-            let listDiv = document.getElementById('selected-list'); listDiv.innerHTML = "";
-            document.getElementById('right-title').innerText = "📌 Fiche Canon";
-            
-            window.selectedCannonsMap.forEach((layer, id) => {
-                const p = layer.feature.properties;
-                let active = window.getActiveTickets(p.id); let history = window.getHistoryTickets(p.id);
-                let mainContent = ""; let histHtml = "";
-
-                if (history.length > 0) {
-                    histHtml = `<details class="ticket-history"><summary>📁 Historique d'interventions passées (${history.length})</summary><ul style="padding-left:15px; margin-top:10px;">`;
-                    history.forEach(t => {
-                        let dateStr = isNaN(new Date(t.date).getTime()) ? (t.date || "Inconnue") : new Date(t.date).toLocaleDateString('fr-FR');
-                        let cause = t.fullData.find(x => x.k.toLowerCase().includes('cause') || x.k.toLowerCase().includes('intervention'));
-                        let causeTxt = cause ? cause.v : "Non précisée";
-                        histHtml += `<li style="margin-bottom:8px; font-size:11.5px; border-bottom:1px solid #eee; padding-bottom:5px;"><b>${dateStr}</b> - <span style="color:#e74c3c;">${t.defaut}</span> <br><span style="color:#666;">Intervention : ${causeTxt}</span></li>`;
-                    });
-                    histHtml += `</ul></details>`;
-                }
-
-                if (window.mainTheme === 'historique') {
-                    let s = window.saisonsList[window.histSeasonIdx]; let hd = p.historique[s] || {eau:0, air:0, temps:0};
-                    mainContent = `
-                        <div class="hist-card">
-                            <div style="font-size:14px; color:#555; margin-bottom:10px; text-transform:uppercase;">Saison <b>${s}</b></div>
-                            <div style="display:flex; justify-content: space-around;">
-                                <div><div style="font-size:24px; font-weight:bold; color:#2980b9;">${hd.eau}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">m³ Eau</div></div>
-                                <div><div style="font-size:24px; font-weight:bold; color:#e67e22;">${hd.air}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">Air</div></div>
-                                <div><div style="font-size:24px; font-weight:bold; color:#27ae60;">${hd.temps}</div><div style="font-size:11px; color:#7f8c8d; text-transform:uppercase;">Heures</div></div>
-                            </div>
-                        </div>
-                        <div class="piste-chart-container">
-                            <div style="font-size:12px; font-weight:bold; color:#34495e; text-align:center;">Comparatif sur la piste (${window.getV(p, window.keyPiste)})</div>
-                            <div style="height: 160px; position:relative; margin-top:10px;"><canvas id="chart-${p.id}"></canvas></div>
-                        </div>
-                        <div class="piste-chart-container" style="background:#fafbfc;">
-                            <div style="font-size:11px; font-weight:bold; color:#555; text-align:center;">➕ Comparer avec une autre saison : 
-                                <select onchange="window.drawSecondPisteChart('${p.id}', this.value)" style="padding:4px; border-radius:4px; border:1px solid #ccc; outline:none;">
-                                    <option value="">-- Choisir --</option>
-                                    ${window.saisonsList.filter(x => x !== s).map(x => `<option value="${x}">${x}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div style="height: 160px; position:relative; margin-top:10px;"><canvas id="chart2-${p.id}"></canvas></div>
-                        </div>`;
-                } 
-                else if (window.mainTheme === 'defauts') {
-                    if (active.length === 0) { mainContent = `<div style="background:#eafaf1; color:#27ae60; padding:15px; border-radius:6px; text-align:center; font-weight:bold; border:1px solid #d5f5e3; margin-bottom:15px;">✅ Aucun défaut en cours</div>${histHtml}`; } 
-                    else {
-                        mainContent = active.map(t => {
-                            let borderCol = t.statut.includes('faire') ? '#e74c3c' : '#f39c12';
-                            let safeDef = t.defaut.replace(/'/g, "\\'");
-                            let safeId = p.id.replace(/'/g, "\\'");
-                            let idDiv = `ticket-edit-${safeId}-${t.defaut.replace(/[^a-zA-Z0-9]/g, "")}`;
-                            
-                            let details = t.fullData.map(d => {
-                                let kLow = d.k.toLowerCase();
-                                if (kLow.includes('defaut') || kLow.includes('n°') || kLow === 'id' || kLow.includes('etat') || kLow.includes('état')) return '';
-                                return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #f9f9f9; padding:5px 0; font-size:12px;"><span style="color:#7f8c8d;">${d.k}</span><span style="font-weight:600; text-align:right; max-width:65%; color:#2c3e50;">${d.v}</span></div>`;
-                            }).join('');
-
-                            return `
-                                <div class="ticket-card" style="border-left-color:${borderCol};">
-                                    <div style="font-weight:bold; font-size:14px; color:#333; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;">
-                                        <span style="flex-grow:1; margin-right:10px;">${t.defaut}</span>
-                                        <button onclick="window.editFullTicket('${safeId}', '${safeDef}')" style="background:none; border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; flex-shrink:0;">Éditer ✏️</button>
-                                    </div>
-                                    <div id="${idDiv}">
-                                        <span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${borderCol}20; color:${borderCol}; font-weight:bold; display:inline-block; margin-bottom:8px;">STATUT : ${t.statut.toUpperCase()}</span>
-                                        ${details}
-                                    </div>
-                                </div>`;
-                        }).join('') + histHtml;
-                    }
-                } 
-                else {
-                    let badges = `<span class="badge"><b>Modèle:</b> ${window.getV(p, window.keyType)}</span> <span class="badge"><b>Rép:</b> ${window.getV(p, window.keyRep)}</span> <span class="badge"><b>Trans:</b> ${window.getV(p, window.keyTransfo)}</span> <span class="badge"><b>Vanne:</b> ${window.getV(p, window.keyVanne)}</span> <span class="badge"><b>Module:</b> ${window.getV(p, window.keyModule)}</span>`;
-                    let fullDataHTML = `<details style="margin-top:15px; font-size:12px; background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #e1e8ed;"><summary style="cursor:pointer; font-weight:600; color:#34495e;">➕ Caractéristiques Complètes</summary><div style="margin-top:12px; display:grid; grid-template-columns: 1fr; gap:8px;">`;
-                    p.fullData.forEach(item => { if(!item.k.toLowerCase().includes('xy') && !item.k.toLowerCase().includes('gps')) { fullDataHTML += `<div style="border-bottom:1px solid #f0f0f0; padding-bottom:4px;"><span style="color:#7f8c8d;">${item.k} :</span> <b style="color:#2c3e50; float:right;">${item.v}</b></div>`; } });
-                    fullDataHTML += `</div></details>`;
-                    mainContent = `<div style="margin-bottom:10px;">${badges}</div>${fullDataHTML}`;
-                    if (active.length > 0) mainContent += `<div style="margin-top:15px; padding:10px; background:#fdf0ed; border-radius:6px; font-size:12px; color:#e74c3c; font-weight:bold; border:1px solid #fadbd8;">⚠️ Ce canon a ${active.length} défaut(s) en cours.</div>`;
-                }
-
-                let editBtn = (window.mainTheme === 'type' && !window.isMultiSelect) ? `<button class="btn-action-primary" onclick="window.startEdit('${p.id}')">✏️ Éditer ce canon</button>` : '';
-
-                listDiv.innerHTML += `
-                    <div class="sel-details">
-                        <div class="sel-details-header"><span>📍 Canon <b>${p.id}</b></span><span style="font-weight:normal; font-size:12px; background:#e0e6ed; padding:4px 10px; border-radius:12px; color:#34495e;">${window.getV(p, window.keyPiste)}</span></div>
-                        <div class="sel-details-body">${mainContent}${editBtn}</div>
-                    </div>`;
-                    
-                if(window.mainTheme === 'historique' && !window.isMultiSelect) setTimeout(() => window.drawPisteCompareChart(p), 50);
-            });
-        };
-
         window.getColorByFilter = function(ratio, props) {
             const inter = (c1,c2,f) => { let r=c1.slice(); for(let i=0;i<3;i++)r[i]=Math.round(r[i]+f*(c2[i]-c1[i])); return `rgb(${r[0]},${r[1]},${r[2]})`;};
             if (window.mainTheme === 'defauts') { let act = window.getActiveTickets(props.id); if (act.length === 0) return '#bdc3c7'; if (act.some(t => t.statut.includes('faire'))) return '#e74c3c'; return '#f39c12'; }
@@ -1437,6 +1321,11 @@
                 }
             });
         };
+
+        // KICK-START MANUEL EN FORCANT L'ÉVÉNEMENT (PLAN B SÉCURITÉ)
+        if (document.readyState === "complete" || document.readyState === "interactive") {
+            setTimeout(window.onload, 100);
+        }
 
     </script>
 </body>
