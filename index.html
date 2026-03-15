@@ -190,6 +190,7 @@
         window.getHistoryTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); };
 
         // === WEBCAMS ===
+        // === WEBCAMS ===
         window.openWebcamGrid = function() {
             let sb = document.getElementById('right-sidebar'); let rt = document.getElementById('right-title'); let sl = document.getElementById('selected-list');
             if(!sb || !sl) return;
@@ -203,7 +204,8 @@
             else {
                 window.webcamsData.forEach(wc => {
                     let isImage = wc.url.toLowerCase().match(/\.(jpeg|jpg|png|gif)$/) != null;
-                    let mediaHtml = isImage ? `<img src="${wc.url}" style="width:100%; border-radius:4px; background:#000;" loading="lazy" />` : `<iframe src="${wc.url}" style="width:100%; aspect-ratio:16/9; border:none; border-radius:4px; background:#000;" allowfullscreen loading="lazy"></iframe>`;
+                    // Ajout de scrolling="no" et ajustement parfait de la hauteur pour couper les marges
+                    let mediaHtml = isImage ? `<img src="${wc.url}" style="width:100%; height:auto; border-radius:4px; background:#000;" loading="lazy" />` : `<iframe src="${wc.url}" style="width:100%; height:350px; border:none; border-radius:4px; background:#000; overflow:hidden;" scrolling="no" allowfullscreen loading="lazy"></iframe>`;
                     html += `<div style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;"><div style="font-weight:bold; margin-bottom:8px; color:#2c3e50;">${wc.nom}</div>${mediaHtml}<button onclick="window.enableWebcamEdit('${wc.nom.replace(/'/g, "\\'")}')" style="margin-top:8px; background:#f39c12; color:white; border:none; padding:6px; border-radius:4px; font-size:11px; cursor:pointer;">✏️ Éditer position/logo</button></div>`;
                 });
             }
@@ -219,7 +221,9 @@
             let vs = document.getElementById('view-selection'); if(vs) vs.style.display = 'block';
 
             let isImage = wc.url.toLowerCase().match(/\.(jpeg|jpg|png|gif)$/) != null;
-            let mediaHtml = isImage ? `<img src="${wc.url}" style="width:100%; border-radius:4px; background:#000;" />` : `<iframe src="${wc.url}" style="width:100%; aspect-ratio:16/9; border:none; border-radius:4px; background:#000;" allowfullscreen></iframe>`;
+            // Ajout de scrolling="no" et d'une hauteur généreuse (350px)
+            let mediaHtml = isImage ? `<img src="${wc.url}" style="width:100%; height:auto; border-radius:4px; background:#000;" />` : `<iframe src="${wc.url}" style="width:100%; height:350px; border:none; border-radius:4px; background:#000; overflow:hidden;" scrolling="no" allowfullscreen></iframe>`;
+            
             sl.innerHTML = `<div style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">${mediaHtml}<button onclick="window.enableWebcamEdit('${wc.nom.replace(/'/g, "\\'")}')" style="margin-top:15px; width:100%; background:#f39c12; color:white; border:none; padding:10px; border-radius:4px; font-size:13px; cursor:pointer; font-weight:bold;">✏️ Déplacer ou changer le logo</button></div>`;
             sb.classList.add('open');
         };
@@ -694,13 +698,14 @@
             function hslToHex(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}; let q=l<0.5?l*(1+s):l+s-l*s;let p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);} const toHex=x=>{const hex=Math.round(x*255).toString(16);return hex.length===1?'0'+hex:hex;};return `#${toHex(r)}${toHex(g)}${toHex(b)}`;}
             function generatePalette(arr, s = 0.7, l = 0.5) { let pal = {}; arr.forEach((item, i) => { pal[item] = hslToHex(i / arr.length, s, l); }); return pal; }
 
-            let tSet = new Set(); let pSet = new Set();
+            let tSet = new Set(), rSet = new Set(), trSet = new Set(), pSet = new Set();
             window.snowCannons.features.forEach(f => {
                 let p = f.properties;
                 let t = window.getV(p, window.keyType); if(t!=="N/A") tSet.add(t.toLowerCase()); 
+                let r = window.getV(p, window.keyRep); if(r!=="N/A") rSet.add(r); 
+                let tr = window.getV(p, window.keyTransfo); if(tr!=="N/A") trSet.add(tr); 
                 let pi = window.getV(p, window.keyPiste); if(pi!=="N/A") pSet.add(pi);
             });
-
             Array.from(tSet).sort().forEach((t, i) => { window.technoColors[t] = hslToHex(0.14, 1.0, tSet.size > 1 ? 0.8 - (i / (tSet.size - 1)) * 0.4 : 0.6); });
 
             window.snowCannons.features.forEach(f => {
