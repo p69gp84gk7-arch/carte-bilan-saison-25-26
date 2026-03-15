@@ -82,6 +82,10 @@
         .layer-color-picker{width:24px;height:24px;padding:0;border:none;}
         .layer-weight-picker{width:35px;height:22px;padding:2px;border:1px solid #ccc;text-align:center;margin-left:5px;}
         @media(max-width:768px){#sidebar,#right-sidebar{width:100%;}#compare-modal{width:95%;}}
+        /* REDIMENSIONNEMENT VOLET DROIT */
+        .resizer { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; cursor: ew-resize; background: rgba(0,0,0,0.05); z-index: 3000; border-left: 1px solid #ddd; transition: background 0.2s; }
+        .resizer:hover, .resizer.active { background: #3498db; }
+        #right-sidebar { min-width: 300px; max-width: 90vw; }
     </style>
 </head>
 <body>
@@ -91,6 +95,7 @@
     <div id="topbar">
         <div style="display:flex; align-items:center;"><button class="topbar-btn" style="margin-left:0;" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰ Menu</button></div>
         <div style="display:flex; align-items:center;">
+            <button class="topbar-btn" onclick="window.openMeteo()">⛅ Météo</button>
             <button class="topbar-btn" onclick="window.openWebcamGrid()">📷 Webcams</button>
             <button class="topbar-btn" onclick="window.toggleRightSidebar()">📊 Tableau de Bord</button>
             <button id="btn-multi-toggle" class="topbar-btn" onclick="window.toggleMultiSelect()">🔲 Sélec. Multiple : OFF</button>
@@ -141,9 +146,8 @@
         </div>
 
         <div id="map-container">
-            <div id="map-controls-tr">
-                <button id="btn-toggle-right" class="map-btn" onclick="window.toggleRightSidebar()" style="background:#2c3e50; color:white; border:none;">📊 Tableau de bord</button>
-            </div>
+            
+            
             <div id="map"></div>
         </div>
 
@@ -1125,6 +1129,61 @@
             });
         };
 
+        // === MÉTÉO (METEOGRAMME 3 JOURS) ===
+        window.openMeteo = function() {
+            let sb = document.getElementById('right-sidebar'); let rt = document.getElementById('right-title'); let sl = document.getElementById('selected-list');
+            if(!sb || !sl) return;
+            if(rt) rt.innerText = "⛅ Prévisions Météo (3 Jours)";
+            let mt = document.getElementById('multi-tools'); if(mt) mt.style.display = 'none';
+            let ve = document.getElementById('view-edit'); if(ve) ve.style.display = 'none';
+            let vs = document.getElementById('view-selection'); if(vs) vs.style.display = 'block';
+
+            // Le widget météo est centré sur les coordonnées de votre domaine skiable
+            sl.innerHTML = `
+                <div style="background:#fff; border-radius:6px; border:1px solid #eee; padding:10px; height:100%;">
+                    <iframe src="https://www.meteoblue.com/fr/meteo/widget/three/42.766N0.564E42_Europe%2FParis?geoloc=fixed&nocurrent=0&noforecast=0&days=3&temp=1&layout=light" frameborder="0" scrolling="NO" allowtransparency="true" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width: 100%; height: 600px;"></iframe>
+                    <div style="text-align:center; font-size:11px; margin-top:10px;">
+                        <a href="https://www.meteoblue.com" target="_blank" style="color:#3498db; text-decoration:none;">Prévisions détaillées par Meteoblue</a>
+                    </div>
+                </div>`;
+            sb.classList.add('open');
+        };
+
+        // === SYSTÈME DE REDIMENSIONNEMENT DU VOLET DROIT ===
+        window.initSidebarResizer = function() {
+            const sidebar = document.getElementById('right-sidebar');
+            if (!sidebar) return;
+            const resizer = document.createElement('div');
+            resizer.className = 'resizer';
+            sidebar.appendChild(resizer);
+
+            let isResizing = false;
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                resizer.classList.add('active');
+                document.body.style.cursor = 'ew-resize';
+                if(window.map) window.map.dragging.disable(); // Bloque la carte pendant qu'on étire le menu
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                let newWidth = document.body.clientWidth - e.clientX;
+                if (newWidth < 350) newWidth = 350; // Largeur minimale
+                if (newWidth > document.body.clientWidth * 0.9) newWidth = document.body.clientWidth * 0.9; // Largeur maximale (90% de l'écran)
+                sidebar.style.width = newWidth + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    resizer.classList.remove('active');
+                    document.body.style.cursor = 'default';
+                    if(window.map) window.map.dragging.enable(); // Réactive la carte
+                }
+            });
+        };
+        // Activer la poignée de redimensionnement après le chargement
+        setTimeout(window.initSidebarResizer, 1000);
         // BOOT FORCE
         window.addEventListener('DOMContentLoaded', async () => {
             if(window.bootAttempt > 0) return;
