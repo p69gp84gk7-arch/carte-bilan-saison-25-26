@@ -110,35 +110,56 @@
         </div>
     </div>
 
-    <div id="bi-meteo-modal">
-        <div class="bi-header"><span>❄️ Studio Data Météo & Neige (Expert BI)</span><button onclick="document.getElementById('bi-meteo-modal').style.display='none'" style="background:none;border:none;color:white;font-size:28px;cursor:pointer;">&times;</button></div>
-        <div class="bi-container">
-            <div class="bi-sidebar">
-                <div class="edit-label">1. Source des données (Google Sheets)</div>
+    <div id="bi-meteo-modal" style="display:none;position:fixed;top:50px;left:0;right:0;bottom:0;background:#f4f6f8;z-index:8000;flex-direction:column;">
+        <div class="bi-header" style="background:#2c3e50;color:white;padding:15px 20px;font-size:18px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;">
+            <span>❄️ Centre Expert BI (Météo, Production & Maintenance)</span>
+            <button onclick="document.getElementById('bi-meteo-modal').style.display='none'" style="background:none;border:none;color:white;font-size:28px;cursor:pointer;">&times;</button>
+        </div>
+        <div class="bi-container" style="display:flex;flex:1;overflow:hidden;">
+            <div class="bi-sidebar" style="width:350px;background:#fff;border-right:1px solid #ddd;padding:20px;overflow-y:auto;box-shadow:2px 0 10px rgba(0,0,0,0.05);">
+                
+                <div class="edit-label">1. Source des données</div>
                 <select id="bi-source" class="edit-input" onchange="window.biLoadSource()">
-                    <option value="hist">Historique Météo</option>
-                    <option value="froid">Répartition Heures de Froid</option>
+                    <optgroup label="Données Google Sheets">
+                        <option value="hist">Météo : Historique</option>
+                        <option value="froid">Météo : Heures de Froid</option>
+                    </optgroup>
+                    <optgroup label="Données Canons (Temps Réel)">
+                        <option value="conso">Production : Volumes par Saison</option>
+                        <option value="defauts">Maintenance : Pannes par Mois</option>
+                        <option value="types">Parc : Types de Canons</option>
+                    </optgroup>
                 </select>
                 
-                <div class="edit-label">2. Type de Graphique</div>
+                <div class="edit-label">2. Format du Graphique</div>
                 <select id="bi-type" class="edit-input" onchange="window.biDrawChart()">
                     <option value="bar">📊 Barres (Comparaisons)</option>
-                    <option value="line">📈 Courbe (Évolutions)</option>
+                    <option value="line">📈 Courbes (Évolutions)</option>
                     <option value="pie">🥧 Camembert (Répartitions)</option>
-                    <option value="doughnut">🍩 Anneau</option>
                 </select>
 
-                <div class="edit-label">3. Axe Horizontal (Donnée de Base)</div>
+                <div class="edit-label">3. Axe Horizontal (Temps / Catégorie)</div>
                 <select id="bi-x" class="edit-input" onchange="window.biDrawChart()"></select>
 
-                <div class="edit-label">4. Axe Vertical (Valeur Mesurée)</div>
-                <select id="bi-y" class="edit-input" onchange="window.biDrawChart()"></select>
+                <div class="edit-label">4. Données à Afficher (Choix Multiple)</div>
+                <div id="bi-y-container" style="background:#fdfdfd; border:1px solid #ccc; border-radius:4px; padding:10px; max-height:150px; overflow-y:auto; margin-bottom:12px; font-size:12px;">
+                    </div>
+
+                <div class="edit-label">🎨 Thème de Couleurs</div>
+                <select id="bi-palette" class="edit-input" onchange="window.biDrawChart()">
+                    <option value="default">Standard (Bleu, Rouge, Vert...)</option>
+                    <option value="cold">Froid (Nuances de Bleu/Cyan)</option>
+                    <option value="warm">Chaud (Jaune, Orange, Rouge)</option>
+                </select>
                 
-                <button class="btn-action-primary" style="background:#27ae60; margin-top:5px;" onclick="window.biDrawChart()">🔄 Mettre à jour le graphique</button>
-                <p style="font-size:11px; color:#888; margin-top:20px; font-style:italic;">Les graphiques se construisent automatiquement à partir des colonnes de vos fichiers Google Sheets.</p>
+                <button class="btn-action-primary" style="background:#27ae60; margin-top:5px; padding:15px;" onclick="window.biDrawChart()">🔄 Actualiser le Graphique</button>
+                <button class="btn-action-primary" style="background:#8e44ad; margin-top:10px; padding:15px;" onclick="window.exportBiChart()">💾 Télécharger l'Image (PNG)</button>
+                
             </div>
-            <div class="bi-content">
-                <div class="bi-canvas-box"><canvas id="bi-canvas"></canvas></div>
+            <div class="bi-content" style="flex:1;padding:20px;display:flex;flex-direction:column;">
+                <div class="bi-canvas-box" style="background:#fff;border-radius:8px;border:1px solid #ddd;padding:20px;flex:1;position:relative;box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+                    <canvas id="bi-canvas"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -231,7 +252,9 @@
         window.getActiveTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); };
         window.getHistoryTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); };
 
-        // === STUDIO BI METEO ===
+       // === STUDIO EXPERT BI (MÉTÉO, PROD, MAINTENANCE) ===
+        window.biCurrentData = []; 
+
         window.openBiMeteo = function() {
             document.getElementById('bi-meteo-modal').style.display = 'flex';
             window.biLoadSource();
@@ -239,52 +262,152 @@
 
         window.biLoadSource = function() {
             let src = document.getElementById('bi-source').value;
-            let dataSheet = src === 'hist' ? window.meteoHistData : window.meteoFroidData;
-            let selX = document.getElementById('bi-x'); let selY = document.getElementById('bi-y');
-            selX.innerHTML = ""; selY.innerHTML = "";
+            let data = [];
+
+            // 1. GÉNÉRATION DES DONNÉES SELON LA SOURCE CHOISIE
+            if (src === 'hist') data = window.meteoHistData || [];
+            else if (src === 'froid') data = window.meteoFroidData || [];
+            else if (src === 'conso') {
+                data.push(["Saison", "Eau (m³)", "Air", "Heures"]);
+                window.saisonsList.forEach(s => {
+                    let e = 0, a = 0, t = 0;
+                    window.snowCannons.features.forEach(f => {
+                        let h = f.properties.historique[s];
+                        if(h) { e += h.eau || 0; a += h.air || 0; t += h.temps || 0; }
+                    });
+                    data.push([s, Math.round(e), Math.round(a), Math.round(t)]);
+                });
+            }
+            else if (src === 'defauts') {
+                data.push(["Mois", "Nombre de Pannes"]);
+                let counts = {};
+                window.rawTickets.forEach(t => {
+                    if(!t.date) return;
+                    let d = new Date(t.date);
+                    if(isNaN(d.getTime())) return;
+                    let m = (d.getMonth()+1).toString().padStart(2,'0') + "/" + d.getFullYear();
+                    counts[m] = (counts[m] || 0) + 1;
+                });
+                // Tri chronologique
+                Object.keys(counts).sort((a,b) => {
+                    let pa = a.split('/'); let pb = b.split('/');
+                    return new Date(pa[1], pa[0]-1) - new Date(pb[1], pb[0]-1);
+                }).forEach(k => data.push([k, counts[k]]));
+                if(data.length === 1) data.push(["Aucun ticket", 0]);
+            }
+            else if (src === 'types') {
+                data.push(["Modèle de Canon", "Quantité"]);
+                let counts = {};
+                window.snowCannons.features.forEach(f => {
+                    let t = window.getV(f.properties, window.keyType);
+                    if(t !== "N/A") counts[t] = (counts[t] || 0) + 1;
+                });
+                Object.keys(counts).sort().forEach(k => data.push([k, counts[k]]));
+            }
+
+            window.biCurrentData = data;
+            let selX = document.getElementById('bi-x'); 
+            let containerY = document.getElementById('bi-y-container');
+            selX.innerHTML = ""; containerY.innerHTML = "";
             
-            if(!dataSheet || dataSheet.length < 2) { alert("Aucune donnée trouvée dans cet onglet (vérifiez Apps Script)."); return; }
+            if(!data || data.length < 2) { containerY.innerHTML = "<i>Aucune donnée disponible.</i>"; return; }
             
-            let headers = dataSheet[0];
+            let headers = data[0];
             headers.forEach((h, i) => {
                 if(h.toString().trim() === "") return;
                 selX.innerHTML += `<option value="${i}">${h}</option>`;
-                selY.innerHTML += `<option value="${i}">${h}</option>`;
+                if (i > 0) { // On coche par défaut la première donnée vertical
+                    containerY.innerHTML += `<label style="display:flex; align-items:center; gap:5px; margin-bottom:8px; cursor:pointer;"><input type="checkbox" class="bi-y-cbx" value="${i}" ${i===1?'checked':''}> <b style="color:#2c3e50;">${h}</b></label>`;
+                }
             });
-            if(headers.length > 1) { selX.selectedIndex = 0; selY.selectedIndex = 1; }
+            selX.selectedIndex = 0;
             window.biDrawChart();
         };
 
         window.biDrawChart = function() {
-            let src = document.getElementById('bi-source').value;
-            let dataSheet = src === 'hist' ? window.meteoHistData : window.meteoFroidData;
-            if(!dataSheet || dataSheet.length < 2) return;
+            let data = window.biCurrentData;
+            if(!data || data.length < 2) return;
 
             let type = document.getElementById('bi-type').value;
             let idxX = parseInt(document.getElementById('bi-x').value);
-            let idxY = parseInt(document.getElementById('bi-y').value);
-            let labelY = dataSheet[0][idxY];
+            
+            // Récupère les cases cochées
+            let yCbx = document.querySelectorAll('.bi-y-cbx:checked');
+            if(yCbx.length === 0) return;
+            let yIndices = Array.from(yCbx).map(cb => parseInt(cb.value));
 
-            let labels = []; let values = []; let bgColors = [];
-            const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#1abc9c', '#34495e', '#7f8c8d'];
+            let labels = []; let datasets = [];
 
-            for(let i=1; i<dataSheet.length; i++) {
-                let row = dataSheet[i];
+            // Choix de la palette
+            let paletteChoice = document.getElementById('bi-palette').value;
+            let pDef = ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#1abc9c', '#34495e', '#7f8c8d'];
+            let pCold = ['#81D4FA', '#26C6DA', '#00BCD4', '#00ACC1', '#0097A7', '#00838F', '#006064'];
+            let pWarm = ['#FFD54F', '#FFCA28', '#FFC107', '#FFB300', '#FFA000', '#FF8F00', '#FF6F00', '#E65100'];
+            let colors = paletteChoice === 'cold' ? pCold : (paletteChoice === 'warm' ? pWarm : pDef);
+
+            let isPie = (type === 'pie');
+
+            // Axe X
+            for(let i=1; i<data.length; i++) {
+                let row = data[i];
                 if(row[idxX] == null || row[idxX] === "") continue;
                 let valX = row[idxX].toString();
                 if(valX.length > 20 && !isNaN(Date.parse(valX))) valX = new Date(valX).toLocaleDateString('fr-FR');
-                let valY = parseFloat(row[idxY] || 0);
-                labels.push(valX); values.push(valY); bgColors.push(colors[i % colors.length]);
+                labels.push(valX);
             }
+
+            // Construction des courbes/barres (Axes Y multiples)
+            yIndices.forEach((yIdx, dsIndex) => {
+                let values = []; let bgColors = [];
+                for(let i=1; i<data.length; i++) {
+                    let row = data[i];
+                    if(row[idxX] == null || row[idxX] === "") continue;
+                    values.push(parseFloat(row[yIdx] || 0));
+                    if (isPie) bgColors.push(colors[(i-1) % colors.length]);
+                }
+                
+                let color = colors[dsIndex % colors.length];
+                datasets.push({
+                    label: data[0][yIdx],
+                    data: values,
+                    backgroundColor: isPie ? bgColors : (type==='line' ? color+'33' : color),
+                    borderColor: isPie ? '#fff' : color,
+                    borderWidth: type==='bar'?0:2,
+                    fill: type === 'line',
+                    tension: 0.3,
+                    borderRadius: type==='bar'?4:0
+                });
+            });
+
+            // Si Camembert, on ne garde que la première donnée cochée (pour éviter un graphique illisible)
+            if(isPie && datasets.length > 1) { datasets = [datasets[0]]; }
 
             let ctx = document.getElementById('bi-canvas'); if(!ctx) return;
             if(window.chartInstances['bi-chart']) window.chartInstances['bi-chart'].destroy();
-            let isPie = (type === 'pie' || type === 'doughnut');
+            
+            // Fond blanc pour un export propre
+            const customBg = { id: 'customBg', beforeDraw: (chart) => { const c = chart.ctx; c.save(); c.globalCompositeOperation = 'destination-over'; c.fillStyle = 'white'; c.fillRect(0, 0, chart.width, chart.height); c.restore(); } };
+
             window.chartInstances['bi-chart'] = new Chart(ctx.getContext('2d'), {
-                type: type,
-                data: { labels: labels, datasets: [{ label: labelY, data: values, backgroundColor: isPie ? bgColors : '#3498db', borderColor: isPie ? '#fff' : '#2980b9', borderWidth: 1, fill: type === 'line' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: isPie, position: 'right' } }, scales: isPie ? {} : { x: { ticks: { maxRotation: 45, minRotation: 45 } } } }
+                type: type, data: { labels: labels, datasets: datasets },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: true, position: isPie ? 'right' : 'top' },
+                        title: { display: true, text: 'Analyse Croisée - ' + data[0][idxX], font: {size: 16} }
+                    }, 
+                    scales: isPie ? {} : { x: { ticks: { maxRotation: 45, minRotation: 45 } } } 
+                },
+                plugins: [customBg]
             });
+        };
+
+        // EXPORT DU GRAPHIQUE EN IMAGE
+        window.exportBiChart = function() {
+            let canvas = document.getElementById('bi-canvas'); if(!canvas) return;
+            let url = canvas.toDataURL('image/png');
+            let a = document.createElement('a'); a.href = url; a.download = 'GMAO_Export_BI.png';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         };
 
         // === PREVISIONS METEO (MULTI-ONGLETS) ===
