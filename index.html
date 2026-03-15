@@ -106,6 +106,7 @@
     <div id="topbar">
         <div style="display:flex; align-items:center;"><button class="topbar-btn" style="margin-left:0;" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰ Menu</button></div>
         <div style="display:flex; align-items:center;">
+            <button class="topbar-btn" onclick="window.openGlobalCompareModal(true)" style="background:#d35400; border-color:#e67e22;">📊 Comparer Saisons</button>
             <button class="topbar-btn" onclick="window.openBiMeteo()" style="background:#8e44ad; border-color:#9b59b6;">❄️ Centre Expert BI</button>
             <button class="topbar-btn" onclick="window.openMeteoWidget()">⛅ Météo Live</button>
             <button class="topbar-btn" onclick="window.openWebcamGrid()">📷 Webcams</button>
@@ -219,8 +220,7 @@
                         <div class="slider-container"><div class="slider-label">Voyage temporel : <span id="season-display" style="color:#27ae60; font-size:14px;">-</span></div><input type="range" id="season-slider" min="0" max="0" value="0"></div>
                         <div id="legend-historique" style="margin-top:15px; margin-bottom:5px;"></div>
                         <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #bdc3c7;"><div class="slider-label">Cacher en dessous de : <span id="val-min" class="val-badge">0</span></div><input type="range" id="slider-min" min="0" max="100" value="0"><div class="slider-label" style="margin-top:12px;">Cacher au dessus de : <span id="val-max" class="val-badge" style="color:#2980b9;">100</span></div><input type="range" id="slider-max" min="0" max="100" value="100"></div>
-                        <button class="btn-action-primary" style="background:#27ae60; margin-top:15px;" onclick="window.openGlobalCompareModal(true)">📊 Comparer 2 Saisons</button>
-                    </div></div>
+                    </div>
                 </div>
             </details>
             <details class="panel-section" open><summary>Filtres Rapides</summary><div class="section-content" style="padding-top: 5px;">
