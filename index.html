@@ -874,6 +874,10 @@
                         const id = feature.properties.id;
                         if (!window.isMultiSelect) window.selectedCannonsMap.clear(); 
                         if (window.selectedCannonsMap.has(id)) window.selectedCannonsMap.delete(id); else window.selectedCannonsMap.set(id, layer);
+                        
+                        // NOUVEAUTÉ : Centrage de la carte
+                        window.map.setView(layer.getLatLng(), 17, {animate: true});
+                        
                         window.updateMap(); window.renderSelectionPanel();
                         let sb = document.getElementById('right-sidebar'); if (window.selectedCannonsMap.size > 0 && sb) sb.classList.add('open');
                     });
@@ -888,6 +892,10 @@
                 marker.on('click', function(e) {
                     L.DomEvent.stopPropagation(e);
                     if(marker.dragging && marker.dragging.enabled()) return;
+                    
+                    // NOUVEAUTÉ : Centrage de la carte
+                    window.map.setView([wc.lat, wc.lng], 17, {animate: true});
+                    
                     window.openSingleWebcam(wc.nom);
                 });
                 marker.wcData = wc; window.webcamLayerGroup.addLayer(marker);
@@ -895,7 +903,7 @@
             window.webcamLayerGroup.addTo(window.map);
             
             window.attachEvents(); window.updateLegend(); window.updateMap(); window.triggerGlobalFilterChart();
-        };
+        }; // <-- FIN DE LA FONCTION initAppUI
 
         window.generateDynamicFiltersUI = function() {
             let container = document.getElementById('dynamic-filters-container'); if(!container) return; container.innerHTML = "";
