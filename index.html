@@ -213,10 +213,11 @@
         // ⚠️ LIEN GOOGLE APPS SCRIPT ⚠️
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbx7MOw-b9DNQlLtgxpou_sg2-5BcFS0b2i7NZKxfNNAB8kiLH8L9Z3lV06-gxjsmui0mw/exec";
         
+        
         window.map = null; window.satLayer = null;
         window.snowCannons = { "type": "FeatureCollection", "features": [] };
         window.rawTickets = []; window.saisonsList = []; window.cloudKmzLayers = []; window.webcamsData = [];
-        window.meteoHistData = []; window.meteoFroidData = []; // Nouvelles variables Météo
+        window.meteoHistData = []; window.meteoFroidData = [];
         window.isMultiSelect = false; window.columnValuesSets = {}; window.availableColumns = [];
         window.mainTheme = 'defauts'; window.histMetric = 'eau'; window.histSeasonIdx = 0;
         window.absoluteMaxes = { eau: 0, air: 0, temps: 0 }; window.currentMaxThreshold = { eau: 100, air: 100, temps: 100 }; window.currentMinThreshold = { eau: 0, air: 0, temps: 0 };
@@ -229,13 +230,12 @@
         window.localDB = null; window.bootAttempt = 0; window.tempTicketPayloads = {};
 
         // === UTILITAIRES ===
-        window.showError = function(msg) { window.showCrash(msg, "App"); };
         window.getV = function(p, key) { if(!key || !p || !p.fullData) return "N/A"; let o = p.fullData.find(x => x.k === key); return o ? o.v.toString().trim() : "N/A"; };
         window.getTicketsForCanon = function(idCanon) { return window.rawTickets.filter(t => t.idCanon === idCanon); };
         window.getActiveTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('faire') || t.statut.includes('cours')); };
         window.getHistoryTickets = function(idCanon) { return window.getTicketsForCanon(idCanon).filter(t => t.statut.includes('fait') || t.statut === '').sort((a,b) => new Date(b.date) - new Date(a.date)); };
 
-        // === NOVEAU STUDIO BI METEO ===
+        // === STUDIO BI METEO ===
         window.openBiMeteo = function() {
             document.getElementById('bi-meteo-modal').style.display = 'flex';
             window.biLoadSource();
@@ -248,7 +248,7 @@
             let selX = document.getElementById('bi-x'); let selY = document.getElementById('bi-y');
             selX.innerHTML = ""; selY.innerHTML = "";
             
-            if(!dataSheet || dataSheet.length < 2) { alert("Aucune donnée trouvée dans cet onglet (vérifiez que l'onglet existe dans le G-Drive)."); return; }
+            if(!dataSheet || dataSheet.length < 2) { alert("Aucune donnée trouvée dans cet onglet."); return; }
             
             let headers = dataSheet[0];
             headers.forEach((h, i) => {
@@ -256,7 +256,6 @@
                 selX.innerHTML += `<option value="${i}">${h}</option>`;
                 selY.innerHTML += `<option value="${i}">${h}</option>`;
             });
-            
             if(headers.length > 1) { selX.selectedIndex = 0; selY.selectedIndex = 1; }
             window.biDrawChart();
         };
@@ -289,15 +288,14 @@
             if(window.chartInstances['bi-chart']) window.chartInstances['bi-chart'].destroy();
             
             let isPie = (type === 'pie' || type === 'doughnut');
-            
             window.chartInstances['bi-chart'] = new Chart(ctx.getContext('2d'), {
                 type: type,
-                data: { labels: labels, datasets: [{ label: labelY, data: values, backgroundColor: isPie ? bgColors : '#3498db', borderColor: isPie ? '#fff' : '#2980b9', borderWidth: 1, fill: type === 'line' ? true : false, tension: 0.3 }] },
+                data: { labels: labels, datasets: [{ label: labelY, data: values, backgroundColor: isPie ? bgColors : '#3498db', borderColor: isPie ? '#fff' : '#2980b9', borderWidth: 1, fill: type === 'line' }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: isPie, position: 'right' } }, scales: isPie ? {} : { x: { ticks: { maxRotation: 45, minRotation: 45 } } } }
             });
         };
 
-        // === PREVISIONS METEO 3 JOURS (VOLET DROIT) ===
+        // === PREVISIONS METEO (MULTI-ONGLETS) ===
         window.openMeteoWidget = function() {
             let sb = document.getElementById('right-sidebar'); let rt = document.getElementById('right-title'); let sl = document.getElementById('selected-list');
             if(!sb || !sl) return;
@@ -328,7 +326,7 @@
             sb.classList.add('open');
         };
 
-        // === WEBCAMS ===
+        // === GESTION WEBCAMS ===
         window.openWebcamGrid = function() {
             let sb = document.getElementById('right-sidebar'); let rt = document.getElementById('right-title'); let sl = document.getElementById('selected-list');
             if(!sb || !sl) return; if(rt) rt.innerText = "📷 Toutes les Caméras";
@@ -390,7 +388,7 @@
             } catch(e) { alert("Échec réseau."); btn.innerText = "✅ Enregistrer"; btn.disabled = false; }
         };
 
-        // === UI ACTIONS ===
+        // === ACTIONS UI ===
         window.toggleRightSidebar = function() { let sb = document.getElementById('right-sidebar'); if(!sb) return; if(sb.classList.contains('open')) { sb.classList.remove('open'); } else { sb.classList.add('open'); if(window.selectedCannonsMap.size === 0 && !window.currentlyEditingId) { window.triggerGlobalFilterChart(); } else { window.renderSelectionPanel(); } } };
         window.toggleMultiSelect = function() { window.isMultiSelect = !window.isMultiSelect; const btn = document.getElementById('btn-multi-toggle'); if(!btn) return; if(window.isMultiSelect) { btn.classList.add('active'); btn.innerText = "🔲 Sélec. Multiple : ON"; btn.style.background = "#3498db"; } else { btn.classList.remove('active'); btn.innerText = "🔲 Sélec. Multiple : OFF"; btn.style.background = "rgba(255,255,255,0.1)"; if(window.selectedCannonsMap.size > 1) window.clearSelection(); } window.renderSelectionPanel(); };
         window.closeRightSidebar = function() { let sb = document.getElementById('right-sidebar'); if(sb) sb.classList.remove('open'); if(window.webcamLayerGroup) window.webcamLayerGroup.eachLayer(m => m.dragging.disable()); };
@@ -426,7 +424,14 @@
             let rh = document.getElementById('right-header'); if(rh) rh.classList.add('editing'); let rt = document.getElementById('right-title'); if(rt) rt.innerText = "✏️ Édition Complète"; window.updateMap(); 
         };
 
-        // === GESTION DES COULEURS ET LÉGENDES ===
+        window.focusCannon = function(id) {
+            if(!window.geojsonLayer) return;
+            window.geojsonLayer.eachLayer(function(l) {
+                if (l.feature.properties.id === id) { window.selectedCannonsMap.clear(); window.selectedCannonsMap.set(id, l); window.map.setView(l.getLatLng(), 17); window.updateMap(); window.renderSelectionPanel(); let sb = document.getElementById('right-sidebar'); if(sb) sb.classList.add('open'); }
+            });
+        };
+
+        // === COULEURS ET LÉGENDES ===
         window.getColorByFilter = function(ratio, props) {
             const inter = (c1,c2,f) => { let r=c1.slice(); for(let i=0;i<3;i++)r[i]=Math.round(r[i]+f*(c2[i]-c1[i])); return `rgb(${r[0]},${r[1]},${r[2]})`;};
             if (window.mainTheme === 'defauts') { let act = window.getActiveTickets(props.id); if (act.length === 0) return '#bdc3c7'; if (act.some(t => t.statut.includes('faire'))) return '#e74c3c'; return '#f39c12'; }
@@ -471,7 +476,6 @@
         window.updateMap = function() {
             if(!window.geojsonLayer) return;
             let s = window.saisonsList[window.histSeasonIdx];
-
             window.geojsonLayer.eachLayer(function(layer) {
                 const p = layer.feature.properties; let vis = true;
                 if (window.currentPistes && !window.currentPistes.includes('all')) { if (!window.currentPistes.includes(window.getV(p, window.keyPiste))) vis = false; }
@@ -500,7 +504,7 @@
             });
         };
 
-        // === AFFICHAGE DU PANNEAU DETAILS (CANON) ===
+        // === AFFICHAGE DES DETAILS (CANON) ET GRAPHIQUES ===
         window.renderSelectionPanel = function() {
             if(window.selectedCannonsMap.size === 0) { window.triggerGlobalFilterChart(); return; }
             let mt = document.getElementById('multi-tools'); if(mt) mt.style.display = 'flex';
@@ -546,14 +550,8 @@
                     if (active.length === 0) { mainContent = `<div style="background:#eafaf1; color:#27ae60; padding:15px; border-radius:6px; text-align:center; font-weight:bold; border:1px solid #d5f5e3; margin-bottom:15px;">✅ Aucun défaut en cours</div>${histHtml}`; } 
                     else {
                         mainContent = active.map(t => {
-                            let borderCol = t.statut.includes('faire') ? '#e74c3c' : '#f39c12';
-                            let safeDef = t.defaut.replace(/'/g, "\\'"); let safeId = p.id.replace(/'/g, "\\'");
-                            let idDiv = `ticket-edit-${safeId}-${t.defaut.replace(/[^a-zA-Z0-9]/g, "")}`;
-                            return `
-                                <div class="ticket-card" style="border-left-color:${borderCol};">
-                                    <div style="font-weight:bold; font-size:14px; color:#333; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;"><span style="flex-grow:1; margin-right:10px;">${t.defaut}</span><button onclick="window.editFullTicket('${safeId}', '${safeDef}')" style="background:none; border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; flex-shrink:0;">Éditer ✏️</button></div>
-                                    <div id="${idDiv}"><span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${borderCol}20; color:${borderCol}; font-weight:bold; display:inline-block; margin-bottom:8px;">STATUT : ${t.statut.toUpperCase()}</span></div>
-                                </div>`;
+                            let borderCol = t.statut.includes('faire') ? '#e74c3c' : '#f39c12'; let safeDef = t.defaut.replace(/'/g, "\\'"); let safeId = p.id.replace(/'/g, "\\'"); let idDiv = `ticket-edit-${safeId}-${t.defaut.replace(/[^a-zA-Z0-9]/g, "")}`;
+                            return `<div class="ticket-card" style="border-left-color:${borderCol};"><div style="font-weight:bold; font-size:14px; color:#333; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;"><span style="flex-grow:1; margin-right:10px;">${t.defaut}</span><button onclick="window.editFullTicket('${safeId}', '${safeDef}')" style="background:none; border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; flex-shrink:0;">Éditer ✏️</button></div><div id="${idDiv}"><span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${borderCol}20; color:${borderCol}; font-weight:bold; display:inline-block; margin-bottom:8px;">STATUT : ${t.statut.toUpperCase()}</span></div></div>`;
                         }).join('') + histHtml;
                     }
                 } 
@@ -569,11 +567,7 @@
 
                 let editBtn = (window.mainTheme === 'type' && !window.isMultiSelect) ? `<button class="btn-action-primary" onclick="window.startEdit('${p.id}')">✏️ Éditer ce canon</button>` : '';
 
-                listDiv.innerHTML += `
-                    <div class="sel-details">
-                        <div class="sel-details-header"><span>📍 Canon <b>${p.id}</b></span><span style="font-weight:normal; font-size:12px; background:#e0e6ed; padding:4px 10px; border-radius:12px; color:#34495e;">${window.getV(p, window.keyPiste)}</span></div>
-                        <div class="sel-details-body">${mainContent}${editBtn}</div>
-                    </div>`;
+                listDiv.innerHTML += `<div class="sel-details"><div class="sel-details-header"><span>📍 Canon <b>${p.id}</b></span><span style="font-weight:normal; font-size:12px; background:#e0e6ed; padding:4px 10px; border-radius:12px; color:#34495e;">${window.getV(p, window.keyPiste)}</span></div><div class="sel-details-body">${mainContent}${editBtn}</div></div>`;
                     
                 setTimeout(() => {
                     if(window.mainTheme === 'historique' && !window.isMultiSelect) window.drawPisteCompareChart(p);
@@ -586,14 +580,9 @@
                         const drawMiniChart = (id, data, color) => {
                             let canvas = document.getElementById(id); if(!canvas) return;
                             if(window.chartInstances[id]) window.chartInstances[id].destroy();
-                            window.chartInstances[id] = new Chart(canvas.getContext('2d'), {
-                                type: 'bar', data: { labels: labels, datasets: [{ data: data, backgroundColor: color, borderRadius: 2 }] },
-                                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: {titleFont: {size: 10}, bodyFont: {size: 10}} }, scales: { x: { ticks: {font:{size:8}, maxRotation:45, minRotation:45}, grid: {display:false} }, y: { ticks: {font:{size:8}, maxTicksLimit: 4} } } }
-                            });
+                            window.chartInstances[id] = new Chart(canvas.getContext('2d'), { type: 'bar', data: { labels: labels, datasets: [{ data: data, backgroundColor: color, borderRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: {titleFont: {size: 10}, bodyFont: {size: 10}} }, scales: { x: { ticks: {font:{size:8}, maxRotation:45, minRotation:45}, grid: {display:false} }, y: { ticks: {font:{size:8}, maxTicksLimit: 4} } } } });
                         };
-                        drawMiniChart(`hist-eau-${p.id}`, dEau, '#3498db');
-                        drawMiniChart(`hist-air-${p.id}`, dAir, '#e67e22');
-                        drawMiniChart(`hist-temps-${p.id}`, dTemps, '#27ae60');
+                        drawMiniChart(`hist-eau-${p.id}`, dEau, '#3498db'); drawMiniChart(`hist-air-${p.id}`, dAir, '#e67e22'); drawMiniChart(`hist-temps-${p.id}`, dTemps, '#27ae60');
                     }
                 }, 100);
             });
@@ -690,82 +679,6 @@
             let pisteCannons = window.snowCannons.features.filter(f => window.getV(f.properties, window.keyPiste) === pName && f.properties.historique[seasonStr]);
             pisteCannons.sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id)); let bgColors = pisteCannons.map(f => f.properties.id === targetId ? '#e74c3c' : '#9b59b6');
             window.chartInstances[canvasId] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: pisteCannons.map(f => f.properties.id), datasets: [{ data: pisteCannons.map(f => f.properties.historique[seasonStr][window.histMetric]), backgroundColor: bgColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: {font:{size:10}} } } } });
-        };
-
-        window.triggerGlobalFilterChart = function() {
-            if (window.selectedCannonsMap.size > 0 || window.currentlyEditingId) return;
-            let visibleCannons = window.snowCannons.features.filter(f => f.properties._isVisible);
-            let html = `<div style="background:#eafaf1; padding:15px; border-radius:6px; text-align:center; margin-bottom:15px; border:1px solid #d5f5e3;"><span style="font-size:24px; font-weight:bold; color:#27ae60;">${visibleCannons.length}</span><br><span style="font-size:12px; color:#555; text-transform:uppercase;">Canons affichés</span></div>`;
-
-            let chartLabels = []; let chartData = []; let chartColors = []; let chartType = 'bar';
-            let chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-
-            if (window.mainTheme === 'defauts') {
-                let rt = document.getElementById('right-title'); if(rt) rt.innerText = "📊 Analyse : Défauts";
-                let activeList = []; let cUrgent = 0, cEnCours = 0, cRas = 0;
-                visibleCannons.forEach(f => {
-                    let p = f.properties; let acts = window.getActiveTickets(p.id);
-                    if(acts.length === 0) { cRas++; }
-                    else { acts.forEach(t => { if(t.statut.includes('faire')) cUrgent++; else cEnCours++; activeList.push({id: p.id, piste: window.getV(p, window.keyPiste), ticket: t}); }); }
-                });
-                chartLabels = ['À faire', 'En cours', 'RAS']; chartData = [cUrgent, cEnCours, cRas]; chartColors = ['#e74c3c', '#f39c12', '#bdc3c7']; chartType = 'doughnut';
-                let total = cUrgent + cEnCours + cRas; let faultPerc = total > 0 ? (((cUrgent + cEnCours) / total) * 100).toFixed(1) : 0;
-
-                chartOptions.plugins.legend = { position: 'right', labels: { boxWidth: 12, font: {size: 11} } };
-                html += `<div class="piste-chart-container"><div style="text-align:center; font-size:16px; font-weight:bold; color:#e74c3c; margin-bottom:5px;">Taux de pannes : ${faultPerc}%</div><div style="height:180px;position:relative;"><canvas id="global-filter-chart"></canvas></div></div>`;
-                html += `<div style="font-size:13px; font-weight:bold; margin-top:15px; border-bottom:2px solid #eee; padding-bottom:5px;">Liste détaillée des défauts :</div>`;
-                if (activeList.length === 0) { html += `<div style="font-size:12px; color:#7f8c8d; text-align:center; padding:10px;">Aucun défaut sur les canons affichés.</div>`; } 
-                else {
-                    activeList.sort((a,b) => { let wA = a.ticket.statut.includes('faire') ? 1 : 0; let wB = b.ticket.statut.includes('faire') ? 1 : 0; return wB - wA; });
-                    let listHtml = activeList.map(item => {
-                        let color = item.ticket.statut.includes('faire') ? '#e74c3c' : '#f39c12';
-                        return `<div style="border-left:3px solid ${color}; background:#fff; padding:8px; margin-top:8px; border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:12px; display:flex; justify-content:space-between; align-items:center;"><div><b style="color:#2c3e50;">Canon ${item.id}</b> <span style="color:#7f8c8d; font-size:10px;">(${item.piste})</span><br><span style="color:${color}; font-weight:bold;">${item.ticket.defaut}</span></div><button onclick="window.focusCannon('${item.id}');" style="background:none; border:1px solid #ddd; border-radius:4px; cursor:pointer; font-size:10px; padding:4px 8px;">Cibler 📍</button></div>`; 
-                    }).join('');
-                    html += `<div style="max-height: 40vh; overflow-y: auto; padding-right:5px;">${listHtml}</div>`;
-                }
-            } 
-            else if (window.mainTheme === 'type' || window.mainTheme === 'repeteur' || window.mainTheme === 'transfo') {
-                let key = window.mainTheme === 'type' ? window.keyType : (window.mainTheme === 'repeteur' ? window.keyRep : window.keyTransfo);
-                let title = window.mainTheme === 'type' ? 'Types de canon' : (window.mainTheme === 'repeteur' ? 'Répéteurs' : 'Transformateurs');
-                let rt = document.getElementById('right-title'); if(rt) rt.innerText = "📊 Analyse : " + title;
-                let counts = {};
-                visibleCannons.forEach(f => { let v = window.getV(f.properties, key); counts[v] = (counts[v] || 0) + 1; });
-                chartLabels = Object.keys(counts).sort(); chartData = chartLabels.map(k => counts[k]);
-                
-                if (window.mainTheme === 'type') {
-                    chartColors = chartLabels.map(k => { let kL = k.toLowerCase(); if(["demak lenko", "demac lenko"].includes(kL)) return '#0000FF'; if(["sufag", "street", "taurus", "taurax", "peak"].includes(kL)) return '#008000'; return window.technoColors[kL] || '#FFD700'; });
-                } else if (window.mainTheme === 'repeteur') { chartColors = chartLabels.map(k => window.repColors[k] || '#3498db'); } 
-                else { chartColors = chartLabels.map(k => window.transfoColors[k] || '#3498db'); }
-
-                html += `<div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; text-align:center; color:#34495e;">Répartition par ${title}</div><div style="height:200px;position:relative;margin-top:10px;"><canvas id="global-filter-chart"></canvas></div></div>`;
-            } 
-            else if (window.mainTheme === 'historique') {
-                let rt = document.getElementById('right-title'); if(rt) rt.innerText = "📊 Analyse : Historique";
-                let s = window.saisonsList[window.histSeasonIdx]; let metricName = window.histMetric === 'eau' ? 'Eau (m³)' : (window.histMetric === 'air' ? 'Air' : 'Temps (h)');
-                let isSinglePiste = (window.currentPistes.length === 1 && window.currentPistes[0] !== 'all');
-                
-                if (isSinglePiste || visibleCannons.length <= 40) {
-                    let sorted = [...visibleCannons].sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
-                    chartLabels = sorted.map(c => c.properties.id); chartData = sorted.map(c => c.properties.historique[s] ? c.properties.historique[s][window.histMetric] : 0); chartColors = '#3498db'; let pisteName = isSinglePiste ? window.currentPistes[0] : "Canons";
-                    html += `<div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; text-align:center; color:#34495e;">Détail par canon (${metricName}) - ${pisteName}</div><div style="height:250px;position:relative;margin-top:10px;"><canvas id="global-filter-chart"></canvas></div></div>`;
-                } else {
-                    let pisteTotals = {};
-                    visibleCannons.forEach(f => { let p = window.getV(f.properties, window.keyPiste); let val = f.properties.historique[s] ? f.properties.historique[s][window.histMetric] : 0; pisteTotals[p] = (pisteTotals[p] || 0) + val; });
-                    chartLabels = Object.keys(pisteTotals).sort(); chartData = chartLabels.map(k => pisteTotals[k]); chartColors = '#2980b9';
-                    html += `<div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; text-align:center; color:#34495e;">Total ${metricName} par Piste (Saison ${s})</div><div style="height:250px;position:relative;margin-top:10px;"><canvas id="global-filter-chart"></canvas></div></div>`;
-                }
-            }
-
-            let mt = document.getElementById('multi-tools'); if(mt) mt.style.display = 'flex';
-            let vs = document.getElementById('view-selection'); if(vs) vs.style.display = 'block'; 
-            let ve = document.getElementById('view-edit'); if(ve) ve.style.display = 'none';
-            let sl = document.getElementById('selected-list'); if(sl) sl.innerHTML = html; 
-
-            setTimeout(() => {
-                let ctx = document.getElementById('global-filter-chart'); if(!ctx) return;
-                if(window.chartInstances['global-filter-chart']) window.chartInstances['global-filter-chart'].destroy();
-                window.chartInstances['global-filter-chart'] = new Chart(ctx.getContext('2d'), { type: chartType, data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: chartColors, borderRadius: chartType==='bar'?4:0 }] }, options: chartOptions });
-            }, 50);
         };
 
         // === DB LOCALE KML/KMZ ===
@@ -881,108 +794,6 @@
         };
         setTimeout(window.initSidebarResizer, 1000);
 
-        // === LECTURE DONNÉES GOOGLE ===
-        window.setStep = function(step, desc) { let elStep = document.getElementById('loading-step'); let elDesc = document.getElementById('loading-desc'); if (elStep) elStep.innerText = "Étape " + step + "/5"; if (elDesc) elDesc.innerText = desc; };
-
-        window.fetchWithTimeout = async function(resource, options = {}) {
-            let finalUrl = resource; if(!resource.includes('raw.githubusercontent')) { finalUrl += (resource.includes('?') ? '&' : '?') + 't=' + new Date().getTime(); }
-            const controller = window.AbortController ? new AbortController() : null; if (controller) options.signal = controller.signal;
-            const timeoutPromise = new Promise((_, reject) => { setTimeout(() => { if (controller) controller.abort(); reject(new Error("Délai d'attente dépassé (15s).")); }, 15000); });
-            return Promise.race([fetch(finalUrl, options), timeoutPromise]);
-        };
-
-        window.fetchGoogleSheetsData = async function() {
-            window.setStep(1, "Connexion au serveur Google...");
-            const response = await window.fetchWithTimeout(GOOGLE_API_URL);
-            if (!response.ok) throw new Error("Accès refusé. Vérifiez l'URL.");
-            let textData = await response.text(); let data;
-            try { data = JSON.parse(textData); } catch(e) { throw new Error("Format invalide."); }
-            
-            // DONNÉES MÉTÉO BI
-            window.meteoHistData = data.meteo_hist || [];
-            window.meteoFroidData = data.meteo_froid || [];
-
-            window.setStep(2, "Analyse du Tableau Général...");
-            if (!data.general || data.general.length < 2) throw new Error(`L'onglet principal est introuvable ou vide.`);
-            const genHeaders = data.general[0].map(h => (h||"").toString().toLowerCase().trim());
-            const originalHeaders = data.general[0].map(h => (h||"").toString().trim()); 
-            const findCol = (keywords) => { let idx = genHeaders.findIndex(h => keywords.some(k => h.includes(k))); return idx !== -1 ? originalHeaders[idx] : null; };
-
-            const idxId = 2; const idxXY = genHeaders.findIndex(h => h.includes('xy') || h.includes('gps'));
-            if (idxXY === -1) throw new Error("La colonne 'xy' est introuvable.");
-
-            window.keyPiste = findCol(['pistes', 'piste']); window.keyType = findCol(['type canon', 'type']);
-            window.keyRep = findCol(['répéteur', 'repeteur', 'épéteur', 'epeteur', 'peteur']); window.keyTransfo = findCol(['transfo']);
-
-            originalHeaders.forEach(h => { let hl = h.toLowerCase(); if(!hl.includes('xy') && !hl.includes('gps') && !hl.includes('photo')) { window.availableColumns.push(h); window.columnValuesSets[h] = new Set(); } });
-
-            let dictGeneral = {}; let validPointsCount = 0;
-            data.general.slice(1).forEach(row => {
-                let idRaw = row[idxId]; if (idRaw == null || idRaw === "") return;
-                let id = idRaw.toString().replace(/^YA\s*/i, '').trim(); if (!id) return;
-                let lat = 0, lng = 0;
-                if (row[idxXY]) {
-                    let txt = String(row[idxXY]).replace(/,/g, '.'); let matches = txt.match(/-?\d+(?:\.\d+)?/g);
-                    if (matches && matches.length >= 2) { lat = parseFloat(matches[0]); lng = parseFloat(matches[1]); if (lat < 20 && lng > 30) { let temp = lat; lat = lng; lng = temp; } }
-                }
-                let fullData = [];
-                originalHeaders.forEach((head, i) => { 
-                    if(head.trim() !== "") { let val = (i < row.length && row[i] != null) ? row[i].toString() : ""; fullData.push({k: head, v: val}); if(val !== "" && window.columnValuesSets[head]) window.columnValuesSets[head].add(val.trim()); }
-                });
-                if (!isNaN(lat) && !isNaN(lng) && lat !== 0) validPointsCount++;
-                dictGeneral[id] = { id: id, lat: lat, lng: lng, fullData: fullData, historique: {} };
-            });
-
-            window.setStep(3, "Analyse de l'Historique...");
-            if (data.historique && data.historique.length > 1) {
-                const histHeaders = data.historique[0].map(h => (h||"").toString().toLowerCase().trim()); const idxCanons = 1; let colsEau = {}, colsAir = {}, colsTemps = {}; let saisonsSet = new Set();
-                histHeaders.forEach((h, i) => { let match = h.match(/(eau|air|marche).*?(\d{2}\/\d{2})/i); if (match) { let t = match[1].toLowerCase(); let s = match[2]; saisonsSet.add(s); if (t.includes('eau')) colsEau[s] = i; if (t.includes('air')) colsAir[s] = i; if (t.includes('marche')) colsTemps[s] = i; } });
-                window.saisonsList = Array.from(saisonsSet).sort((a,b) => parseInt(a.split('/')[0]) - parseInt(b.split('/')[0])); window.histSeasonIdx = window.saisonsList.length > 0 ? window.saisonsList.length - 1 : 0;
-                data.historique.slice(1).forEach(row => {
-                    let rawId = row[idxCanons];
-                    if (rawId != null && rawId !== "") { let id = rawId.toString().replace(/^YA\s*/i, '').trim(); if (id && dictGeneral[id]) { window.saisonsList.forEach(s => { dictGeneral[id].historique[s] = { eau: colsEau[s]?parseFloat(row[colsEau[s]])||0:0, air: colsAir[s]?parseFloat(row[colsAir[s]])||0:0, temps: colsTemps[s]?parseFloat(row[colsTemps[s]])||0:0 }; }); } }
-                });
-            }
-
-            window.setStep(4, "Préparation des Pannes & KMZ...");
-            if (data.tickets && data.tickets.length > 1) {
-                const tHeaders = data.tickets[0].map(h => (h||"").toString().toLowerCase().trim()); const originalTHeaders = data.tickets[0].map(h => (h||"").toString().trim());
-                const idxTEtat = tHeaders.findIndex(h => h.includes('état') || h.includes('etat')); const idxTDate = tHeaders.findIndex(h => h.includes('date')); const idxTRegard = tHeaders.findIndex(h => h.includes('n°regard') || h.includes('regard') || h.includes('canon')); const idxTDefaut = tHeaders.findIndex(h => h.includes('defaut') || h.includes('défaut') || h.includes('panne'));
-                if(idxTRegard > -1) {
-                    window.rawTickets = data.tickets.slice(1).map(row => {
-                        let fullTData = []; originalTHeaders.forEach((h, i) => { if(h.trim() !== "") { let val = (i < row.length && row[i] != null) ? row[i].toString() : ""; fullTData.push({k: h, v: val}); } });
-                        return { statut: (idxTEtat>-1 && row[idxTEtat] != null ? row[idxTEtat].toString().toLowerCase().trim() : ""), date: (idxTDate>-1 && row[idxTDate] != null ? row[idxTDate] : ""), idCanon: (row[idxTRegard] != null ? row[idxTRegard].toString().replace(/^YA\s*/i, '').trim() : ""), defaut: (idxTDefaut>-1 && row[idxTDefaut] ? row[idxTDefaut].toString() : "Défaut non spécifié"), fullData: fullTData };
-                    });
-                }
-            }
-
-            if (data.kmz && data.kmz.length > 0) { window.cloudKmzLayers = data.kmz.map((k, index) => { let col = k.color ? k.color : window.defaultColors[index % window.defaultColors.length]; let wei = k.weight ? parseInt(k.weight) : 4; return { ...k, isVisible: false, leafletLayer: null, color: col, weight: wei }; }); }
-
-            window.setStep(5, "Analyse des Webcams...");
-            if (data.webcams && data.webcams.length > 1) {
-                const wHead = data.webcams[0].map(h => (h||"").toString().toLowerCase().trim());
-                const iNom = wHead.findIndex(h => h.includes("nom")); const iLL = wHead.findIndex(h => h.includes("latlong") || h.includes("gps") || h.includes("xy")); const iUrl = wHead.findIndex(h => h.includes("url") || h.includes("lien")); const iIcon = wHead.findIndex(h => h.includes("icone") || h.includes("logo"));
-                if(iNom > -1 && iLL > -1 && iUrl > -1) {
-                    data.webcams.slice(1).forEach(row => {
-                        let nom = row[iNom]; let llStr = row[iLL] ? row[iLL].toString() : ""; let url = row[iUrl]; let icon = (iIcon > -1 && row[iIcon]) ? row[iIcon].toString().trim() : "📷"; if(!icon) icon = "📷";
-                        if(nom && llStr && url) {
-                            let matches = llStr.replace(/,/g, '.').match(/-?\d+(?:\.\d+)?/g);
-                            if(matches && matches.length >= 2) { let lat = parseFloat(matches[0]); let lng = parseFloat(matches[1]); if (lat < 20 && lng > 30) { let t = lat; lat = lng; lng = t; } window.webcamsData.push({ nom: nom, lat: lat, lng: lng, url: url, icon: icon }); }
-                        }
-                    });
-                }
-            }
-
-            Object.values(dictGeneral).forEach(canon => { if (canon.lat !== 0 && !isNaN(canon.lat)) { window.snowCannons.features.push({ "type": "Feature", "geometry": { "type": "Point", "coordinates": [canon.lng, canon.lat] }, "properties": canon }); } });
-
-            let ls = document.getElementById('loading-spinner'); if(ls) ls.style.display = 'none';
-            let lt = document.getElementById('loading-title'); if(lt) { lt.innerText = "✅ Chargement Réussi !"; lt.style.color = "#27ae60"; }
-            let lst = document.getElementById('loading-step'); if(lst) lst.style.display = 'none';
-            let ld = document.getElementById('loading-desc'); if(ld) ld.innerHTML = `${window.snowCannons.features.length} canons placés.`;
-            
-            setTimeout(() => { window.initAppUI(); let ov = document.getElementById('loading-overlay'); if(ov) ov.style.display = 'none'; }, 800);
-        };
-
         // === INITIALISATION UI GLOBALE ===
         window.initAppUI = function() {
             let dTitle = document.getElementById('app-title'); if(dTitle) dTitle.style.display = 'block';
@@ -1036,7 +847,7 @@
                         const id = feature.properties.id;
                         if (!window.isMultiSelect) window.selectedCannonsMap.clear(); 
                         if (window.selectedCannonsMap.has(id)) window.selectedCannonsMap.delete(id); else window.selectedCannonsMap.set(id, layer);
-                        window.map.setView(layer.getLatLng(), 17, {animate: true});
+                        if(window.map) window.map.setView(layer.getLatLng(), 17, {animate: true});
                         window.updateMap(); window.renderSelectionPanel();
                         let sb = document.getElementById('right-sidebar'); if (window.selectedCannonsMap.size > 0 && sb) sb.classList.add('open');
                     });
@@ -1048,7 +859,12 @@
             window.webcamLayerGroup = L.layerGroup();
             window.webcamsData.forEach(wc => {
                 let marker = L.marker([wc.lat, wc.lng], { icon: L.divIcon({ className: 'custom-cannon-icon', html: `<div class="camera-icon">${wc.icon}</div>`, iconSize: [24,24], iconAnchor: [12,12] }), draggable: false });
-                marker.on('click', function(e) { L.DomEvent.stopPropagation(e); if(marker.dragging && marker.dragging.enabled()) return; window.map.setView([wc.lat, wc.lng], 17, {animate: true}); window.openSingleWebcam(wc.nom); });
+                marker.on('click', function(e) { 
+                    L.DomEvent.stopPropagation(e); 
+                    if(marker.dragging && marker.dragging.enabled()) return; 
+                    if(window.map) window.map.setView([wc.lat, wc.lng], 17, {animate: true});
+                    window.openSingleWebcam(wc.nom); 
+                });
                 marker.wcData = wc; window.webcamLayerGroup.addLayer(marker);
             });
             window.webcamLayerGroup.addTo(window.map);
@@ -1104,6 +920,23 @@
                     } else { window.closeRightSidebar(); }
                 });
             }
+        };
+
+        window.calculateMaxes = function() {
+            if(!window.saisonsList[window.histSeasonIdx]) return;
+            let s = window.saisonsList[window.histSeasonIdx]; window.absoluteMaxes = { eau: 0, air: 0, temps: 0 };
+            window.snowCannons.features.forEach(f => {
+                if (f.properties.historique[s]) {
+                    window.absoluteMaxes.eau = Math.max(window.absoluteMaxes.eau, f.properties.historique[s].eau);
+                    window.absoluteMaxes.air = Math.max(window.absoluteMaxes.air, f.properties.historique[s].air);
+                    window.absoluteMaxes.temps = Math.max(window.absoluteMaxes.temps, f.properties.historique[s].temps);
+                }
+            });
+            window.currentMaxThreshold = { ...window.absoluteMaxes }; window.currentMinThreshold = { eau:0, air:0, temps:0 };
+            let smin = document.getElementById('slider-min'); if(smin) { smin.max = window.absoluteMaxes[window.histMetric] || 1; smin.value = 0; }
+            let smax = document.getElementById('slider-max'); if(smax) { smax.max = window.absoluteMaxes[window.histMetric] || 1; smax.value = window.absoluteMaxes[window.histMetric] || 1; }
+            let vmin = document.getElementById('val-min'); if(vmin) vmin.innerText = 0; 
+            let vmax = document.getElementById('val-max'); if(vmax) vmax.innerText = window.absoluteMaxes[window.histMetric] || 1;
         };
 
         // BOOT FORCE
