@@ -864,6 +864,240 @@
         });
         
         setTimeout(() => { if(window.bootAttempt === 0) { window.document.dispatchEvent(new Event("DOMContentLoaded")); } }, 2000);
+        // ====================================================================
+        // === MODULE SURPUISSANT : SUIVI ENTRETIEN & DASHBOARD AVANCÉ ===
+        // ====================================================================
+        
+        window.suiviEntretienData = []; // Stockera les données du nouvel onglet
+
+        // 1. Surcharge du chargement Google pour inclure le Suivi
+        let originalFetch = window.fetchGoogleSheetsData;
+        window.fetchGoogleSheetsData = async function() {
+            await originalFetch(); // Fait le travail habituel
+            
+            // Récupération des données de suivi (si le Google Apps Script a été mis à jour)
+            try {
+                const response = await window.fetchWithTimeout(GOOGLE_API_URL);
+                const textData = await response.text();
+                const data = JSON.parse(textData);
+                if (data.suivi && data.suivi.length > 1) {
+                    window.suiviEntretienData = data.suivi;
+                }
+            } catch(e) { console.log("L'onglet Suivi n'a pas pu être chargé (Script Google à mettre à jour)."); }
+        };
+
+        // 2. Ouverture du mode Suivi Entretien
+        window.openSuiviEntretien = function() {
+            window.mainTheme = 'suivi_entretien';
+            let sb = document.getElementById('right-sidebar'); 
+            let rt = document.getElementById('right-title'); 
+            let sl = document.getElementById('selected-list');
+            
+            if(!sb || !sl) return;
+            rt.innerText = "🛠️ Mode : Suivi Entretien";
+            document.getElementById('multi-tools').style.display = 'none';
+            document.getElementById('view-edit').style.display = 'none';
+            document.getElementById('view-selection').style.display = 'block';
+
+            // Menu déroulant pour choisir la piste
+            let pistes = Array.from(window.columnValuesSets[window.keyPiste] || []).sort();
+            let html = `
+                <div style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #ddd; margin-bottom:15px;">
+                    <div class="edit-label">Sélectionner une piste pour la maintenance :</div>
+                    <select class="edit-input" id="suivi-piste-select" onchange="window.renderSuiviList(this.value)">
+                        <option value="">-- Choisir une piste --</option>
+                        ${pistes.map(p => `<option value="${p}">${p}</option>`).join('')}
+                    </select>
+                </div>
+                <div id="suivi-canons-container"></div>
+            `;
+            sl.innerHTML = html;
+            sb.classList.add('open');
+            window.updateMap();
+            window.triggerGlobalFilterChart();
+        };
+
+        // 3. Affichage de la liste d'édition par piste
+        window.renderSuiviList = function(pisteName) {
+            let container = document.getElementById('suivi-canons-container');
+            if(!container) return;
+            if(!pisteName) { container.innerHTML = ""; return; }
+
+            let canons = window.snowCannons.features.filter(f => window.getV(f.properties, window.keyPiste) === pisteName).sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
+            
+            let html = "";
+            canons.forEach(c => {
+                let id = c.properties.id;
+                let activeFaults = window.getActiveTickets(id).map(t => t.defaut).join(" | ");
+                let hasFault = activeFaults.length > 0;
+                
+                // Recherche des données de suivi existantes
+                let suiviInfo = window.suiviEntretienData.find(row => row[0] == id) || ["", "", "non", "non", "", "", ""];
+                let deconnecte = suiviInfo[2].toString().toLowerCase().trim() === "oui";
+                let preventif = suiviInfo[3].toString().toLowerCase().trim() === "oui";
+                let remarque = suiviInfo[5] || "";
+
+                html += `
+                    <div style="background:#fff; border:1px solid ${hasFault ? '#e74c3c' : '#ccc'}; border-left: 4px solid ${hasFault ? '#e74c3c' : '#3498db'}; padding:12px; border-radius:6px; margin-bottom:10px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <b style="font-size:16px; color:#2c3e50;">Canon ${id}</b>
+                            <button onclick="window.focusCannon('${id}')" style="background:none; border:1px solid #ddd; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:10px;">Cibler 📍</button>
+                        </div>
+                        <div style="font-size:11px; margin-bottom:10px;">
+                            <span style="color:#7f8c8d;">Piste:</span> <b>${pisteName}</b><br>
+                            <span style="color:#7f8c8d;">Défaut en cours (Vanne):</span> <b style="color:${hasFault ? '#e74c3c' : '#27ae60'};">${hasFault ? activeFaults : "Aucun"}</b>
+                        </div>
+                        <div style="display:flex; gap:15px; margin-bottom:10px; font-size:12px;">
+                            <label style="cursor:pointer;"><input type="checkbox" id="chk-dec-${id}" ${deconnecte ? 'checked' : ''}> Déconnecté</label>
+                            <label style="cursor:pointer;"><input type="checkbox" id="chk-prev-${id}" ${preventif ? 'checked' : ''}> Préventif Usine</label>
+                        </div>
+                        <input type="text" id="rem-${id}" value="${remarque}" placeholder="Remarque..." class="edit-input" style="padding:6px; font-size:11px; margin-bottom:8px;">
+                        <button onclick="window.saveSuiviCanon('${id}', '${pisteName}')" style="width:100%; background:#27ae60; color:white; border:none; padding:8px; border-radius:4px; font-weight:bold; cursor:pointer;">💾 Sauvegarder</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        };
+
+        // 4. Surcharge de la mise à jour de la carte (Logique de Couleurs Multiples)
+        let originalUpdateMap = window.updateMap;
+        window.updateMap = function() {
+            originalUpdateMap(); // Met à jour le reste
+            
+            if(window.mainTheme === 'suivi_entretien' && window.geojsonLayer) {
+                window.geojsonLayer.eachLayer(function(layer) {
+                    if(!layer.feature.properties._isVisible) return;
+                    let p = layer.feature.properties;
+                    
+                    let activeFaults = window.getActiveTickets(p.id);
+                    let hasFault = activeFaults.length > 0;
+                    let suiviInfo = window.suiviEntretienData.find(row => row[0] == p.id) || ["", "", "non", "non", "", "", ""];
+                    let deconnecte = suiviInfo[2].toString().toLowerCase().trim() === "oui";
+                    let preventif = suiviInfo[3].toString().toLowerCase().trim() === "oui";
+
+                    let bgStr = "#bdc3c7"; // Défaut gris
+                    let iconChar = p.id;
+                    let borderCol = "white";
+
+                    if (hasFault) {
+                        bgStr = "#e74c3c"; // Rouge prioritaire
+                    } else if (preventif && deconnecte) {
+                        bgStr = "linear-gradient(135deg, #9b59b6 50%, #27ae60 50%)"; // Violet & Vert
+                    } else if (preventif) {
+                        bgStr = "#9b59b6"; // Violet
+                    } else if (deconnecte) {
+                        bgStr = "#27ae60"; // Vert
+                    } else {
+                        bgStr = "#f1c40f"; // Jaune (non déconnecté, sans défaut)
+                        iconChar = "⚡<br><span style='font-size:8px;'>" + p.id + "</span>";
+                    }
+
+                    if (window.selectedCannonsMap.has(p.id)) borderCol = "#2c3e50";
+
+                    layer.setIcon(L.divIcon({ 
+                        className: 'custom-cannon-icon', 
+                        html: `<div class="cannon-circle" style="background:${bgStr}; width:28px; height:28px; line-height:${iconChar.includes('<br>') ? '12px' : '28px'}; border:2px solid ${borderCol}; font-size:11px;">${iconChar}</div>`, 
+                        iconSize: [28, 28], 
+                        iconAnchor: [14, 14] 
+                    }));
+                });
+            }
+        };
+
+        // 5. Surcharge du Tableau de bord global (Dashboard)
+        let originalGlobalChart = window.triggerGlobalFilterChart;
+        window.triggerGlobalFilterChart = function() {
+            if (window.mainTheme !== 'suivi_entretien') {
+                originalGlobalChart(); return;
+            }
+            
+            // Dashboard spécial Suivi Entretien
+            let visibleCannons = window.snowCannons.features.filter(f => f.properties._isVisible);
+            let html = `<div style="background:#eafaf1; padding:15px; border-radius:6px; text-align:center; font-weight:bold; font-size:24px; color:#27ae60; margin-bottom:15px;">${visibleCannons.length} <span style="font-size:12px; color:#555; display:block; text-transform:uppercase;">Canons analysés</span></div>`;
+            
+            // Années spécifiques du tableau général
+            let anneeBuse = 0, anneeVanne = 0;
+            visibleCannons.forEach(f => {
+                let yBuse = parseInt(window.getV(f.properties, "année de buse")) || 0;
+                let yVanne = parseInt(window.getV(f.properties, "année vanne")) || 0;
+                if(yBuse > 2000) anneeBuse++; if(yVanne > 2000) anneeVanne++;
+            });
+
+            html += `<div style="display:flex; gap:10px; margin-bottom:15px; text-align:center;">
+                        <div style="flex:1; background:#fdfdfe; border:1px solid #ccc; padding:10px; border-radius:6px;">
+                            <div style="font-size:18px; font-weight:bold; color:#3498db;">${anneeBuse}</div>
+                            <div style="font-size:9px; color:#7f8c8d; text-transform:uppercase;">Buses (Année connue)</div>
+                        </div>
+                        <div style="flex:1; background:#fdfdfe; border:1px solid #ccc; padding:10px; border-radius:6px;">
+                            <div style="font-size:18px; font-weight:bold; color:#e67e22;">${anneeVanne}</div>
+                            <div style="font-size:9px; color:#7f8c8d; text-transform:uppercase;">Vannes (Année connue)</div>
+                        </div>
+                     </div>`;
+            
+            html += `<div class="piste-chart-container"><div style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:10px;">Avancement Déconnexions</div><canvas id="suivi-pie" height="180"></canvas></div>`;
+
+            document.getElementById('right-title').innerText = "📊 Synthèse Entretien";
+            document.getElementById('selected-list').innerHTML = html;
+            
+            // === SAUVEGARDE DU SUIVI ENTRETIEN VERS GOOGLE ===
+        window.saveSuiviCanon = async function(id, piste) {
+            let chkDec = document.getElementById('chk-dec-' + id);
+            let chkPrev = document.getElementById('chk-prev-' + id);
+            let txtRem = document.getElementById('rem-' + id);
+
+            let payload = {
+                action: "update_suivi",
+                idCanon: id,
+                piste: piste,
+                deconnexion: chkDec ? chkDec.checked : false,
+                preventif: chkPrev ? chkPrev.checked : false,
+                vanneCorrectif: window.getActiveTickets(id).map(t => t.defaut).join(" | "), // Fait remonter les défauts auto
+                remarque: txtRem ? txtRem.value : ""
+            };
+
+            let btn = event.target; let oldText = btn.innerText;
+            btn.innerText = "⏳ Envoi..."; btn.disabled = true;
+
+            try {
+                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    // Mise à jour de la mémoire locale pour changer les couleurs de la carte instantanément
+                    let existingRow = window.suiviEntretienData.find(row => row[0] == id);
+                    if (existingRow) {
+                        existingRow[2] = payload.deconnexion ? "oui" : "non";
+                        existingRow[3] = payload.preventif ? "oui" : "non";
+                        existingRow[5] = payload.remarque;
+                    } else {
+                        window.suiviEntretienData.push([id, piste, payload.deconnexion ? "oui" : "non", payload.preventif ? "oui" : "non", payload.vanneCorrectif, payload.remarque, ""]);
+                    }
+                    btn.innerText = "✅ Sauvegardé !";
+                    window.updateMap(); // Rafraîchit les points verts/violets/rouges
+                    window.triggerGlobalFilterChart(); // Rafraichit le Dashboard
+                    setTimeout(() => { btn.innerText = oldText; btn.disabled = false; }, 2000);
+                } else {
+                    alert("Erreur Google : " + result.msg);
+                    btn.innerText = oldText; btn.disabled = false;
+                }
+            } catch(e) {
+                alert("Échec réseau (Avez-vous bien déployé une 'Nouvelle version' dans Apps Script ?).");
+                btn.innerText = oldText; btn.disabled = false;
+            }
+        };
+            setTimeout(() => {
+                let decOui = 0, decNon = 0;
+                visibleCannons.forEach(f => {
+                    let suivi = window.suiviEntretienData.find(row => row[0] == f.properties.id);
+                    if (suivi && suivi[2].toString().toLowerCase() === "oui") decOui++; else decNon++;
+                });
+                if(window.chartInstances['suivi-pie']) window.chartInstances['suivi-pie'].destroy();
+                window.chartInstances['suivi-pie'] = new Chart(document.getElementById('suivi-pie').getContext('2d'), {
+                    type: 'doughnut', data: { labels: ['Déconnecté', 'Connecté (⚡)'], datasets: [{ data: [decOui, decNon], backgroundColor: ['#27ae60', '#f1c40f'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }, 100);
+        };
     </script>
 </body>
 </html>
