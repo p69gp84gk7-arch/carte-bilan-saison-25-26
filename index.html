@@ -106,6 +106,7 @@
     <div id="topbar">
         <div style="display:flex; align-items:center;"><button class="topbar-btn" style="margin-left:0;" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">☰ Menu</button></div>
         <div style="display:flex; align-items:center;">
+            <button class="topbar-btn" onclick="window.openSuiviEntretien()" style="background:#27ae60; border-color:#2ecc71;">🛠️ Suivi Entretien</button>
             <button class="topbar-btn" onclick="window.openGlobalCompareModal(true)" style="background:#d35400; border-color:#e67e22;">📊 Comparer Saisons</button>
             <button class="topbar-btn" onclick="window.openBiMeteo()" style="background:#8e44ad; border-color:#9b59b6;">❄️ Centre Expert BI</button>
             <button class="topbar-btn" onclick="window.openMeteoWidget()">⛅ Météo Live</button>
@@ -114,7 +115,6 @@
             <button id="btn-multi-toggle" class="topbar-btn" onclick="window.toggleMultiSelect()">🔲 Sélec. Multiple : OFF</button>
         </div>
     </div>
-
     <div id="bi-meteo-modal">
         <div class="bi-header">
             <span>❄️ PowerBI Neige (Analyse & Graphiques Avancés)</span>
@@ -844,6 +844,229 @@
             }
             let vmin = document.getElementById('val-min'); if(vmin) vmin.innerText = 0; 
             let vmax = document.getElementById('val-max'); if(vmax) vmax.innerText = Math.round(window.absoluteMaxes[window.histMetric]) || 1;
+        };
+        // ====================================================================
+        // === MODULE GMAO : SUIVI ENTRETIEN WEBAPP ===
+        // ====================================================================
+        
+        window.suiviEntretienData = []; 
+
+        // 1. Démarrage du mode Suivi
+        window.openSuiviEntretien = function() {
+            window.mainTheme = 'suivi_entretien';
+            let sb = document.getElementById('right-sidebar'); let sl = document.getElementById('selected-list');
+            document.getElementById('right-title').innerText = "🛠️ Mode : Suivi Entretien";
+            document.getElementById('multi-tools').style.display = 'none';
+            document.getElementById('view-edit').style.display = 'none';
+            document.getElementById('view-selection').style.display = 'block';
+
+            let pistes = Array.from(window.columnValuesSets[window.keyPiste] || []).sort();
+            sl.innerHTML = `
+                <div style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #ddd; margin-bottom:15px;">
+                    <div class="edit-label">Sélectionner une piste pour l'entretien :</div>
+                    <select class="edit-input" style="margin-bottom:0;" onchange="window.renderSuiviList(this.value)">
+                        <option value="">-- Choisir une piste --</option>
+                        ${pistes.map(p => `<option value="${p}">${p}</option>`).join('')}
+                    </select>
+                </div>
+                <div id="suivi-canons-container"></div>
+            `;
+            sb.classList.add('open');
+            window.updateLegend(); window.updateMap(); window.triggerGlobalFilterChart();
+        };
+
+        // 2. Liste d'édition verrouillée par piste
+        window.renderSuiviList = function(pisteName) {
+            let container = document.getElementById('suivi-canons-container'); if(!container) return;
+            if(!pisteName) { container.innerHTML = ""; return; }
+
+            let canons = window.snowCannons.features.filter(f => window.getV(f.properties, window.keyPiste) === pisteName).sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
+            let html = "";
+            
+            canons.forEach(c => {
+                let id = c.properties.id;
+                let activeFaults = window.getActiveTickets(id).map(t => t.defaut).join(" | ");
+                let hasFault = activeFaults.length > 0;
+                
+                let suiviInfo = window.suiviEntretienData.find(row => row[0] == id) || ["", "", "non", "non", "", "", ""];
+                let dec = suiviInfo[2].toString().toLowerCase().trim() === "oui";
+                let prev = suiviInfo[3].toString().toLowerCase().trim() === "oui";
+                let rem = suiviInfo[5] || "";
+
+                html += `
+                    <div style="background:#fff; border-left:4px solid ${hasFault ? '#e74c3c' : '#3498db'}; padding:12px; margin-bottom:10px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <b style="font-size:14px;">Canon ${id}</b>
+                            <button onclick="window.focusCannon('${id}')" style="background:none; border:1px solid #ddd; border-radius:4px; padding:2px 6px; cursor:pointer; font-size:10px;">Cibler 📍</button>
+                        </div>
+                        <div style="font-size:11px; color:#555; background:#f4f6f8; padding:6px; border-radius:4px; margin-bottom:8px;">
+                            Piste : <b>${pisteName}</b><br>
+                            Correctif (Vanne) : <b style="color:${hasFault?'#e74c3c':'#27ae60'}">${hasFault ? activeFaults : "Aucun"}</b>
+                        </div>
+                        <div style="display:flex; gap:10px; font-size:12px; margin-bottom:8px;">
+                            <label style="cursor:pointer;"><input type="checkbox" id="chk-dec-${id}" ${dec?'checked':''}> Déconnexion</label>
+                            <label style="cursor:pointer;"><input type="checkbox" id="chk-prev-${id}" ${prev?'checked':''}> Préventif Usine</label>
+                        </div>
+                        <input type="text" id="rem-${id}" value="${rem}" placeholder="Remarques..." style="width:100%; box-sizing:border-box; padding:6px; font-size:11px; border:1px solid #ccc; border-radius:4px; margin-bottom:8px;">
+                        <button onclick="window.saveSuiviCanon('${id}', '${pisteName.replace(/'/g,"\\'")}', this)" style="width:100%; background:#27ae60; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-weight:bold;">💾 Sauvegarder</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        };
+
+        window.saveSuiviCanon = async function(id, piste, btn) {
+            let chkDec = document.getElementById('chk-dec-' + id);
+            let chkPrev = document.getElementById('chk-prev-' + id);
+            let txtRem = document.getElementById('rem-' + id);
+            let payload = { action: "update_suivi", idCanon: id, piste: piste, deconnexion: chkDec ? chkDec.checked : false, preventif: chkPrev ? chkPrev.checked : false, vanneCorrectif: window.getActiveTickets(id).map(t => t.defaut).join(" | "), remarque: txtRem ? txtRem.value : "" };
+            
+            let oldText = btn.innerText; btn.innerText = "⏳ Envoi..."; btn.disabled = true;
+            try {
+                const response = await fetch(GOOGLE_API_URL, { method: 'POST', body: JSON.stringify(payload) }); const result = await response.json();
+                if (result.status === "success") {
+                    let existingRow = window.suiviEntretienData.find(row => row[0] == id);
+                    if (existingRow) { existingRow[2] = payload.deconnexion ? "oui" : "non"; existingRow[3] = payload.preventif ? "oui" : "non"; existingRow[5] = payload.remarque; } 
+                    else { window.suiviEntretienData.push([id, piste, payload.deconnexion ? "oui" : "non", payload.preventif ? "oui" : "non", payload.vanneCorrectif, payload.remarque, ""]); }
+                    btn.innerText = "✅ OK !"; window.updateMap(); setTimeout(() => { btn.innerText = oldText; btn.disabled = false; }, 2000);
+                } else { alert("Erreur Google"); btn.innerText = oldText; btn.disabled = false; }
+            } catch(e) { alert("Échec réseau."); btn.innerText = oldText; btn.disabled = false; }
+        };
+
+        // 3. Surcharge de la carte : Mélange des couleurs (Priorités + Gradients)
+        let oldUpdateMap = window.updateMap;
+        window.updateMap = function() {
+            oldUpdateMap(); 
+            if(window.mainTheme === 'suivi_entretien' && window.geojsonLayer) {
+                window.geojsonLayer.eachLayer(function(layer) {
+                    if(!layer.feature.properties._isVisible) return;
+                    let p = layer.feature.properties;
+                    let acts = window.getActiveTickets(p.id); let hasFault = acts.length > 0;
+                    let suivi = window.suiviEntretienData.find(row => row[0] == p.id) || ["", "", "non", "non"];
+                    let dec = suivi[2] && suivi[2].toString().toLowerCase().trim() === "oui";
+                    let prev = suivi[3] && suivi[3].toString().toLowerCase().trim() === "oui";
+
+                    let colors = [];
+                    if(hasFault) colors.push('#e74c3c'); // Rouge (Priorité haute)
+                    if(prev) colors.push('#9b59b6');     // Violet (Préventif)
+                    if(dec) colors.push('#27ae60');      // Vert (Déconnecté)
+
+                    let bgStr = '#f1c40f'; // Jaune (Connecté par défaut)
+                    if(colors.length === 3) bgStr = `conic-gradient(${colors[0]} 0 33%, ${colors[1]} 33% 66%, ${colors[2]} 66% 100%)`;
+                    else if(colors.length === 2) bgStr = `linear-gradient(135deg, ${colors[0]} 50%, ${colors[1]} 50%)`;
+                    else if(colors.length === 1) bgStr = colors[0];
+
+                    let isDefaultYellow = (colors.length === 0);
+                    let iconChar = isDefaultYellow ? `⚡<br><span style="font-size:8px;">${p.id}</span>` : p.id;
+                    
+                    let bord = window.selectedCannonsMap.has(p.id) ? "#2c3e50" : "white";
+                    let bw = window.selectedCannonsMap.has(p.id) ? "3px" : "1.5px";
+
+                    layer.setIcon(L.divIcon({ className: 'custom-cannon-icon', html: `<div class="cannon-circle" style="background:${bgStr}; width:28px; height:28px; line-height:${isDefaultYellow ? '12px' : '28px'}; border:${bw} solid ${bord}; font-size:11px;">${iconChar}</div>`, iconSize: [28,28], iconAnchor: [14,14] }));
+                });
+            }
+        };
+
+        // 4. Surcharge Panneau Fiche Canon
+        let oldRenderPanel = window.renderSelectionPanel;
+        window.renderSelectionPanel = function() {
+            if (window.mainTheme !== 'suivi_entretien') { oldRenderPanel(); return; }
+            if(window.selectedCannonsMap.size === 0) { window.triggerGlobalFilterChart(); return; }
+            
+            document.getElementById('multi-tools').style.display = 'flex'; document.getElementById('view-selection').style.display = 'block'; 
+            document.getElementById('sel-count').innerText = window.selectedCannonsMap.size; let listDiv = document.getElementById('selected-list'); listDiv.innerHTML = ""; document.getElementById('right-title').innerText = "📌 Détails Maintenance";
+
+            window.selectedCannonsMap.forEach((layer, id) => {
+                const p = layer.feature.properties;
+                let s = window.suiviEntretienData.find(row => row[0] == id) || ["", "", "non", "non", "", "", ""];
+                let dec = s[2].toString().toLowerCase().trim() === "oui" ? "✅ Oui" : "❌ Non";
+                let prev = s[3].toString().toLowerCase().trim() === "oui" ? "✅ Oui" : "❌ Non";
+                
+                // Extraction des années depuis "Tableau Général"
+                let bY = window.getV(p, "année de buse") || window.getV(p, "annee buse") || "Inconnue";
+                let vAdY = window.getV(p, "année vanne ad") || window.getV(p, "annee vanne ad") || "Inconnue";
+                let vY = window.getV(p, "année vanne") || window.getV(p, "annee vanne") || "Inconnue";
+
+                let history = window.getHistoryTickets(p.id); let histHtml = `<div style="font-size:12px; color:#7f8c8d; margin-top:10px;">Aucun historique de panne.</div>`;
+                if (history.length > 0) {
+                    histHtml = `<details style="font-size:12px; background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #e1e8ed; margin-top:10px;"><summary style="cursor:pointer; font-weight:bold;">📁 Historique Secours (${history.length})</summary><ul style="padding-left:15px; margin-top:5px;">`;
+                    history.forEach(t => { let dStr = isNaN(new Date(t.date).getTime()) ? (t.date||"?") : new Date(t.date).toLocaleDateString('fr-FR'); histHtml += `<li style="margin-bottom:5px;"><b>${dStr}</b> - ${t.defaut}</li>`; });
+                    histHtml += `</ul></details>`;
+                }
+
+                listDiv.innerHTML += `
+                    <div class="sel-details">
+                        <div class="sel-details-header"><span>📍 <b>Canon ${p.id}</b></span><span class="badge">${window.getV(p, window.keyPiste)}</span></div>
+                        <div class="sel-details-body">
+                            <div style="background:#eafaf1; padding:10px; border-radius:6px; border:1px solid #2ecc71; margin-bottom:10px; font-size:12px;">
+                                <h4 style="margin:0 0 8px 0; color:#27ae60;">🛠️ Suivi Entretien</h4>
+                                <b>Déconnecté :</b> ${dec}<br><b>Préventif Usine :</b> ${prev}<br><b>Correctif :</b> ${s[4] || "Aucun"}<br><b>Remarque :</b> ${s[5] || "Aucune"}
+                            </div>
+                            <div style="background:#fdfdfe; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:12px;">
+                                <h4 style="margin:0 0 8px 0; color:#2c3e50;">📊 Données Techniques</h4>
+                                <b>Modèle :</b> ${window.getV(p, window.keyType)}<br><b>Année Buse :</b> ${bY}<br><b>Année Vanne AD :</b> ${vAdY}<br><b>Année Vanne :</b> ${vY}
+                            </div>
+                            ${histHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        // 5. Surcharge Dashboard / Synthèse Globale
+        let oldTriggerDash = window.triggerGlobalFilterChart;
+        window.triggerGlobalFilterChart = function() {
+            if (window.mainTheme !== 'suivi_entretien') { oldTriggerDash(); return; }
+
+            let visibleCannons = window.snowCannons.features.filter(f => f.properties._isVisible);
+            let statsHtml = `<div style="background:#eafaf1; padding:15px; border-radius:6px; text-align:center; font-weight:bold; font-size:24px; color:#27ae60; margin-bottom:15px;">${visibleCannons.length} <span style="font-size:12px; color:#555; display:block; text-transform:uppercase;">Canons Affichés</span></div>`;
+
+            let bYearCounts = {}; let vYearCounts = {}; let decCount = 0; let prevCount = 0;
+            
+            visibleCannons.forEach(f => {
+                let p = f.properties;
+                let s = window.suiviEntretienData.find(row => row[0] == p.id) || [];
+                if(s[2] && s[2].toString().toLowerCase().trim() === "oui") decCount++;
+                if(s[3] && s[3].toString().toLowerCase().trim() === "oui") prevCount++;
+
+                let bY = window.getV(p, "année de buse") || window.getV(p, "annee buse");
+                let vY = window.getV(p, "année vanne") || window.getV(p, "annee vanne");
+                if(bY && bY !== "N/A") bYearCounts[bY] = (bYearCounts[bY]||0)+1;
+                if(vY && vY !== "N/A") vYearCounts[vY] = (vYearCounts[vY]||0)+1;
+            });
+
+            let topBuse = Object.entries(bYearCounts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>`${x[0]} <span style="color:#7f8c8d">(${x[1]})</span>`).join('<br>');
+            let topVanne = Object.entries(vYearCounts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>`${x[0]} <span style="color:#7f8c8d">(${x[1]})</span>`).join('<br>');
+
+            let summaryHtml = `
+                <div style="display:flex; gap:10px; text-align:center; margin-bottom:15px;">
+                    <div style="flex:1; background:#fff; border:1px solid #ccc; border-radius:6px; padding:10px;"><b style="font-size:20px; color:#27ae60;">${decCount}</b><br><span style="font-size:10px;">Déconnectés</span></div>
+                    <div style="flex:1; background:#fff; border:1px solid #ccc; border-radius:6px; padding:10px;"><b style="font-size:20px; color:#9b59b6;">${prevCount}</b><br><span style="font-size:10px;">Préventif</span></div>
+                </div>
+                <div style="display:flex; gap:10px; margin-bottom:15px; font-size:11px;">
+                    <div style="flex:1; background:#fdfdfe; border:1px solid #e1e8ed; padding:10px; border-radius:6px;"><h4 style="margin:0 0 5px 0; color:#3498db;">Top Années Buse</h4>${topBuse || "Aucune info"}</div>
+                    <div style="flex:1; background:#fdfdfe; border:1px solid #e1e8ed; padding:10px; border-radius:6px;"><h4 style="margin:0 0 5px 0; color:#e67e22;">Top Années Vanne</h4>${topVanne || "Aucune info"}</div>
+                </div>
+            `;
+
+            document.getElementById('right-title').innerText = "📊 Dashboard Maintenance";
+            document.getElementById('selected-list').innerHTML = statsHtml + summaryHtml;
+        };
+
+        // Surcharge de la Légende
+        let oldUpdateLegend = window.updateLegend;
+        window.updateLegend = function() {
+            oldUpdateLegend();
+            if (window.mainTheme === 'suivi_entretien') {
+                let elDef = document.getElementById('legend-defauts');
+                if(elDef) elDef.innerHTML = `
+                    <div class="legend-item"><div class="color-box" style="background:#e74c3c;"></div> Défaut en cours</div>
+                    <div class="legend-item"><div class="color-box" style="background:#9b59b6;"></div> Préventif Usine</div>
+                    <div class="legend-item"><div class="color-box" style="background:#27ae60;"></div> Déconnecté</div>
+                    <div class="legend-item"><div class="color-box" style="background:#f1c40f;"></div> Connecté (⚡)</div>
+                    <div class="legend-item" style="font-size:10px; color:#7f8c8d; margin-top:5px;"><i>Si plusieurs statuts, le point affiche les couleurs mélangées.</i></div>
+                `;
+            }
         };
 
         // BOOT FORCE
