@@ -962,6 +962,48 @@
 
             window.updateLegend(); window.updateMap(); window.triggerGlobalFilterChart();
         };
+        window.calculateMaxes = function() {
+            if(!window.saisonsList[window.histSeasonIdx]) return;
+            let s = window.saisonsList[window.histSeasonIdx]; window.absoluteMaxes = { eau: 0, air: 0, temps: 0 };
+            window.snowCannons.features.forEach(f => {
+                if (f.properties.historique[s]) {
+                    window.absoluteMaxes.eau = Math.max(window.absoluteMaxes.eau, f.properties.historique[s].eau);
+                    window.absoluteMaxes.air = Math.max(window.absoluteMaxes.air, f.properties.historique[s].air);
+                    window.absoluteMaxes.temps = Math.max(window.absoluteMaxes.temps, f.properties.historique[s].temps);
+                }
+            });
+            window.currentMaxThreshold = { ...window.absoluteMaxes }; window.currentMinThreshold = { eau:0, air:0, temps:0 };
+            
+            let slmin = document.getElementById('slider-min'); 
+            let slmax = document.getElementById('slider-max');
+            
+            if(slmin) { 
+                slmin.max = window.absoluteMaxes[window.histMetric] || 1; 
+                slmin.value = 0; 
+                slmin.step = "any";
+                slmin.oninput = function(e) {
+                    let val = parseFloat(e.target.value) || 0;
+                    if (val > window.currentMaxThreshold[window.histMetric]) { val = window.currentMaxThreshold[window.histMetric]; e.target.value = val; }
+                    window.currentMinThreshold[window.histMetric] = val;
+                    let vm = document.getElementById('val-min'); if(vm) vm.innerText = Math.round(val);
+                    window.updateMap(); window.triggerGlobalFilterChart();
+                };
+            }
+            if(slmax) { 
+                slmax.max = window.absoluteMaxes[window.histMetric] || 1; 
+                slmax.value = window.absoluteMaxes[window.histMetric] || 1; 
+                slmax.step = "any";
+                slmax.oninput = function(e) {
+                    let val = parseFloat(e.target.value) || 0;
+                    if (val < window.currentMinThreshold[window.histMetric]) { val = window.currentMinThreshold[window.histMetric]; e.target.value = val; }
+                    window.currentMaxThreshold[window.histMetric] = val;
+                    let vmx = document.getElementById('val-max'); if(vmx) vmx.innerText = Math.round(val);
+                    window.updateMap(); window.triggerGlobalFilterChart();
+                };
+            }
+            let vmin = document.getElementById('val-min'); if(vmin) vmin.innerText = 0; 
+            let vmax = document.getElementById('val-max'); if(vmax) vmax.innerText = Math.round(window.absoluteMaxes[window.histMetric]) || 1;
+        };
 
         window.addEventListener('DOMContentLoaded', async () => {
             if(window.bootAttempt > 0) return;
