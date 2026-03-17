@@ -257,6 +257,7 @@
         // ⚠️ LIEN GOOGLE APPS SCRIPT ⚠️
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbxXWPGusI2o66WGBut-urJXxeB00ltFti2KltPXb-mafmmfleavph8wRGNWPydHw0YY1g/exec";
 
+
         window.map=null; window.satLayer=null; window.geojsonLayer=null; window.webcamLayerGroup=null;
         window.snowCannons={"type":"FeatureCollection","features":[]}; window.rawGeneral=[]; window.rawHistorique=[]; window.rawTicketsSheet=[]; window.meteoHistData=[]; window.meteoFroidData=[]; window.rawTickets=[]; window.saisonsList=[]; window.cloudKmzLayers=[]; window.webcamsData=[]; window.isMultiSelect=false; window.columnValuesSets={}; window.availableColumns=[]; window.mainTheme='defauts'; window.histMetric='eau'; window.histSeasonIdx=0; window.absoluteMaxes={eau:0,air:0,temps:0}; window.currentMaxThreshold={eau:100,air:100,temps:100}; window.currentMinThreshold={eau:0,air:0,temps:0}; window.activeFilters=[{key:"",vals:[]}]; window.currentPistes=['all']; window.currentTypes=['all']; window.chartInstances={}; window.selectedCannonsMap=new Map(); window.currentlyEditingId=null; window.technoColors={}; window.repColors={}; window.transfoColors={}; window.externalLayers={}; window.defaultColors=['#e74c3c','#3498db','#f1c40f','#2ecc71','#9b59b6','#e67e22','#1abc9c','#34495e']; window.keyPiste=""; window.keyType=""; window.keyRep=""; window.keyTransfo=""; window.localDB=null; window.bootAttempt=0; window.tempTicketPayloads={}; window.suiviEntretienData = [];
 
@@ -280,7 +281,7 @@
             let pistes = Array.from(window.columnValuesSets[window.keyPiste] || []).sort();
             sl.innerHTML = `
                 <div style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #ddd; margin-bottom:15px;">
-                    <div class="edit-label">Sélectionner une piste pour l'entretien :</div>
+                    <div class="edit-label">Sélectionner une piste :</div>
                     <select class="edit-input" style="margin-bottom:0;" onchange="window.renderSuiviList(this.value)">
                         <option value="">-- Choisir une piste --</option>
                         ${pistes.map(p => `<option value="${p}">${p}</option>`).join('')}
@@ -296,6 +297,8 @@
             if(!pisteName) { container.innerHTML = ""; return; }
             let canons = window.snowCannons.features.filter(f => window.getV(f.properties, window.keyPiste) === pisteName).sort((a,b) => parseInt(a.properties.id) - parseInt(b.properties.id));
             let html = "";
+            let cDef = 0, cDec = 0, cPrev = 0, cOk = 0;
+
             canons.forEach(c => {
                 let id = c.properties.id;
                 let activeFaults = window.getActiveTickets(id).map(t => t.defaut).join(" | ");
@@ -304,6 +307,9 @@
                 let dec = suiviInfo[2].toString().toLowerCase().trim() === "oui";
                 let prev = suiviInfo[3].toString().toLowerCase().trim() === "oui";
                 let rem = suiviInfo[5] || "";
+
+                // Calcul pour le camembert
+                if (hasFault) cDef++; else if (dec) cDec++; else if (prev) cPrev++; else cOk++;
 
                 html += `
                     <div style="background:#fff; border-left:4px solid ${hasFault ? '#e74c3c' : '#3498db'}; padding:12px; margin-bottom:10px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
@@ -324,7 +330,28 @@
                     </div>
                 `;
             });
-            container.innerHTML = html;
+
+            // NOUVEAU : Le camembert d'état de la piste
+            let pieHtml = `
+                <div style="background:#fff; border:1px solid #e1e8ed; border-radius:6px; padding:10px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:10px;">État de la piste : ${pisteName}</div>
+                    <div style="position:relative; height:160px; width:100%;"><canvas id="pie-piste-local"></canvas></div>
+                </div>
+            `;
+
+            container.innerHTML = pieHtml + html;
+
+            setTimeout(() => {
+                if(window.chartInstances['pie-piste-local']) window.chartInstances['pie-piste-local'].destroy();
+                let ctxPie = document.getElementById('pie-piste-local');
+                if(ctxPie) {
+                    window.chartInstances['pie-piste-local'] = new Chart(ctxPie.getContext('2d'), {
+                        type: 'doughnut',
+                        data: { labels: ['En Défaut', 'Déconnecté', 'Préventif', 'OK / Connecté'], datasets: [{ data: [cDef, cDec, cPrev, cOk], backgroundColor: ['#e74c3c', '#27ae60', '#9b59b6', '#f1c40f'] }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } } }
+                    });
+                }
+            }, 100);
         };
 
         window.saveSuiviCanon = async function(id, piste, btn) {
@@ -337,7 +364,7 @@
                     let existingRow = window.suiviEntretienData.find(row => row[0] == id);
                     if (existingRow) { existingRow[2] = payload.deconnexion ? "oui" : "non"; existingRow[3] = payload.preventif ? "oui" : "non"; existingRow[5] = payload.remarque; } 
                     else { window.suiviEntretienData.push([id, piste, payload.deconnexion ? "oui" : "non", payload.preventif ? "oui" : "non", payload.vanneCorrectif, payload.remarque, ""]); }
-                    btn.innerText = "✅ OK !"; window.updateMap(); setTimeout(() => { btn.innerText = oldText; btn.disabled = false; }, 2000);
+                    btn.innerText = "✅ OK !"; window.renderSuiviList(piste); window.updateMap(); setTimeout(() => { btn.innerText = oldText; btn.disabled = false; }, 2000);
                 } else { alert("Erreur Google"); btn.innerText = oldText; btn.disabled = false; }
             } catch(e) { alert("Échec réseau."); btn.innerText = oldText; btn.disabled = false; }
         };
@@ -418,7 +445,7 @@
                     p._isVisible = false; if (window.map.hasLayer(layer)) window.map.removeLayer(layer);
                 } else {
                     p._isVisible = true; if (!window.map.hasLayer(layer)) window.map.addLayer(layer);
-                    let rad = 12; let ratio = 0; let bgStr = ""; let iconChar = p.id;
+                    let rad = 12; let ratio = 0; let bgStr = ""; let iconChar = p.id; let lh = '24px';
                     
                     if (window.mainTheme === 'historique') { 
                         let maxVal = window.absoluteMaxes[window.histMetric] || 1; ratio = val / maxVal; rad = 10 + (15 * ratio); 
@@ -439,8 +466,12 @@
                         else if(colors.length === 2) bgStr = `linear-gradient(135deg, ${colors[0]} 50%, ${colors[1]} 50%)`;
                         else if(colors.length === 1) bgStr = colors[0];
 
-                        let isDefaultYellow = (colors.length === 0);
-                        iconChar = isDefaultYellow ? `⚡<br><span style="font-size:8px;">${p.id}</span>` : p.id;
+                        // CORRECTION ECLAIR : On ajoute l'éclair ⚡ si le canon n'est pas déconnecté !
+                        let hasPower = !dec;
+                        if (hasPower) {
+                            iconChar = `⚡<br><span style="font-size:8px;">${p.id}</span>`;
+                            lh = '12px';
+                        }
                     } else {
                         bgStr = window.getColorByFilter(0, p);
                     }
@@ -448,13 +479,12 @@
                     let bord = window.selectedCannonsMap.has(p.id) ? "#2c3e50" : (window.currentlyEditingId === p.id ? "#e74c3c" : "white");
                     let bw = window.selectedCannonsMap.has(p.id) ? "3px" : (window.currentlyEditingId === p.id ? "4px" : "1.5px");
                     let fsz = Math.max(9, rad - 4) + "px"; 
-                    
                     let zIdx = window.currentlyEditingId === p.id ? 2000 : (window.selectedCannonsMap.has(p.id) ? 1000 : 0);
                     layer.setZIndexOffset(zIdx);
 
                     let actClass = (window.mainTheme !== 'suivi_entretien' && window.mainTheme === 'defauts' && window.getActiveTickets(p.id).some(t => t.statut.includes('faire'))) ? "alert-urgent" : "";
                     
-                    layer.setIcon(L.divIcon({ className: 'custom-cannon-icon', html: `<div class="cannon-circle ${actClass}" style="background:${bgStr}; width:${rad*2}px; height:${rad*2}px; line-height:${iconChar.toString().includes('<br>') ? '12px' : (rad*2)+'px'}; border:${bw} solid ${bord}; font-size:${fsz};">${iconChar}</div>`, iconSize: [rad*2, rad*2], iconAnchor: [rad, rad] }));
+                    layer.setIcon(L.divIcon({ className: 'custom-cannon-icon', html: `<div class="cannon-circle ${actClass}" style="background:${bgStr}; width:${rad*2}px; height:${rad*2}px; line-height:${lh}; border:${bw} solid ${bord}; font-size:${fsz};">${iconChar}</div>`, iconSize: [rad*2, rad*2], iconAnchor: [rad, rad] }));
                     layer.setOpacity(1); if(layer._icon) { layer._icon.style.opacity = '1'; layer._icon.style.transform = layer._icon.style.transform.replace(' scale(1.3)', ''); }
                 }
             });
@@ -628,39 +658,6 @@
                     chartLabels = Object.keys(pisteTotals).sort(); chartData = chartLabels.map(k => pisteTotals[k]); chartColors = '#2980b9';
                     html += `<div class="piste-chart-container"><div style="font-size:12px; font-weight:bold; text-align:center; color:#34495e; margin-bottom:10px;">Total ${metricName} par Piste (Saison ${s})</div><div style="position:relative;height:250px;width:100%;"><canvas id="global-filter-chart"></canvas></div></div>`;
                 }
-            }
-            else if (window.mainTheme === 'suivi_entretien') {
-                let rt = document.getElementById('right-title'); if(rt) rt.innerText = "📊 Dashboard Maintenance";
-                let bYearCounts = {}; let vYearCounts = {}; let decCount = 0; let prevCount = 0;
-                visibleCannons.forEach(f => {
-                    let p = f.properties; let s = window.suiviEntretienData.find(row => row[0] == p.id) || [];
-                    if(s[2] && s[2].toString().toLowerCase().trim() === "oui") decCount++;
-                    if(s[3] && s[3].toString().toLowerCase().trim() === "oui") prevCount++;
-                    let bY = window.getV(p, "année de buse") || window.getV(p, "annee buse");
-                    let vY = window.getV(p, "année vanne") || window.getV(p, "annee vanne");
-                    if(bY && bY !== "N/A") bYearCounts[bY] = (bYearCounts[bY]||0)+1;
-                    if(vY && vY !== "N/A") vYearCounts[vY] = (vYearCounts[vY]||0)+1;
-                });
-                let topBuse = Object.entries(bYearCounts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>`${x[0]} <span style="color:#7f8c8d">(${x[1]})</span>`).join('<br>');
-                let topVanne = Object.entries(vYearCounts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>`${x[0]} <span style="color:#7f8c8d">(${x[1]})</span>`).join('<br>');
-
-                html += `<div style="display:flex; gap:10px; text-align:center; margin-bottom:15px;">
-                            <div style="flex:1; background:#fff; border:1px solid #ccc; border-radius:6px; padding:10px;"><b style="font-size:20px; color:#27ae60;">${decCount}</b><br><span style="font-size:10px;">Déconnectés</span></div>
-                            <div style="flex:1; background:#fff; border:1px solid #ccc; border-radius:6px; padding:10px;"><b style="font-size:20px; color:#9b59b6;">${prevCount}</b><br><span style="font-size:10px;">Préventif</span></div>
-                        </div>
-                        <div style="display:flex; gap:10px; margin-bottom:15px; font-size:11px;">
-                            <div style="flex:1; background:#fdfdfe; border:1px solid #e1e8ed; padding:10px; border-radius:6px;"><h4 style="margin:0 0 5px 0; color:#3498db;">Top Années Buse</h4>${topBuse || "Aucune info"}</div>
-                            <div style="flex:1; background:#fdfdfe; border:1px solid #e1e8ed; padding:10px; border-radius:6px;"><h4 style="margin:0 0 5px 0; color:#e67e22;">Top Années Vanne</h4>${topVanne || "Aucune info"}</div>
-                        </div>
-                        <div class="piste-chart-container"><div style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:10px;">Avancement Déconnexions</div><div style="position:relative; height:180px; width:100%;"><canvas id="suivi-pie"></canvas></div></div>`;
-                
-                document.getElementById('multi-tools').style.display = 'flex'; document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none'; document.getElementById('selected-list').innerHTML = html; 
-                setTimeout(() => {
-                    if(window.chartInstances['suivi-pie']) window.chartInstances['suivi-pie'].destroy();
-                    let canvas = document.getElementById('suivi-pie');
-                    if (canvas) window.chartInstances['suivi-pie'] = new Chart(canvas.getContext('2d'), { type: 'doughnut', data: { labels: ['Déconnecté', 'Connecté (⚡)'], datasets: [{ data: [decCount, visibleCannons.length - decCount], backgroundColor: ['#27ae60', '#f1c40f'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
-                }, 100);
-                return; // On arrête là pour le thème Suivi
             }
 
             document.getElementById('multi-tools').style.display = 'flex'; document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none'; document.getElementById('selected-list').innerHTML = html; 
@@ -841,7 +838,26 @@
                 }
             }
 
-            if (data.kmz && data.kmz.length > 0) { window.cloudKmzLayers = data.kmz.map((k, index) => { let col = k.color ? k.color : window.defaultColors[index % window.defaultColors.length]; let wei = k.weight ? parseInt(k.weight) : 4; return { ...k, isVisible: false, leafletLayer: null, color: col, weight: wei }; }); }
+            // CORRECTION DES KMZ ICI : ON LIT UN TABLEAU 2D !
+            if (data.kmz && data.kmz.length > 1) {
+                const kHead = data.kmz[0].map(h => (h||"").toString().toLowerCase().trim());
+                const iNom = kHead.findIndex(h => h.includes("nom") || h.includes("calque"));
+                const iUrl = kHead.findIndex(h => h.includes("url") || h.includes("lien"));
+                const iCol = kHead.findIndex(h => h.includes("couleur"));
+                const iWei = kHead.findIndex(h => h.includes("epaisseur") || h.includes("taille"));
+                
+                if(iNom > -1 && iUrl > -1) {
+                    window.cloudKmzLayers = [];
+                    data.kmz.slice(1).forEach((row, index) => {
+                        let nom = row[iNom]; let url = row[iUrl];
+                        if(nom && url) {
+                            let col = (iCol > -1 && row[iCol]) ? row[iCol].toString().trim() : window.defaultColors[index % window.defaultColors.length];
+                            let wei = (iWei > -1 && row[iWei]) ? parseInt(row[iWei]) : 4;
+                            window.cloudKmzLayers.push({ nom: nom, url: url, isVisible: false, leafletLayer: null, color: col, weight: wei, commentaire: "" });
+                        }
+                    });
+                }
+            }
 
             window.setStep(5, "Analyse des Webcams...");
             if (data.webcams && data.webcams.length > 1) {
@@ -873,9 +889,7 @@
             
             let tc=['#3498db','#e74c3c','#2ecc71','#f1c40f','#9b59b6']; Array.from(ts).sort().forEach((t,i)=>window.technoColors[t]=tc[i%tc.length]);
             let rc=['#1abc9c','#16a085','#f39c12','#d35400','#8e44ad']; Array.from(rs).sort().forEach((r,i)=>window.repColors[r]=rc[i%rc.length]);
-            
-            let neonColors = ['#FF0000', '#00FF00', '#0000FF', '#FF00FF', '#00FFFF', '#FF8C00', '#FF1493', '#39FF14'];
-            Array.from(trs).sort().forEach((t,i)=>window.transfoColors[t]=neonColors[i%neonColors.length]);
+            let neonColors = ['#FF0000', '#00FF00', '#0000FF', '#FF00FF', '#00FFFF', '#FF8C00', '#FF1493', '#39FF14']; Array.from(trs).sort().forEach((t,i)=>window.transfoColors[t]=neonColors[i%neonColors.length]);
             
             window.snowCannons.features.forEach(f=>{let t=window.getV(f.properties,window.keyType).toLowerCase();f.properties.couleur_defaut=(["demak lenko","demac lenko"].includes(t))?"#0000FF":(["sufag","street","taurus","taurax","peak"].includes(t))?"#008000":window.technoColors[t]||"#FFD700";});
             
@@ -962,6 +976,7 @@
 
             window.updateLegend(); window.updateMap(); window.triggerGlobalFilterChart();
         };
+
         window.calculateMaxes = function() {
             if(!window.saisonsList[window.histSeasonIdx]) return;
             let s = window.saisonsList[window.histSeasonIdx]; window.absoluteMaxes = { eau: 0, air: 0, temps: 0 };
