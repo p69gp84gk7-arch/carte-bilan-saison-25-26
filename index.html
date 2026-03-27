@@ -243,7 +243,6 @@
 
         window.toggleRightSidebar=function(){let sb=document.getElementById('right-sidebar');if(!sb)return;if(sb.classList.contains('open'))sb.classList.remove('open');else{sb.classList.add('open');if(window.selectedCannonsMap.size===0&&!window.currentlyEditingId)window.triggerGlobalFilterChart();else window.renderSelectionPanel();}};
         window.toggleMultiSelect=function(){window.isMultiSelect=!window.isMultiSelect;let btn=document.getElementById('btn-multi-toggle');if(window.isMultiSelect){btn.innerText="🔲 Sélec. Multiple : ON";btn.style.background="#3498db";}else{btn.innerText="🔲 Sélec. Multiple : OFF";btn.style.background="rgba(255,255,255,0.1)";}window.renderSelectionPanel();};
-        
         window.closeRightSidebar=function(){document.getElementById('right-sidebar').classList.remove('open');window.clearSelection();if(window.webcamLayerGroup)window.webcamLayerGroup.eachLayer(m=>m.dragging.disable());};
         window.clearSelection=function(){window.selectedCannonsMap.clear();window.updateMap();window.renderSelectionPanel();window.triggerGlobalFilterChart();};
         window.cancelEdit=function(){window.currentlyEditingId=null;document.getElementById('view-selection').style.display='block';document.getElementById('view-edit').style.display='none';document.getElementById('right-title').innerText="📌 Fiche Canon";window.updateMap();window.renderSelectionPanel();};
@@ -619,8 +618,23 @@
                             <div style="flex:1; background:#fdfdfe; border:1px solid #e1e8ed; padding:10px; border-radius:6px;"><h4 style="margin:0 0 5px 0; color:#e67e22;">Top Années Vanne</h4>${topVanne || "Aucune info"}</div>
                         </div>
                         <div class="piste-chart-container"><div style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:10px;">Statuts Principaux (Priorité Haute)</div><div style="position:relative; height:180px; width:100%;"><canvas id="suivi-pie-global"></canvas></div></div>`;
+
+                let pistesSet = new Set();
+                window.snowCannons.features.forEach(f => { let pName = window.getV(f.properties, window.keyPiste); if (pName && pName !== "N/A" && pName.trim() !== "") pistesSet.add(pName); });
+                let pistes = Array.from(pistesSet).sort();
+
+                let selectHtml = `
+                    <div style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #ddd; margin-top:15px;">
+                        <div class="edit-label">Sélectionner une piste pour l'entretien :</div>
+                        <select class="edit-input" style="margin-bottom:0;" onchange="window.renderSuiviList(this.value)">
+                            <option value="">-- Choisir une piste --</option>
+                            ${pistes.map(p => `<option value="${p}">${p}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div id="suivi-canons-container"></div>
+                `;
                 
-                document.getElementById('multi-tools').style.display = 'flex'; document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none'; document.getElementById('selected-list').innerHTML = html; 
+                document.getElementById('multi-tools').style.display = 'flex'; document.getElementById('view-selection').style.display = 'block'; document.getElementById('view-edit').style.display = 'none'; document.getElementById('selected-list').innerHTML = html + selectHtml; 
                 setTimeout(() => {
                     if(window.chartInstances['suivi-pie-global']) window.chartInstances['suivi-pie-global'].destroy();
                     let canvas = document.getElementById('suivi-pie-global');
